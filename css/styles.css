@@ -11543,8 +11543,6 @@ html {
   margin-top: 90px;
   background-color: black; 
   min-height:80px;
-  width: 80%;
-  max-width: 600px;
   display: flex;
   justify-content: center;
   justify-self: center;
