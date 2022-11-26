@@ -649,6 +649,15 @@ progress {
   margin-left: auto;
 }
 
+.Ncontainer {
+  width: 80%;
+  padding-right: var(--bs-gutter-x, 0.75rem);
+  padding-left: var(--bs-gutter-x, 0.75rem);
+  margin-right: auto;
+  margin-left: auto;
+  display: flex; align-items: center; justify-content: center;
+}
+
 @media (min-width: 576px) {
   .container-sm, .container {
     max-width: 540px;
@@ -11528,4 +11537,22 @@ html {
   padding-bottom: 4rem;
   background-color: black;
   color: #fff;
+}
+
+.number_wrapper {
+  margin-top: 90px;
+  background-color: black; 
+  min-height:80px;
+  width: 80%;
+  max-width: 600px;
+  display: flex;
+  justify-content: center;
+  justify-self: center;
+}
+
+#number {
+  font-size:35px;
+  font-weight:700; 
+  color: white;
+  align-self: center;
 }

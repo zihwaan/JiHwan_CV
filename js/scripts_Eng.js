@@ -59,7 +59,7 @@ Number.prototype.numberFormat = function(decimals, dec_point, thousands_sep) {
 var startCount = {var: 0};
 
 gsap.to(startCount, {
-  var: 31450000, duration: 1.5, ease:"none",
+  var: 24200, duration: 1.5, ease:"none",
   onUpdate: changeNumber,
   scrollTrigger: {
     trigger: "#number",
@@ -68,5 +68,5 @@ gsap.to(startCount, {
 })
 
 function changeNumber() {
-  number.innerHTML = ((startCount.var.numberFormat(0)) + "원");
+  number.innerHTML = ((startCount.var.numberFormat(0)) + "$");
 }
