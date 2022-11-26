@@ -63,7 +63,6 @@ gsap.to(startCount, {
   onUpdate: changeNumber,
   scrollTrigger: {
     trigger: "#number",
-    toggleActions: "restart none reverse none",
   },
 })
 
