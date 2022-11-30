@@ -11540,6 +11540,7 @@ html {
 }
 
 .number_wrapper {
+  border-radius: 10px;
   margin-top: 90px;
   background-color: black; 
   min-height:80px;
