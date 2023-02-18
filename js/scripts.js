@@ -69,3 +69,5 @@ gsap.to(startCount, {
 function changeNumber() {
   number.innerHTML = ((startCount.var.numberFormat(0)) + "원");
 }
+
+
