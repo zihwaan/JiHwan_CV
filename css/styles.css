@@ -7722,7 +7722,7 @@ textarea.form-control-lg {
 }
 
 .text-uppercase {
-  text-transform: uppercase !important;
+  /*text-transform: uppercase !important;*/
 }
 
 .text-capitalize {
