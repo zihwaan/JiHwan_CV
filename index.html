@@ -213,6 +213,41 @@
                 <!-- About Section Content-->
                 <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 50px;">
                     <div class="Tcontainer mb-0">
+                        <p class="lead fw-bolder">서울시 지역구별 따릉이 대여량 예측 모델 개발🚲</p>
+
+                        <img src="./assets/따릉이.png" style="width: 300px; margin-bottom: 10px;"/>
+
+                        <p style="font-family: Pretendard; font-size: 19px;">
+                            다음 해의 서울시 지역구별 따릉이 수요를 정확히 예측할 수 있다면 대여소의 확장, 공유 자전거 신규 도입 등에 더 효율적으로 예산을 활용할 수 있을 것입니다.<br>
+                            <b>Task</b>: 2022년의 서울시 지역구별 일별 따릉이 대여량 회귀 예측<br>
+                            - 217개의 팀 중 32등 <b>(상위 15%)</b>
+                        </p>
+                        <details>
+                            <summary style="margin-bottom: 20px; color: gray;">더보기</summary>
+                            <div style="margin-left: 20px;">
+                                <p class="lead fw-bolder">모델 설계 구조 :</p>
+                                <p style="font-family: Pretendard; font-size: 16.5px;">
+                                    
+                                    <b>기본적인 예측 구조</b> : 일시 -> 따릉이 대여량</br>
+                                    <b>우리가 원하는 구조</b> : 일시, 미세먼지, 불쾌지수, 온도 ... -> 따릉이 대여량</br>
+                                    <b>1단계</b></br>
+                                    2018~2021년도의 외부 변수로 학습</br>
+                                    - 일시 -> 다른 구의 따릉이 대여량</br>
+                                    - 일시 -> 미세먼지 불쾌지수</br>
+                                    - 일시 -> 온도</br>
+
+                                    위 모델을 통해 2022년도의 외부 변수 예측</br>
+
+                                    <b>2단계</b></br>
+                                    "일시, 미세먼지, 불쾌지수, 온도 ... -> 따릉이 대여량 모델 일시 + 1단계에서 추론한 외부 변수(2022년도)"
+                                    를 통해 최종 2022년도 타겟 변수 예측</br></br>
+                                </p>
+                        </details>
+                        <A href="https://dacon.io/competitions/official/236029/overview/description" target="blank">해당 대회</A>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 50px;">
+                    <div class="Tcontainer mb-0">
                         <p class="lead fw-bolder">제4회 AI Bookathon 대회📚</p>
 
                         <img src="./assets/니체.png" style="width: 230px; margin-bottom: 10px;"/>
@@ -261,19 +296,15 @@
                         
                         <A href="https://github.com/goonbamm/4th_bookathon" target="blank">프로젝트 Github</A><br/><br/>
                         <A href="https://accessible-bear-91f.notion.site/4-AI-Bookathon-82ac6ae16fe1467bb02e242c79999d89" target="blank">자세히 보기</A>
-                        
                     </div>
                 </div>
                 <div style="display: flex; align-items: center; justify-content: center;">
                     <div class="Tcontainer mb-0">
                         <p class="lead fw-bolder">암호화폐 현물거래 자동매매 시스템💵</p>
-
                         <img src="./assets/robot.png" style="width: 230px; margin-bottom: 10px;"/>
-
                         <p style="font-family: Pretendard; font-size: 19px;">
                             암호화폐 현물거래를 자동으로 매매하는 인공지능(심층강화학습, Time Series Forecasting, DT 등) 기반 시스템을 구축하는 것을 목표로 하는 프로젝트입니다.</p>
-                        <A href="https://accessible-bear-91f.notion.site/fcdba716c57c4829835bb2f2961007e4" target="blank">해당 프로젝트 노션</A>
-                        
+                            <A href="https://accessible-bear-91f.notion.site/fcdba716c57c4829835bb2f2961007e4" target="blank">해당 프로젝트 노션</A>
                     </div>
                 </div>
             </div>
