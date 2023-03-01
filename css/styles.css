@@ -42,7 +42,7 @@
   --bs-light: #f8f9fa;
   --bs-dark: #212529;
   --bs-primary-rgb: 26, 188, 156;
-  --bs-secondary-rgb: 44, 62, 80;
+  --bs-secondary-rgb: black;
   --bs-success-rgb: 25, 135, 84;
   --bs-info-rgb: 13, 202, 240;
   --bs-warning-rgb: 255, 193, 7;
@@ -11341,7 +11341,7 @@ html {
 }
 
 .divider-custom {
-  margin: 1.25rem 0 1.5rem;
+  margin: 1.5rem 0 1.5rem;
   width: 100%;
   display: flex;
   justify-content: center;
@@ -11349,7 +11349,7 @@ html {
 }
 .divider-custom .divider-custom-line {
   width: 100%;
-  max-width: 11rem;
+  max-width: 12rem;
   height: 0.195rem;
   background-color: black;
 }
