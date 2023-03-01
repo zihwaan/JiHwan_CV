@@ -11349,11 +11349,9 @@ html {
 }
 .divider-custom .divider-custom-line {
   width: 100%;
-  max-width: 7rem;
-  height: 0.25rem;
-  background-color: #2c3e50;
-  border-radius: 1rem;
-  border-color: #2c3e50;
+  max-width: 11rem;
+  height: 0.195rem;
+  background-color: black;
 }
 .divider-custom .divider-custom-line:first-child {
   margin-right: 1rem;
