@@ -7787,6 +7787,9 @@ textarea.form-control-lg {
 .text-black {
   --bs-text-opacity: 1;
   color: rgba(var(--bs-black-rgb), var(--bs-text-opacity)) !important;
+  /*background-color: lightgray;
+  padding-top: 15px;
+  padding-bottom: 15px;*/
 }
 
 .text-white {
@@ -11341,7 +11344,7 @@ html {
 }
 
 .divider-custom {
-  margin: 1.5rem 0 1.5rem;
+  margin: 1.2rem 0 2.5rem;
   width: 100%;
   display: flex;
   justify-content: center;
