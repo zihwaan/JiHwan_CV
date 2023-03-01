@@ -11348,26 +11348,10 @@ html {
   align-items: center;
 }
 .divider-custom .divider-custom-line {
-  width: 100%;
-  max-width: 12rem;
-  height: 0.195rem;
+  width: 70%;
+  max-width: 300px;
+  height: 0.23rem;
   background-color: black;
-}
-.divider-custom .divider-custom-line:first-child {
-  margin-right: 1rem;
-}
-.divider-custom .divider-custom-line:last-child {
-  margin-left: 1rem;
-}
-.divider-custom .divider-custom-icon {
-  color: #2c3e50;
-  font-size: 2rem;
-}
-.divider-custom.divider-light .divider-custom-line {
-  background-color: #fff;
-}
-.divider-custom.divider-light .divider-custom-icon {
-  color: #fff;
 }
 
 .btn-xl {
