@@ -4086,6 +4086,14 @@ textarea.form-control-lg {
   text-decoration: none;
   white-space: nowrap;
 }
+.navbar-brand2 {
+  padding-top: 0.3125rem;
+  padding-bottom: 0.3125rem;
+  margin-right: 1rem;
+  font-size: 1rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
 .navbar-nav {
   display: flex;
   flex-direction: column;
