@@ -4090,7 +4090,7 @@ textarea.form-control-lg {
   padding-top: 0.3125rem;
   padding-bottom: 0.3125rem;
   margin-right: 1rem;
-  font-size: 1rem;
+  font-size: 0.11rem;
   text-decoration: none;
   white-space: nowrap;
 }
@@ -7679,7 +7679,7 @@ textarea.form-control-lg {
 
 .fw-bold {
   font-weight: 700 !important;
-}
+}p
 
 .fw-bolder {
   font-weight: bolder !important;
