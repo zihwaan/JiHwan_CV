@@ -59,7 +59,7 @@ Number.prototype.numberFormat = function(decimals, dec_point, thousands_sep) {
 var startCount = {var: 0};
 
 gsap.to(startCount, {
-  var: 38950000, duration: 3, ease:"none",
+  var: 51950000, duration: 3, ease:"none",
   onUpdate: changeNumber,
   scrollTrigger: {
     trigger: "#number",
