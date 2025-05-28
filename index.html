@@ -32,7 +32,7 @@
                 alt="프로필 사진"
                 style="width:15rem;border-radius:0.9rem;margin-bottom:3rem;">
             <h1 class="display-5 fw-semibold mb-3">변지환</h1>
-            <p class="lead mb-0">Semiconductor & Computer Engineering · AI / Systems · Automated Trading</p>
+            <p class="lead mb-0">Semiconductor & Computer Engineering <br> MLOps </p>
         </div>
     </header>
 
@@ -106,7 +106,13 @@
         </form>
         </div>
     </section>
+    <!-- ① JS 키를 숨기려면 meta 태그로 전달 -->
+    <meta name="kakao-key" content="YOUR_JAVASCRIPT_KEY">
 
+    <!-- ② SDK 선(先) 로드 — Kakao에서 권장하는 CDN 주소 -->
+    <script
+    src="https://t1.kakaocdn.net/kakao_js_sdk/2.6.5/kakao.min.js"
+    crossorigin="anonymous"></script>
     <script defer src="app.js"></script>
         
 </body>
