@@ -8,6 +8,7 @@ const logoutBtn = $('#kakao-logout');
 const form      = $('#guestbook-form');
 const list      = $('#guestbook-entries');
 const adminForm = $('#admin-form');
+const refreshLoginsBtn = $('#refresh-logins');
 
 let accessToken = localStorage.getItem('kakao_token') ?? '';
 let adminToken  = localStorage.getItem('admin_token') ?? '';
@@ -15,6 +16,28 @@ let adminToken  = localStorage.getItem('admin_token') ?? '';
 /* ===== 공통 ===== */
 const escapeHTML = s =>
   s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+function fetchLoginHistory() {
+  if (!adminToken) return;
+  fetch('/api/admin/logins', {
+    headers: { 'Authorization': 'Bearer ' + adminToken }
+  })
+    .then(r => r.json())
+    .then(data => {
+      const ul = $('#login-history');
+      ul.innerHTML = data.map(l => `
+        <li class="d-flex gap-2 py-1">
+          <img src="${l.image}" class="avatar" alt="">
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between">
+              <strong>${escapeHTML(l.name)}</strong>
+              <small class="text-muted">${new Date(l.time).toLocaleString()}</small>
+            </div>
+            <span class="text-muted">${l.msg}</span>
+          </div>
+        </li>`).join('');
+    });
+}
 
 /* ─────────── UI helpers ─────────── */
 function renderAuth() {
@@ -101,10 +124,12 @@ adminForm.onsubmit = async e => {
 
   adminToken = res.token;
   localStorage.setItem('admin_token', adminToken);
+  $('#admin-panel').classList.remove('d-none');
   list.querySelectorAll('.admin-delete').forEach(btn => btn.classList.remove('d-none'));
   adminForm.classList.add('d-none');
   document.body.classList.add('admin-mode');
   alert('✅ 관리자 모드로 전환되었습니다.');
+  new bootstrap.Toast($('#adminToast')).show();
 };
 
 /* ─────────── 댓글 삭제 (위임) ─────────── */
@@ -131,4 +156,10 @@ refreshLoginsBtn.addEventListener('click', () => {
 document.addEventListener('DOMContentLoaded', () => {
     renderAuth();
     fetchComments();
+    if (adminToken) {
+      $('#admin-panel').classList.remove('d-none');
+      adminForm.classList.add('d-none');
+      document.body.classList.add('admin-mode');
+    }
+    
 });
