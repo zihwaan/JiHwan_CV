@@ -30,13 +30,16 @@ async function verifyKakaoToken(token) {
     const { data } = await axios.get('https://kapi.kakao.com/v2/user/me', {
       headers: { Authorization: `Bearer ${token}` }
     });
+
+    let img = data.properties?.profile_image
+              || data.kakao_account?.profile?.profile_image_url
+              || '';
+    img = img.replace(/^http:\/\//, 'https://');
     return {
       name  : data.properties?.nickname
               || data.kakao_account?.profile?.nickname
               || '익명',
-      image : data.properties?.profile_image
-              || data.kakao_account?.profile?.profile_image_url
-              || '/assets/img/default_avatar.png'   // 기본 이미지
+      image : img || '/assets/default_avatar.png'
       };
   } catch (_) {
     return null; // 토큰 오류 → 401 반환용

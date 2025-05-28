@@ -21,7 +21,9 @@ function fetchComments() {
     .then(data => {
         list.innerHTML = data.map(c => `
             <li data-id="${c.id}" class="d-flex gap-2 py-2 border-bottom">
-              <img src="${c.image}" alt="" class="avatar mt-1">
+              <img src="${c.image}"
+                    onerror="this.src='/assets/img/default_avatar.png'"
+                    alt="avatar" class="avatar mt-1">
               <div class="flex-grow-1">
                  <b>${escapeHTML(c.name)}</b>
               <small class="text-muted">${new Date(c.time).toLocaleString()}</small><br>
