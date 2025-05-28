@@ -6,72 +6,42 @@ const logoutBtn = document.getElementById('kakao-logout');
 const form      = document.getElementById('guestbook-form');
 const list      = document.getElementById('guestbook-entries');
 const adminForm = document.getElementById('admin-form');
-const adminPanel = document.getElementById('admin-panel');
-const loginHistory = document.getElementById('login-history');
-const refreshLoginsBtn = document.getElementById('refresh-logins');
-
-let accessToken = '';
-let adminToken  = '';
+let   accessToken = localStorage.getItem('kakao_token');
+let   adminToken  = localStorage.getItem('admin_token');
 
 // ─────────────────── Helpers ───────────────────
 function renderAuth() {
-  if (accessToken) { 
-    loginBtn.classList.add('d-none'); 
-    logoutBtn.classList.remove('d-none'); 
-  } else { 
-    loginBtn.classList.remove('d-none'); 
-    logoutBtn.classList.add('d-none'); 
-  }
+  if (accessToken) { loginBtn.classList.add('d-none'); logoutBtn.classList.remove('d-none'); }
+  else             { loginBtn.classList.remove('d-none'); logoutBtn.classList.add('d-none'); }
 }
 
 function fetchComments() {
   fetch('/api/comments')
     .then(r => r.json())
     .then(data => {
-        list.innerHTML = data.map(c => `<li data-id="${c.id}" class="border-bottom pb-3 mb-3"><div class="d-flex gap-3"><img src="${c.image}" onerror="this.src='/assets/default_avatar.png'" alt="avatar" class="avatar flex-shrink-0"><div class="flex-grow-1"><div class="d-flex justify-content-between align-items-start mb-2"><div><strong class="d-block">${escapeHTML(c.name)}</strong><small class="text-muted">${new Date(c.time).toLocaleString()}</small></div><button class="btn btn-sm btn-outline-danger d-none admin-delete ms-2" title="댓글 삭제"><i class="fas fa-trash-alt"></i></button></div><pre class="comment-text mb-0">${escapeHTML(c.text)}</pre></div></div></li>`).join('');
+        list.innerHTML = data.map(c => `
+            <li data-id="${c.id}" class="d-flex gap-2 py-2 border-bottom">
+              <img src="${c.image}"
+                    onerror="this.src='/assets/default_avatar.png'"
+                    alt="avatar" class="avatar flex-shrink-0">
+                  <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between">
+                      <strong>${escapeHTML(c.name)}</strong>
+                      <small class="text-muted">
+                        ${new Date(c.time).toLocaleString()}
+                      </small>
+                    </div>
+                    <pre class="comment-text mb-0">${escapeHTML(c.text)}</pre>
+              <button class="btn btn-sm btn-link text-danger d-none admin-delete">삭제</button>
+            </div>
+            </li>`).join('');
       if (adminToken) document.querySelectorAll('.admin-delete').forEach(b => b.classList.remove('d-none'));
     });
 }
-
-function fetchLoginHistory() {
-  if (!adminToken) return;
-  
-  fetch('/api/admin/logins', {
-    headers: { 'Authorization': 'Bearer ' + adminToken }
-  })
-    .then(r => r.json())
-    .then(data => {
-      loginHistory.innerHTML = data.map(login => `<li class="border-bottom pb-3 mb-3"><div class="d-flex gap-3"><img src="${login.image}" onerror="this.src='/assets/default_avatar.png'" alt="avatar" class="avatar flex-shrink-0"><div class="flex-grow-1"><div class="d-flex justify-content-between align-items-start mb-2"><div><strong class="d-block">${escapeHTML(login.name)}</strong><small class="text-muted">${new Date(login.time).toLocaleString()}</small></div><span class="badge bg-success">로그인</span></div><p class="text-muted mb-0">${escapeHTML(login.msg)}</p></div></div></li>`).join('');
-    })
-    .catch(err => console.error('로그인 이력 조회 실패:', err));
-}
-
 function escapeHTML(str){
     return str.replace(/[&<>"']/g,m=>(
       { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
-}
-
-// 로그인 이력 기록 함수
-function recordLogin() {
-  if (!accessToken) return;
-  
-  fetch('/api/logins', {
-    method: 'POST',
-    headers: { 
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + accessToken 
-    }
-  })
-    .then(r => r.json())
-    .then(() => {
-      console.log('로그인 이력이 기록되었습니다.');
-      // 관리자 모드가 활성화되어 있다면 이력 새로고침
-      if (adminToken) {
-        fetchLoginHistory();
-      }
-    })
-    .catch(err => console.error('로그인 이력 기록 실패:', err));
-}
+  }
   
 // ─────────────────── Auth / UI ─────────────────
 renderAuth();
@@ -82,10 +52,8 @@ loginBtn.addEventListener('click', () => {
     scope: 'profile_nickname, profile_image',
     success: res => {
       accessToken = res.access_token;
+      localStorage.setItem('kakao_token', accessToken);
       renderAuth();
-      
-      // 로그인 성공 후 이력 기록
-      recordLogin();
     },
     fail: err => alert('로그인 실패')
   });
@@ -93,7 +61,8 @@ loginBtn.addEventListener('click', () => {
 
 logoutBtn.addEventListener('click', () => {
   Kakao.Auth.logout(() => {
-    accessToken = '';
+    localStorage.removeItem('kakao_token');
+    accessToken = null;
     renderAuth();
   });
 });
@@ -130,29 +99,29 @@ adminForm.addEventListener('submit', async (e) => {
     const data  = await res.json();
   
     if (!data.token) {
-      alert('❌ 비밀번호 불일치');
+      alert('❌ 비밀번호 불일치');      // 로그인 실패
       return;
     }
   
     /* ───────── 로그인 성공 ───────── */
     adminToken = data.token;
+    localStorage.setItem('admin_token', adminToken);
   
     // ① 삭제 버튼 즉시 노출
     document.querySelectorAll('.admin-delete')
             .forEach(btn => btn.classList.remove('d-none'));
   
-    // ② 관리자 패널 표시
-    adminPanel.classList.remove('d-none');
+    // ② 관리자 입력창 접기(선택)
     adminForm.classList.add('d-none');
   
-    // ③ 로그인 이력 불러오기
-    fetchLoginHistory();
+    // ③ body에 플래그 클래스 추가(스타일·기능 분기용)
+    document.body.classList.add('admin-mode');
   
     // ④ 알림
     alert('✅ 관리자 모드로 전환되었습니다.');
-});
+  });
+  
 
-// 댓글 삭제
 list.addEventListener('click', e => {
   if (!e.target.matches('.admin-delete')) return;
   const id = e.target.closest('li').dataset.id;
@@ -160,9 +129,4 @@ list.addEventListener('click', e => {
     method: 'DELETE',
     headers: { 'Authorization': 'Bearer ' + adminToken }
   }).then(() => fetchComments());
-});
-
-// 로그인 이력 새로고침
-refreshLoginsBtn.addEventListener('click', () => {
-  fetchLoginHistory();
 });
