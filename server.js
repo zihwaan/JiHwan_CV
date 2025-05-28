@@ -1,5 +1,6 @@
 // server.js
 import dotenv from 'dotenv';
+import fs from 'fs';
 import express from 'express';
 import axios from 'axios';
 import cors from 'cors';
