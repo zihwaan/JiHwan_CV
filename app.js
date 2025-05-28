@@ -19,16 +19,21 @@ function fetchComments() {
   fetch('/api/comments')
     .then(r => r.json())
     .then(data => {
-      list.innerHTML = data.map(c => `
-        <li data-id="${c.id}">
-          <b>${c.name}</b> <small class="text-muted">${new Date(c.time).toLocaleString()}</small><br>
-          ${c.text}
-          <button class="btn btn-sm btn-link text-danger d-none admin-delete">삭제</button>
-        </li>`).join('');
+        list.innerHTML = data.map(c => `
+            <li data-id="${c.id}">
+              <b>${escapeHTML(c.name)}</b>
+              <small class="text-muted">${new Date(c.time).toLocaleString()}</small><br>
+              <span class="comment-text">${escapeHTML(c.text)}</span>
+              <button class="btn btn-sm btn-link text-danger d-none admin-delete">삭제</button>
+            </li>`).join('');
       if (adminToken) document.querySelectorAll('.admin-delete').forEach(b => b.classList.remove('d-none'));
     });
 }
-
+function escapeHTML(str){
+    return str.replace(/[&<>"']/g,m=>(
+      { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+  }
+  
 // ─────────────────── Auth / UI ─────────────────
 renderAuth();
 fetchComments();
