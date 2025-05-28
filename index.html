@@ -16,14 +16,16 @@
 
     <style>
         .avatar{
-            width: 36px; height: 36px;
+            width: 36px; 
+            height: 36px;
             border-radius: 50%;
             object-fit: cover;
         }
         .comment-text{
-            white-space:pre-wrap;
+            white-space: pre-wrap;
             font-family: inherit;
             line-height: 1.4;
+            word-break: break-word;
         }
         .admin-delete {
             min-width: 36px;
@@ -33,26 +35,60 @@
             align-items: center;
             justify-content: center;
         }
-
         .admin-delete:hover {
             background-color: #dc3545;
             color: white;
             border-color: #dc3545;
         }
-        :root{--bg:#fff;--fg:#111;--accent:#000;}   
-        html,body{font-family:"Pretendard",sans-serif;background:var(--bg);color:var(--fg);scroll-behavior:auto;}
-        .masthead{padding:8rem 0 5rem;background:#000;color:#fff;text-align:center;}
-        .masthead-avatar{width:200px;border-radius:50%;box-shadow:0 0 25px rgba(0,0,0,.35);}        
-        .feature-card{border:1px solid var(--fg);border-radius:1rem;padding:2rem;height:100%;transition:all .3s ease;cursor:pointer;background:#fff;text-decoration:none!important;color:inherit;}
-        .feature-card:hover{transform:translateY(-6px);box-shadow:0 8px 20px rgba(0,0,0,.12);}        
-        .feature-icon{font-size:2.5rem;margin-bottom:1rem;color:var(--accent);}        
+        :root{
+            --bg: #fff;
+            --fg: #111;
+            --accent: #000;
+        }   
+        html, body{
+            font-family: "Pretendard", sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            scroll-behavior: auto;
+        }
+        .masthead{
+            padding: 8rem 0 5rem;
+            background: #000;
+            color: #fff;
+            text-align: center;
+        }
+        .masthead-avatar{
+            width: 200px;
+            border-radius: 50%;
+            box-shadow: 0 0 25px rgba(0,0,0,.35);
+        }        
+        .feature-card{
+            border: 1px solid var(--fg);
+            border-radius: 1rem;
+            padding: 2rem;
+            height: 100%;
+            transition: all .3s ease;
+            cursor: pointer;
+            background: #fff;
+            text-decoration: none !important;
+            color: inherit;
+        }
+        .feature-card:hover{
+            transform: translateY(-6px);
+            box-shadow: 0 8px 20px rgba(0,0,0,.12);
+        }        
+        .feature-icon{
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }        
         #guestbook-entries li{
-            border-bottom:1px solid #ddd;
-            padding:1rem 0;
+            border-bottom: 1px solid #ddd;
+            padding: 1rem 0;
         }
         #login-history li{
-            border-bottom:1px solid #ddd;
-            padding:.75rem 0;
+            border-bottom: 1px solid #ddd;
+            padding: .75rem 0;
         }
         .admin-panel {
             background: #f8f9fa;
@@ -62,9 +98,10 @@
             margin-top: 2rem;
         }
     </style>
+    
     <script>
         window.KAKAO_JS_KEY = '9fd1b882e2cee4f435584bb9c3e3761c';
-      </script>
+    </script>
     <meta name="kakao-key" content="9fd1b882e2cee4f435584bb9c3e3761c">
     <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
 </head>
@@ -76,7 +113,7 @@
                 alt="프로필 사진"
                 style="width:15rem;border-radius:0.9rem;margin-bottom:3rem;">
             <h1 class="display-5 fw-semibold mb-3">변지환</h1>
-            <p class="lead mb-0">Semiconductor & Computer Engineering <br> MLOps for semiconductor AI systems and DRL-based financial trading solutions </p>
+            <p class="lead mb-0">Semiconductor & Computer Engineering <br> MLOps for semiconductor AI systems and DRL-based financial trading solutions</p>
         </div>
     </header>
 
@@ -117,302 +154,91 @@
         </div>
     </section>
 
-    <!-- ─────────── 방명록 ─────────── -->
+    <!-- 방명록 -->
     <section class="py-5" id="guestbook">
         <div class="container">
-        <h2 class="text-center mb-4">방명록 🗒️</h2>
-        <div class="text-center mb-3">
-            <button id="kakao-login" class="btn btn-warning">카카오 로그인</button>
-            <button id="kakao-logout" class="btn btn-outline-dark d-none">로그아웃</button>
-        </div>
+            <h2 class="text-center mb-4">방명록 🗒️</h2>
+            <div class="text-center mb-3">
+                <button id="kakao-login" class="btn btn-warning">카카오 로그인</button>
+                <button id="kakao-logout" class="btn btn-outline-dark d-none">로그아웃</button>
+            </div>
 
-        <!-- 댓글 작성 -->
-        <form id="guestbook-form" class="mb-4">
-            <textarea id="guestbook-content" class="form-control mb-2" rows="3" placeholder="내용을 입력하세요…" required></textarea>
-            <button class="btn btn-dark w-100" type="submit">등록</button>
-        </form>
+            <!-- 댓글 작성 -->
+            <form id="guestbook-form" class="mb-4">
+                <textarea id="guestbook-content" class="form-control mb-2" rows="3" placeholder="내용을 입력하세요…" required></textarea>
+                <button class="btn btn-dark w-100" type="submit">등록</button>
+            </form>
 
-        <!-- 댓글 목록 -->
-        <ul id="guestbook-entries" class="list-unstyled"></ul>
+            <!-- 댓글 목록 -->
+            <ul id="guestbook-entries" class="list-unstyled"></ul>
         </div>
     </section>
 
     <!-- 관리자 모드 진입 -->
     <section class="py-5 bg-light" id="admin">
         <div class="container">
-        <form id="admin-form" class="row g-2 justify-content-center">
-            <div class="col-auto">
-            <input type="password" id="admin-pass" class="form-control" placeholder="관리자 비밀번호">
-            </div>
-            <div class="col-auto">
-            <button class="btn btn-outline-dark" type="submit">관리자 모드</button>
-            </div>
-        </form>
-
-        <!-- 관리자 패널 (로그인 후에만 표시) -->
-        <div id="admin-panel" class="admin-panel d-none">
-            <h4 class="mb-3"><i class="fas fa-user-shield"></i> 관리자 패널</h4>
-            
-            <!-- 탭 메뉴 -->
-            <ul class="nav nav-tabs mb-3" id="admin-tabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments-panel" type="button">댓글 관리</button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="logins-tab" data-bs-toggle="tab" data-bs-target="#logins-panel" type="button">로그인 이력</button>
-                </li>
-            </ul>
-
-            <!-- 탭 내용 -->
-            <div class="tab-content" id="admin-tab-content">
-                <!-- 댓글 관리 탭 -->
-                <div class="tab-pane fade show active" id="comments-panel">
-                    <p class="text-muted">댓글 목록에서 삭제 버튼이 활성화됩니다.</p>
+            <form id="admin-form" class="row g-2 justify-content-center">
+                <div class="col-auto">
+                    <input type="password" id="admin-pass" class="form-control" placeholder="관리자 비밀번호">
                 </div>
+                <div class="col-auto">
+                    <button class="btn btn-outline-dark" type="submit">관리자 모드</button>
+                </div>
+            </form>
 
-                <!-- 로그인 이력 탭 -->
-                <div class="tab-pane fade" id="logins-panel">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">카카오 로그인 이력</h5>
-                        <button id="refresh-logins" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-sync-alt"></i> 새로고침
-                        </button>
+            <!-- 관리자 패널 (로그인 후에만 표시) -->
+            <div id="admin-panel" class="admin-panel d-none">
+                <h4 class="mb-3"><i class="fas fa-user-shield"></i> 관리자 패널</h4>
+                
+                <!-- 탭 메뉴 -->
+                <ul class="nav nav-tabs mb-3" id="admin-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments-panel" type="button">댓글 관리</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="logins-tab" data-bs-toggle="tab" data-bs-target="#logins-panel" type="button">로그인 이력</button>
+                    </li>
+                </ul>
+
+                <!-- 탭 내용 -->
+                <div class="tab-content" id="admin-tab-content">
+                    <!-- 댓글 관리 탭 -->
+                    <div class="tab-pane fade show active" id="comments-panel">
+                        <p class="text-muted">댓글 목록에서 삭제 버튼이 활성화됩니다.</p>
                     </div>
-                    <ul id="login-history" class="list-unstyled"></ul>
+
+                    <!-- 로그인 이력 탭 -->
+                    <div class="tab-pane fade" id="logins-panel">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">카카오 로그인 이력</h5>
+                            <button id="refresh-logins" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-sync-alt"></i> 새로고침
+                            </button>
+                        </div>
+                        <ul id="login-history" class="list-unstyled"></ul>
+                    </div>
                 </div>
             </div>
-        </div>
         </div>
     </section>
     
-    <script>
-        // Kakao SDK 초기화
-        Kakao.init(window.KAKAO_JS_KEY || document.querySelector('meta[name="kakao-key"]').content);
-
-        const loginBtn  = document.getElementById('kakao-login');
-        const logoutBtn = document.getElementById('kakao-logout');
-        const form      = document.getElementById('guestbook-form');
-        const list      = document.getElementById('guestbook-entries');
-        const adminForm = document.getElementById('admin-form');
-        const adminPanel = document.getElementById('admin-panel');
-        const loginHistory = document.getElementById('login-history');
-        const refreshLoginsBtn = document.getElementById('refresh-logins');
-        
-        let accessToken = '';
-        let adminToken  = '';
-
-        // ─────────────────── Helpers ───────────────────
-        function renderAuth() {
-          if (accessToken) { 
-            loginBtn.classList.add('d-none'); 
-            logoutBtn.classList.remove('d-none'); 
-          } else { 
-            loginBtn.classList.remove('d-none'); 
-            logoutBtn.classList.add('d-none'); 
-          }
-        }
-
-        function fetchComments() {
-          fetch('/api/comments')
-            .then(r => r.json())
-            .then(data => {
-                list.innerHTML = data.map(c => `
-                    <li data-id="${c.id}" class="border-bottom pb-3 mb-3">
-                      <div class="d-flex gap-3">
-                        <img src="${c.image}"
-                              onerror="this.src='/assets/default_avatar.png'"
-                              alt="avatar" class="avatar flex-shrink-0">
-                        <div class="flex-grow-1">
-                          <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div>
-                              <strong class="d-block">${escapeHTML(c.name)}</strong>
-                              <small class="text-muted">
-                                ${new Date(c.time).toLocaleString()}
-                              </small>
-                            </div>
-                            <button class="btn btn-sm btn-outline-danger d-none admin-delete ms-2" 
-                                    title="댓글 삭제">
-                              <i class="fas fa-trash-alt"></i>
-                            </button>
-                          </div>
-                          <p class="comment-text mb-0">
-                            ${escapeHTML(c.text.trim()).replace(/\n/g, '<br>')}
-                        </p>
-                        </div>
-                      </div>
-                    </li>`).join('');
-              if (adminToken) document.querySelectorAll('.admin-delete').forEach(b => b.classList.remove('d-none'));
-            });
-        }
-
-        function fetchLoginHistory() {
-          if (!adminToken) return;
-          
-          fetch('/api/admin/logins', {
-            headers: { 'Authorization': 'Bearer ' + adminToken }
-          })
-            .then(r => r.json())
-            .then(data => {
-              loginHistory.innerHTML = data.map(login => `
-                <li class="border-bottom pb-3 mb-3">
-                  <div class="d-flex gap-3">
-                    <img src="${login.image}"
-                          onerror="this.src='/assets/default_avatar.png'"
-                          alt="avatar" class="avatar flex-shrink-0">
-                    <div class="flex-grow-1">
-                      <div class="d-flex justify-content-between align-items-start mb-2">
-                        <div>
-                          <strong class="d-block">${escapeHTML(login.name)}</strong>
-                          <small class="text-muted">
-                            ${new Date(login.time).toLocaleString()}
-                          </small>
-                        </div>
-                        <span class="badge bg-success">로그인</span>
-                      </div>
-                      <p class="text-muted mb-0">${escapeHTML(login.msg)}</p>
-                    </div>
-                  </div>
-                </li>`).join('');
-            })
-            .catch(err => console.error('로그인 이력 조회 실패:', err));
-        }
-
-        function escapeHTML(str){
-            return str.replace(/[&<>"']/g,m=>(
-              { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
-        }
-        
-        // 로그인 이력 기록 함수
-        function recordLogin() {
-          if (!accessToken) return;
-          
-          fetch('/api/logins', {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + accessToken 
-            }
-          })
-            .then(r => r.json())
-            .then(() => {
-              console.log('로그인 이력이 기록되었습니다.');
-              // 관리자 모드가 활성화되어 있다면 이력 새로고침
-              if (adminToken) {
-                fetchLoginHistory();
-              }
-            })
-            .catch(err => console.error('로그인 이력 기록 실패:', err));
-        }
-          
-        // ─────────────────── Auth / UI ─────────────────
-        renderAuth();
-        fetchComments();
-
-        loginBtn.addEventListener('click', () => {
-          Kakao.Auth.login({
-            scope: 'profile_nickname, profile_image',
-            success: res => {
-              accessToken = res.access_token;
-              renderAuth();
-              
-              // 로그인 성공 후 이력 기록
-              recordLogin();
-            },
-            fail: err => alert('로그인 실패')
-          });
-        });
-
-        logoutBtn.addEventListener('click', () => {
-          Kakao.Auth.logout(() => {
-            accessToken = '';
-            renderAuth();
-          });
-        });
-
-        // ─────────────────── 댓글 등록 ──────────────────
-        form.addEventListener('submit', e => {
-          e.preventDefault();
-          if (!accessToken) return alert('로그인이 필요합니다');
-          const text = document.getElementById('guestbook-content').value.trim();
-          if (!text) return;
-
-          fetch('/api/comments', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken },
-            body: JSON.stringify({ text })
-          })
-            .then(res => res.ok ? res.json() : Promise.reject())
-            .then(() => { form.reset(); fetchComments(); })
-            .catch(() => alert('등록 실패'));
-        });
-
-        // ─────────────────── 관리자 모드 ────────────────
-        adminForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-          
-            const pass = document.getElementById('admin-pass').value.trim();
-            if (!pass) return alert('비밀번호를 입력하세요');
-          
-            const res   = await fetch('/api/admin/login', {
-              method : 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body   : JSON.stringify({ password: pass })
-            });
-            const data  = await res.json();
-          
-            if (!data.token) {
-              alert('❌ 비밀번호 불일치');
-              return;
-            }
-          
-            /* ───────── 로그인 성공 ───────── */
-            adminToken = data.token;
-          
-            // ① 삭제 버튼 즉시 노출
-            document.querySelectorAll('.admin-delete')
-                    .forEach(btn => btn.classList.remove('d-none'));
-          
-            // ② 관리자 패널 표시
-            adminPanel.classList.remove('d-none');
-            adminForm.classList.add('d-none');
-          
-            // ③ 로그인 이력 불러오기
-            fetchLoginHistory();
-          
-            // ④ 알림
-            alert('✅ 관리자 모드로 전환되었습니다.');
-        });
-
-        // 댓글 삭제
-        list.addEventListener('click', e => {
-          if (!e.target.matches('.admin-delete')) return;
-          const id = e.target.closest('li').dataset.id;
-          fetch('/api/comments/' + id, {    
-            method: 'DELETE',
-            headers: { 'Authorization': 'Bearer ' + adminToken }
-          }).then(() => fetchComments());
-        });
-
-        // 로그인 이력 새로고침
-        refreshLoginsBtn.addEventListener('click', () => {
-          fetchLoginHistory();
-        });
-    </script>
-
-    <!-- Success Toast (adminToast) -->
+    <!-- Success Toast -->
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index:1100">
         <div id="adminToast"
             class="toast align-items-center text-white bg-success border-0"
             role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="d-flex">
-            <div class="toast-body">
-            ✅ 관리자 모드로 전환되었습니다.
+            <div class="d-flex">
+                <div class="toast-body">
+                    ✅ 관리자 모드로 전환되었습니다.
+                </div>
+                <button type="button"
+                        class="btn-close btn-close-white me-2 m-auto"
+                        data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
-            <button type="button"
-                    class="btn-close btn-close-white me-2 m-auto"
-                    data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
         </div>
     </div>
+
+    <!-- JavaScript 파일 로드 -->
+    <script src="app.js"></script>
 </body>
 </html>
