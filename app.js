@@ -31,7 +31,9 @@ function fetchComments() {
                         ${new Date(c.time).toLocaleString()}
                       </small>
                     </div>
-                    <pre class="comment-text mb-0">${escapeHTML(c.text)}</pre>
+                    <p class="comment-text mb-0">
+                      ${escapeHTML(c.text.trim()).replace(/\n/g, '<br>')}
+                    </p>
               <button class="btn btn-sm btn-link text-danger d-none admin-delete">삭제</button>
             </div>
             </li>`).join('');
