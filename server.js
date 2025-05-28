@@ -84,6 +84,6 @@ app.delete('/api/comments/:id', async (req, res) => {
 // SPA Fallback (새로고침 대응)
 app.get('*', (_, res) => res.sendFile(path.join(path.resolve(), 'index.html')));
 
-const PORT = process.env.PORT || 3000;
-const HOST_MSG = DOMAIN || `http://localhost:${PORT}`;
+const PORT = process.env.PORT || 8080;
+const HOST_MSG = DOMAIN;
 app.listen(PORT, () => console.log(`🚀 Server ready @ ${HOST_MSG}`));
