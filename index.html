@@ -12,6 +12,7 @@
     <script src="https://use.fontawesome.com/releases/v6.1.0/js/all.js" crossorigin="anonymous"></script>
     <link href="https://webfontworld.github.io/pretendard/Pretendard.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <style>
         :root{--bg:#fff;--fg:#111;--accent:#000;}   
@@ -110,6 +111,20 @@
     </section>
     
     <script defer src="app.js"></script>
-        
+    <!-- Success Toast (adminToast) -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index:1100">
+        <div id="adminToast"
+            class="toast align-items-center text-white bg-success border-0"
+            role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+            ✅ 관리자 모드로 전환되었습니다.
+            </div>
+            <button type="button"
+                    class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        </div>
+    </div>
 </body>
 </html>

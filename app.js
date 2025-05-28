@@ -71,26 +71,48 @@ form.addEventListener('submit', e => {
 });
 
 // ─────────────────── 관리자 모드 ────────────────
-adminForm.addEventListener('submit', e => {
-  e.preventDefault();
-  fetch('/api/admin/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password: document.getElementById('admin-pass').value })
-  })
-    .then(r => r.json())
-    .then(({ token }) => {
-      if (!token) return alert('비밀번호 불일치');
-      adminToken = token;
-      localStorage.setItem('admin_token', token);
-      document.querySelectorAll('.admin-delete').forEach(b => b.classList.remove('d-none'));
+adminForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+  
+    const pass = document.getElementById('admin-pass').value.trim();
+    if (!pass) return alert('비밀번호를 입력하세요');
+  
+    const res   = await fetch('/api/admin/login', {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body   : JSON.stringify({ password: pass })
     });
-});
+    const data  = await res.json();
+  
+    if (!data.token) {
+      alert('❌ 비밀번호 불일치');      // 로그인 실패
+      return;
+    }
+  
+    /* ───────── 로그인 성공 ───────── */
+    adminToken = data.token;
+    localStorage.setItem('admin_token', adminToken);
+  
+    // ① 삭제 버튼 즉시 노출
+    document.querySelectorAll('.admin-delete')
+            .forEach(btn => btn.classList.remove('d-none'));
+  
+    // ② 관리자 입력창 접기(선택)
+    adminForm.classList.add('d-none');
+  
+    // ③ body에 플래그 클래스 추가(스타일·기능 분기용)
+    document.body.classList.add('admin-mode');
+  
+    // ④ 알림
+    //alert('✅ 관리자 모드로 전환되었습니다.');
+    showToast(); 
+  });
+  
 
 list.addEventListener('click', e => {
   if (!e.target.matches('.admin-delete')) return;
   const id = e.target.closest('li').dataset.id;
-  fetch('/api/comments/' + id, {
+  fetch('/api/comments/' + id, {    
     method: 'DELETE',
     headers: { 'Authorization': 'Bearer ' + adminToken }
   }).then(() => fetchComments());
