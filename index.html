@@ -1,726 +1,113 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
-    <!-- 문서 기본 설정 -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <meta name="description" content="" />
-    <meta name="author" content="" />
-    <title>변지환 - 포트폴리오</title>
+    <title>변지환 · Portfolio Hub</title>
 
-    <!-- Favicon 설정 -->
+    <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="assets/img/증사.ico" />
 
-    <!-- 외부 라이브러리 및 스타일시트 -->
+    <!-- Icon & Font -->
     <script src="https://use.fontawesome.com/releases/v6.1.0/js/all.js" crossorigin="anonymous"></script>
-    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css" />
-    <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css" />
     <link href="https://webfontworld.github.io/pretendard/Pretendard.css" rel="stylesheet">
-    <link href="css/styles.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+    <style>
+        :root{--bg:#fff;--fg:#111;--accent:#000;}
+        html,body{font-family:"Pretendard",sans-serif;background:var(--bg);color:var(--fg);scroll-behavior:auto;}
+        .masthead{padding:8rem 0 5rem;background:#000;color:#fff;text-align:center;}
+        .masthead-avatar{width:200px;border-radius:50%;box-shadow:0 0 25px rgba(0,0,0,.35);}        
+        .feature-card{border:1px solid var(--fg);border-radius:1rem;padding:2rem;height:100%;transition:all .3s ease;cursor:pointer;background:#fff;text-decoration:none!important;color:inherit;}
+        .feature-card:hover{transform:translateY(-6px);box-shadow:0 8px 20px rgba(0,0,0,.12);}        
+        .feature-icon{font-size:2.5rem;margin-bottom:1rem;color:var(--accent);}        
+        #guestbook-entries li{border-bottom:1px solid #ddd;padding:.75rem 0;}
+    </style>
 </head>
-<body id="page-top">
-    <!-- 내비게이션 바 -->
-    <nav class="navbar navbar-expand-lg bg-secondary text-uppercase fixed-top" id="mainNav">
+<body>
+    <!-- Intro / Hero -->
+    <header class="masthead">
         <div class="container">
-            <!-- 로고 및 홈 링크 -->
-            <a class="navbar-brand" href="#page-top">Portfolio</a>
-
-            <!-- 모바일 토글 버튼 -->
-            <button class="collapse navbar-toggler text-uppercase font-weight-bold xoxo-primary text-white rounded" 
-                    type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" 
-                    aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-                메뉴 <i class="fas fa-bars"></i>
-            </button>
-
-            <!-- 내비게이션 메뉴 -->
-            <div class="collapse navbar-collapse" id="navbarResponsive">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item mx-0 mx-lg-1">
-                        <a class="nav-link py-3 px-0 px-lg-3 rounded" style="font-family: Pretendard;" href="#intro">소개</a>
-                    </li>
-                    <li class="nav-item mx-0 mx-lg-1">
-                        <a class="nav-link py-3 px-0 px-lg-3 rounded" style="font-family: Pretendard;" href="#prize">수상</a>
-                    </li>
-                    <li class="nav-item mx-0 mx-lg-1">
-                        <a class="nav-link py-3 px-0 px-lg-3 rounded" style="font-family: Pretendard;" href="#project">프로젝트</a>
-                    </li>
-                    <li class="nav-item mx-0 mx-lg-1">
-                        <a class="nav-link py-3 px-0 px-lg-3 rounded" style="font-family: Pretendard;" href="#internship">인턴</a>
-                    </li>
-                    <li class="nav-item mx-0 mx-lg-1">
-                        <a class="nav-link py-3 px-0 px-lg-3 rounded" style="font-family: Pretendard;" href="#activity">활동</a>
-                    </li>
-                    <li class="nav-item mx-0 mx-lg-1">
-                        <a class="nav-link py-3 px-0 px-lg-3 rounded" style="font-family: Pretendard;" href="#janghak">장학금</a>
-                    </li>
-                    <li class="nav-item mx-0 mx-lg-1">
-                        <a class="nav-link py-3 px-0 px-lg-3 rounded" style="font-family: Pretendard;" href="#contact">컨택</a>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- 구글 번역 숨김 요소 -->
-            <div id="google_translate_element" style="display:none;"></div>
-
-            <!-- 번역 링크 UI -->
-            <div class="translation-links">
-                <a href="javascript:void(0)" class="navbar-brand2" data-lang="en">English</a>
-            </div>
-        </div>
-    </nav>
-
-
-    <!-- 구글 번역 스크립트 -->
-    <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-    <script type="text/javascript">
-        // 구글 번역 초기화 함수
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({ pageLanguage: 'ko', autoDisplay: true }, 'google_translate_element');
-        }
-    </script>
-    <script type="text/javascript">
-        // 번역 링크 클릭 이벤트 처리
-        document.querySelector('.translation-links').addEventListener('click', function(event) {
-            let el = event.target;
-            if (el != null) {
-                while (el.nodeName === 'FONT') { el = el.parentElement; } // data-lang 속성 찾기
-                const toLang = el.dataset.lang; // 선택된 언어 코드
-                const gtCombo = document.querySelector('.goog-te-combo');
-                if (gtCombo == null) {
-                    alert("Error: Could not find Google translate Combolist.");
-                    return false;
-                }
-                gtCombo.value = toLang; // 언어 적용
-                gtCombo.dispatchEvent(new Event('change')); // 변경 이벤트 발생
-            }
-            return false;
-        });
-    </script>
-
-    <!-- 메인 헤더 섹션 -->
-    <header class="masthead bg-primary text-white text-center">
-        <div class="container align-items-center flex-column">
-            <!-- 프로필 이미지 -->
-            <img class="masthead-avatar mb-5" src="./assets/img/CD.jpg" alt="프로필 사진" />
-            <!-- 이름 -->
-            <p style="font-family: Pretendard; font-size: 50px; font-weight: 500;">변지환</p>
-            <!-- 소개 문구 -->
-            <p class="masthead-subheading font-weight-light mb-0" style="margin-top: 20px; font-family: Pretendard;">
-                💻 반도체공학, 컴퓨터공학 - 인공지능 및 시스템
-            </p>
+            <img src="./assets/img/CD.jpg"
+                alt="프로필 사진"
+                style="width:15rem;border-radius:0.9rem;margin-bottom:3rem;">
+            <h1 class="display-5 fw-semibold mb-3">변지환</h1>
+            <p class="lead mb-0">Semiconductor & Computer Engineering · AI / Systems · Automated Trading</p>
         </div>
     </header>
 
-    <!-- 소개 섹션 -->
-    <section class="page-section bg-light text-black mb-0" id="intro">
+    <!-- Feature Selector -->
+    <section class="py-5" id="hub">
         <div class="container">
-            <!-- 섹션 제목 -->
-            <h2 class="page-section-heading text-center text-uppercase text-black">소개 📄</h2>
-            <!-- 구분선 -->
-            <div class="divider-custom divider-black">
-                <div class="divider-custom-line"></div>
-            </div>
-            <!-- 소개 내용 -->
-            <div style="display: flex; align-items: center; justify-content: center; max-width: 1000px; position: relative;">
-                <div class="Tcontainer mb-0">
-                    <p style="font-size: 20px; font-family: Pretendard;">
-                        저는 성균관대학교<img src="./assets/img/Emblem_02.png" style="width: 26px; margin-left: 3px; margin-right: 3px; margin-bottom: 5px;" alt="성균관대 엠블럼"/>에서 반도체공학과 컴퓨터공학을 전공하고 있습니다. <br><br>
-                        주 관심 분야는 다음과 같습니다.<br>
-                        <b>
-                            <p style="font-size: 15px;">
-                                - High performance Linux kernel stacks: network, remote I/O, storage, and CPU scheduling<br>
-                                - Intelligent system software: system framework/component design with ML<br>
-                                - Building and optimizing AI models (specially Time series based)<br>
-                                - AI-based (especially DRL) automated trading system<br>
-                            </p>
-                        </b>
-                        <br>
-                        본 페이지에서 수상, 프로젝트, 활동, 장학금 등에 대해 기록하고자 합니다.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-
-    <!-- 수상 섹션 -->
-    <section class="page-section bg-light text-black mb-0" id="prize">
-        <div class="container">
-            <!-- 섹션 제목 -->
-            <h2 class="page-section-heading text-center text-uppercase text-black">수상 🏆</h2>
-            <!-- 구분선 -->
-            <div class="divider-custom divider-black">
-                <div class="divider-custom-line"></div>
-            </div>
-
-            <!-- 수상 항목 1: 2022 국방 데이터 활용 경진대회 -->
-            <div style="display: flex; align-items: center; justify-content: center;">
-                <div class="Tcontainer mb-0">
-                    <b><p style="font-family: Pretendard; font-size: 26px;">2022 국방 데이터 활용 경진대회</p></b>
-                    <p style="font-family: Pretendard; font-size: 21px; margin-top: -20px;">
-                        <b>최우수상 - 국방부장관상</b><br>(상금 4,000,000원)
-                    </p>
-                    <img src="./assets/img/국방.jpg" style="width: 100%; max-width: 500px; margin-bottom: 20px;" alt="국방 경진대회 사진"/>
-                    <p style="font-family: Pretendard; font-size: 19px;">
-                        위 대회는 <b>카카오 엔터프라이즈</b>와 <b>국방부, 정보통신기획평가원, 한국IT서비스산업협회, 한국공개소프트웨어협회</b>의 주관으로 개최되었으며 1등상을 수상하여 <b>"국방부장관상, 상금 400만원, 카카오엔터프라이즈 인턴 기회, 시니어 개발자의 1대1 멘토링"</b>의 혜택을 받게 되었습니다.<br><br>
-                        <b>Tech stacks:</b> ReactNative, Firebase, eas-build, AI 등<br><br>
-                        <b>다수 언론 기사 및 국방 라디오 출연:</b><br>
-                        <a href="https://mobile.newsis.com/view.html?ar_id=NISX20220922_0002022393#_enliple" target="blank">NEWSIS</a><br>
-                        <a href="https://www.fnnews.com/news/202209221046186249" target="blank">파이낸셜뉴스(1)</a><br>
-                        <a href="https://www.fnnews.com/news/202209221512000160" target="blank">파이낸셜뉴스(2)</a><br>
-                        <a href="https://www.korea.kr/news/pressReleaseView.do?newsId=156527010" target="blank">대한민국 정책 브리핑</a><br>
-                        <a href="https://www.youtube.com/watch?v=IPDw4VPAZSA" target="blank">국방 NEWS</a><br>
-                        <a href="https://skb.skku.edu/swuniv/newsletter.do" target="blank">[2022년 10월 VOL.17] 성균관대학교 SW중심대학 포털 뉴스레터, 소중혜</a><br><br>
-                    </p>
-                    <details>
-                        <summary style="margin-bottom: 20px; color: gray;">더보기</summary>
-                        <div style="margin-left: 20px;">
-                            <b><p style="font-family: Pretendard; font-size: 24px;">개요:</p></b>
-                            <p style="font-family: Pretendard; font-size: 16.5px;">
-                                장병이나 군인 가족, 친구, 연인들을 위한 <b>국방/공공 데이터 기반</b>의 군부대 주변 (舊 군 위수지역) 내 놀거리/맛집 정보 제공을 기본 서비스로 한다. 이와 더불어 <b>인공지능 기반의 맞춤 추천 알고리즘, 제휴 가맹 시스템</b>의 2가지 핵심 부가기능을 제공한다.<br><br>
-                                - React Native/Expo를 이용한 Android/IOS 앱 동시 개발 - (Front-End)<br>
-                                - 구글 Firebase를 이용한 서버 구축 - (Back-End)<br>
-                                - 인공지능 기반 맞춤 코스 추천 알고리즘 적용 (공공 인공지능 API 활용)<br>
-                                - 각각의 플레이스의 ARS값(AI based Recommend Score)을 기준으로 정렬하여, 가장 점수가 높은 것을 추천하는 알고리즘을 적용<br>
-                            </p>
-                            <b><p style="font-family: Pretendard; font-size: 24px;">발표 자료:</p></b>
-                            <img style="width: 100%; max-width: 500px; margin-bottom: 20px;" src="./assets/img/장군이.jpeg" alt="발표 자료 1"/>
-                            <img style="width: 100%; max-width: 500px; margin-bottom: 20px;" src="./assets/img/장군이2.jpg" alt="발표 자료 2"/>
-                            <img style="width: 100%; max-width: 500px; margin-bottom: 20px;" src="./assets/img/장군이3.jpg" alt="발표 자료 3"/>
-                            <img style="width: 100%; max-width: 500px; margin-bottom: 20px;" src="./assets/img/장군이4.jpg" alt="발표 자료 4"/>
-                            <img style="width: 100%; max-width: 500px; margin-bottom: 20px;" src="./assets/img/장군이5.jpg" alt="발표 자료 5"/>
-                            <img style="width: 100%; max-width: 500px; margin-bottom: 20px;" src="./assets/img/장군이6.jpg" alt="발표 자료 6"/>
-                            <img style="width: 100%; max-width: 500px; margin-bottom: 20px;" src="./assets/img/장군이7.jpg" alt="발표 자료 7"/>
-                            <img style="width: 100%; max-width: 500px; margin-bottom: 20px;" src="./assets/img/장군이8.jpg" alt="발표 자료 8"/>
-                            <img style="width: 100%; max-width: 500px; margin-bottom: 20px;" src="./assets/img/장군이9.jpg" alt="발표 자료 9"/>
-                        </div>
-                    </details>
-                </div>
-            </div><br><br>
-
-            <!-- 수상 항목 2: 2023 Google Solution Challenge -->
-            <div style="display: flex; align-items: center; justify-content: center;">
-                <div class="Tcontainer mb-0">
-                    <b><p style="font-family: Pretendard; font-size: 26px;">2023 Google Solution Challenge에서 Global Top 100에 선정</p></b>
-                    <img src="./assets/gdsc.jpg" style="width: 100%; max-width: 500px; margin-bottom: 20px;" alt="구글 솔루션 챌린지 사진"/>
-                    <p style="font-family: Pretendard; font-size: 19px;">
-                        성균관대학교 구글 개발자 학생 동아리 (Google Developer Student Clubs)에서 솔루션 챌린지 대회 참여를 위해 형성된 팀인 <b>AcousticNote팀</b>이 올해 GDSC Solution Challenge (구글 솔루션 챌린지)에서 <b>Global Top 100 Finalists</b>에 선정되었습니다.<br><br>
-                        <hr>"AcousticNote (South Korea) - Geonhui Lee, Sanghyeon Kim, <b>Jihwan Byeon</b>, Seongwan Park"<hr><br>
-                        GDSC Solution Challenge는 구글이 주최하는 글로벌 대회로, 학생 개발자들이 실제 문제를 해결하는 혁신적인 솔루션을 개발하는 경진대회입니다. 이 대회는 전 세계의 수많은 학생들이 참여하며, 새로운 아이디어와 기술을 발전시키는 데에 큰 기회를 제공합니다.<br><br>
-                        <b>관련 사이트:</b><br>
-                        <a href="https://developers.google.com/community/gdsc-solution-challenge/winners?hl=en" target="blank">구글 공식 사이트</a><br>
-                        <a href="https://sw.skku.edu/sw/notice.do?mode=view&articleNo=157713" target="blank">성균관대학교 공지사항</a><br>
-                    </p>
-                </div>
-            </div><br><br>
-
-
-            <!-- 수상 항목 3: LG AI Research 자율주행 센서 경진대회 -->
-            <div style="display: flex; align-items: center; justify-content: center;">
-                <div class="Tcontainer mb-0">
-                    <b><p style="font-family: Pretendard; font-size: 26px;">LG AI Research 주관 자율주행 센서의 안테나 성능 예측 AI 경진대회</p></b>
-                    <img src="./assets/img/lgAImers.jpg" style="width: 100%; max-width: 500px; margin-bottom: 20px;" alt="LG AI 대회 사진"/>
-                    <p style="font-family: Pretendard; font-size: 19px;">
-                        위 대회에서 상위 20%의 우수한 성적을 내었고 LG AI Research의 Certification을 받았습니다.<br><br>
-                        <b>Task:</b> 자율주행 센서의 안테나 성능 예측을 위한 공정 내 센서의 정형 데이터 기반 다중 회귀<br><br>
-                        <b>Tech stacks:</b> XGBoost, LightGBM, randomForest 등의 의사결정나무 기반 모델을 앙상블, 파이토치를 이용한 딥러닝 기반 정형 데이터 회귀 모델 TabNet 구현 등<br>
-                        <details>
-                            <summary style="margin-bottom: 20px; color: gray;">Certificate</summary>
-                            <div style="margin-left: 20px;">
-                                <img src="./assets/img/LG.png" style="width: 100%; max-width: 300px;" alt="LG 인증서"/>
-                            </div>
-                        </details>
-                    </p>
-                </div>
-            </div><br><br>
-
-            <!-- 수상 항목 4: 2023 KAIST SPARCS StartUp Hackathon -->
-            <div style="display: flex; align-items: center; justify-content: center;">
-                <div class="Tcontainer mb-0">
-                    <b><p style="font-family: Pretendard; font-size: 26px;">2023 KAIST SPARCS StartUp Hackathon</p></b>
-                    <p style="font-family: Pretendard; font-size: 19px;"><b>"우리의 생각이 한계까지 함께하는 곳, SPARCS 2023 StartUp Hackathon" <br><b>SPARCS상</b> (상금 1,000,000원)</b></p>
-                    <img style="width: 100%; max-width: 700px; margin-bottom: 20px;" src="./assets/img/sparcs.png" alt="SPARCS 해커톤 사진"/>
-                    <p style="font-family: Pretendard; font-size: 19px;">
-                        2023 KAIST SPARCS StartUp Hackathon은 전국 각지의 기획자, 개발자, 디자이너가 만나 전문 개발자, 투자자의 피드백을 통해 실제 서비스까지 만들어 볼 수 있는, 해커톤과 멘토링 & 데모데이가 융합된 행사입니다.
-                    </p>
-                    <details>
-                        <summary style="margin-bottom: 20px; color: gray;">더보기</summary>
-                        <div style="margin-left: 20px;">
-                            <b><p style="font-family: Pretendard; font-size: 24px;">개요:</p></b>
-                            <p style="font-family: Pretendard; font-size: 16.5px;">
-                                KAIST SPARCS StartUp Hackathon (KAIST 주최, AWS, NAVER D2, 두나무앤파트너스, PRIMER, VoyagerX 등 후원)에 참여하여 온라인 회의에서 실시간 질의응답, 회의 요약, 기록이 가능한 개인화 AI 비서 개발하였습니다.
-                            </p>
-                            <b><p style="font-family: Pretendard; font-size: 24px;">상세 내용:</p></b>
-                            <p style="font-family: Pretendard; font-size: 16.5px;">
-                                - OpenAI text-embedding-ada-02 모델을 사용하여 명령어 embedding 후, 미리 설정된 명령어와의 vector similarity 계산을 통한 AI 비서와 사용자와의 원활한 상호작용을 가능하게 하였습니다.<br>
-                                - Google Speech-to-Text API를 사용하여 실시간 회의 음성을 텍스트로 전환하고 기록하였습니다.<br>
-                                - Bart-large-xsum 요약 모델을 사용하여 실시간 회의 내용 요약을 구현하였습니다.<br>
-                                - ChatGPT API (davinci-003 model)를 사용하여 회의록을 기반으로 AI 비서와 자유로운 질의 응답이 가능하도록 구현하였습니다.<br>
-                                - Google Calendar와의 연동을 통해 AI 비서가 자동으로 회의에서 정해진 스케줄을 관리할 수 있게 하였습니다.<br>
-                                - 전체적인 Pipeline 구상 및 API 통합을 진행하여 하나의 서비스로 제작하였습니다.<br>
-                            </p>
-                            <b><p style="font-family: Pretendard; font-size: 24px;">대회 운영진</p></b>
-                            <img style="width: 100%; max-width: 500px; margin-bottom: 20px;" src="./assets/img/운영진.png" alt="운영진 사진"/>
-                            <b><p style="font-family: Pretendard; font-size: 24px;">후원사</p></b>
-                            <img style="width: 100%; max-width: 500px; margin-bottom: 20px;" src="./assets/img/후원사.png" alt="후원사 로고"/>
-                            <b><p style="font-family: Pretendard; font-size: 24px;">프로젝트</p></b>
-                            <img style="width: 100%; max-width: 500px; margin-bottom: 20px;" src="./assets/img/chatty_cat.png" alt="프로젝트 이미지"/>
-                            <b><p style="font-family: Pretendard; font-size: 24px;">수상 증명</p></b>
-                            <img style="width: 100%; max-width: 500px;" src="./assets/img/BP_sparcs.png" alt="수상 증명서"/>
-                        </div>
-                    </details>
-                </div>
-            </div><br><br>
-
-            <!-- 수상 항목 5: 2024 WorldQuant Brain Research Korea Consultant Hackathon -->
-            <div style="display: flex; align-items: center; justify-content: center;">
-                <div class="Tcontainer mb-0">
-                    <b><p style="font-family: Pretendard; font-size: 26px;">2024 WorldQuant Brain Research Korea Consultant Hackathon</p></b>
-                    <p style="font-family: Pretendard; font-size: 19px;"><b>Alpha Research Automation Framework <br><b>2등상</b> (상금 1,500,000원)</b></p>
-                    <img style="width: 100%; max-width: 700px; margin-bottom: 20px;" src="./assets/WQppt.png" alt="WorldQuant 해커톤 사진"/>
-                    <p style="font-family: Pretendard; font-size: 19px;">
-                        1. Equally committed to each of 4 stages of the alpha development process<br>
-                        2. User-friendly, User-driven Framework<br>
-                        3. Use of Random Tree function, Similarity function<br>
-                        4. Application of various neutralizations in the signal Operation Stage<br>
-                        5. Ability to select Alphas to submit based on various criteria
-                    </p>
-                </div>
-            </div><br><br>
-
-            <!-- 수상 항목 6: 2024년 반도체 경진대회 -->
-            <div style="display: flex; align-items: center; justify-content: center;">
-                <div class="Tcontainer mb-0">
-                    <b><p style="font-family: Pretendard; font-size: 26px;">2024년 반도체 경진대회</p></b>
-                    <p style="font-family: Pretendard; font-size: 21px; margin-top: -20px;">
-                        한국반도체산업협회장상<br>
-                    </p>
-                    <p style="font-family: Pretendard; font-size: 15px; margin-top: -20px;">
-                        12월 26~27일 (부산 벡스코 컨벤션)
-                    </p>
-                    
-                    <p style="font-family: Pretendard; font-size: 19px;">
-                        <b>"랜덤화 기법 및 해석 가능한 인공지능을 활용한 QLC 낸드플래시 데이터 신뢰성 개선"<br></b>
-                    </p>
-                    <img style="width: 100%; max-width: 700px; margin-bottom: 20px;" src="./assets/semi.jpg" alt="반도체 경진대회 사진"/>
-                    <p style="font-family: Pretendard; font-size: 19px;">
-                        <b>지도교수 :</b> 성균관대학교 반도체시스템공학과 홍석인 교수님<br><br><hr>
-                        QLC는 셀 하나에 4비트를 저장할 수 있어 저장 용량이 증가했지만, 전압 마진이 좁아져 간섭과 열화 같은 문제가 심각합니다. 이러한 간섭과 열화 문제로 인해 데이터 오류가 발생합니다. 이를 해결하기 위해 총 3가지 Task를 설정했습니다.<br>
-                        첫 번째로, Task 1, 즉 랜덤화 기법입니다. 저희는 LFSR 기반 랜덤화 기법을 적용함으로써 데이터 패턴 의존성을 완화시켰습니다.<br>
-                        두 번째로, Task 2는 열화현상 모델링입니다. 여기서는 RTN, CCI, 리텐션과 같은 물리적 노이즈 요인을 종합적으로 모델링하여 복합적인 열화 현상을 파악하는 데 중점을 두었습니다.<br>
-                        마지막으로, Task 3, 해석 가능한 AI입니다. 기계학습 모델을 활용하여 오류 발생을 예측하고, SHAP과 LIME 같은 기법을 통해 오류가 왜 발생했는지를 설명할 수 있도록 했습니다.<br>
-                        결론적으로, 이 연구는 단순히 오류를 줄이는 것을 넘어, 오류 메커니즘을 해석하여 실무 반도체 엔지니어들에게 가이드라인을 제시하는 데 주된 의의가 있습니다.<br><br>
-                        성균관대학교 "믿음을주세요"팀의 팀장 변지환이었습니다.<hr>
-                    </p>
-                    <br>
-                    <a href="./assets/semippt.pdf" download="semippt.pdf" 
-                       style="text-decoration: none; padding: 10px; background-color: #4CAF50; color: white;">
-                        발표 PDF 다운로드
+            <h2 class="text-center fw-bold mb-5">둘러보기기</h2>
+            <div class="row g-4 row-cols-1 row-cols-md-2 row-cols-lg-3">
+                <div class="col">
+                    <a href="portfolio.html" class="feature-card d-block text-center h-100">
+                        <div class="feature-icon"><i class="fas fa-briefcase"></i></div>
+                        <h5 class="fw-bold mb-1">포트폴리오</h5>
+                        <p class="small mb-0">수상 & 프로젝트</p>
                     </a>
-                    <br><br>
-                    <a href="./assets/반도체대본.pdf" download="반도체대본.pdf" 
-                       style="text-decoration: none; padding: 10px; background-color: #4CAF50; color: white;">
-                        발표 대본 다운로드
+                </div>
+                <div class="col">
+                    <a href="learned.html" class="feature-card d-block text-center h-100">
+                        <div class="feature-icon"><i class="fas fa-book"></i></div>
+                        <h5 class="fw-bold mb-1">배운 것 정리</h5>
+                        <p class="small mb-0">Learning Notes</p>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="thoughts.html" class="feature-card d-block text-center h-100">
+                        <div class="feature-icon"><i class="fas fa-feather-alt"></i></div>
+                        <h5 class="fw-bold mb-1">지환의 생각</h5>
+                        <p class="small mb-0">Blog & Diary</p>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="bot.html" class="feature-card d-block text-center h-100">
+                        <div class="feature-icon"><i class="fas fa-robot"></i></div>
+                        <h5 class="fw-bold mb-1">자동매매봇 실시간 수익</h5>
+                        <p class="small mb-0">Live P&L</p>
                     </a>
                 </div>
             </div>
         </div>
     </section>
 
-
-    <!-- 프로젝트 섹션 -->
-    <section class="page-section bg-light text-black mb-0" id="project">
+    <!-- ─────────── 방명록 ─────────── -->
+    <section class="py-5" id="guestbook">
         <div class="container">
-            <!-- 섹션 제목 -->
-            <h2 class="page-section-heading text-center text-uppercase text-black">프로젝트 ⛳️</h2>
-            <!-- 구분선 -->
-            <div class="divider-custom divider-black">
-                <div class="divider-custom-line"></div>
-            </div>
+        <h2 class="text-center mb-4">방명록 🗒️</h2>
+        <div class="text-center mb-3">
+            <button id="kakao-login" class="btn btn-warning">카카오 로그인</button>
+            <button id="kakao-logout" class="btn btn-outline-dark d-none">로그아웃</button>
+        </div>
 
-            <!-- 프로젝트 항목 1: 서울시 지역구별 따릉이 대여량 예측 -->
-            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 50px;">
-                <div class="Tcontainer mb-0">
-                    <b><p style="font-family: Pretendard; font-size: 26px;">서울시 지역구별 따릉이 대여량 예측 모델 개발🚲</p></b>
-                    <img src="./assets/따릉이.png" style="width: 100%; max-width: 500px; margin-bottom: 20px;" alt="따릉이 예측 프로젝트 이미지"/>
-                    <p style="font-family: Pretendard; font-size: 19px;">
-                        다음 해의 서울시 지역구별 따릉이 수요를 정확히 예측할 수 있다면 대여소의 확장, 공유 자전거 신규 도입 등에 더 효율적으로 예산을 활용할 수 있을 것입니다.<br><br>
-                        <b>Task:</b> 2022년의 서울시 지역구별 일별 따릉이 대여량 회귀 예측<br>
-                        <b>Rank:</b> 217개의 팀 중 32등 <b>(상위 15%)</b>
-                    </p>
-                    <details>
-                        <summary style="margin-bottom: 20px; color: gray;">더보기</summary>
-                        <div style="margin-left: 20px;">
-                            <b><p style="font-family: Pretendard; font-size: 24px;">모델 설계 구조:</p></b>
-                            <p style="font-family: Pretendard; font-size: 16.5px;">
-                                <b>기본적인 예측 구조:</b> 일시 -> 따릉이 대여량<br>
-                                <b>우리가 원하는 구조:</b> 일시, 미세먼지, 불쾌지수, 온도 ... -> 따릉이 대여량<br>
-                                <b>1단계:</b><br>
-                                2018~2021년도의 외부 변수로 학습<br>
-                                - 일시 -> 다른 구의 따릉이 대여량<br>
-                                - 일시 -> 미세먼지 불쾌지수<br>
-                                - 일시 -> 온도<br>
-                                위 모델을 통해 2022년도의 외부 변수 예측<br>
-                                <b>2단계:</b><br>
-                                "일시, 미세먼지, 불쾌지수, 온도 ... -> 따릉이 대여량 모델 일시 + 1단계에서 추론한 외부 변수(2022년도)"를 통해 최종 2022년도 타겟 변수 예측<br>
-                            </p>
-                        </div>
-                    </details>
-                    <p style="font-family: Pretendard; font-size: 19px;">
-                        <i style="margin-right: 5px;" class="fab fa-fw fa-blogger-b"></i>
-                        <a href="https://dacon.io/competitions/official/236029/overview/description" target="blank">Page</a>
-                    </p>
-                </div>
-            </div>
+        <!-- 댓글 작성 -->
+        <form id="guestbook-form" class="mb-4">
+            <textarea id="guestbook-content" class="form-control mb-2" rows="3" placeholder="내용을 입력하세요…" required></textarea>
+            <button class="btn btn-dark w-100" type="submit">등록</button>
+        </form>
 
-            <!-- 프로젝트 항목 2: 제4회 AI Bookathon 대회 -->
-            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 50px;">
-                <div class="Tcontainer mb-0">
-                    <b><p style="font-family: Pretendard; font-size: 26px;">제4회 AI Bookathon 대회📚</p></b>
-                    <img src="./assets/니체.png" style="width: 75%; max-width: 380px; margin-bottom: 20px;" alt="북커톤 이미지"/>
-                    <p style="font-family: Pretendard; font-size: 19px;">
-                        북커톤(Bookathon)은 Book과 Hackathon의 합성어로 인공지능(Artificial Intelligence)과 함께 글을 짓는 경진대회입니다.
-                    </p>
-                    <details>
-                        <summary style="margin-bottom: 20px; color: gray;">더보기</summary>
-                        <div style="margin-left: 20px;">
-                            <p style="font-family: Pretendard; font-size: 19px;">
-                                <img src="./assets/logo.png" style="width: 100%; max-width: 500px; margin-bottom: 10px;" alt="북커톤 로고"/>
-                            </p>
-                            <p style="font-family: Pretendard; font-size: 16.5px;">
-                                북커톤에 참가한 &#39;Hey, Shakesby(헤이, 셰익스비)&#39; 팀입니다. 저희가 쓴 이야기는 아래에 그림과 함께 잘 요약되어 있습니다. 그림은 openAI에서 제공하는 <a href="https://openai.com/dall-e-2/">DALLE2</a>를 활용하여 제작하였습니다.
-                            </p>
-                            <h2 id="story-">Story 🌈</h2>
-                            <p style="font-family: Pretendard; font-size: 19px;">
-                                <img src="./assets/story_abstraction.png" style="width: 100%; max-width: 700px; margin-bottom: 10px;" alt="스토리 요약 이미지"/>
-                            </p>
-                            <details>
-                                <summary style="margin-bottom: 20px; color: gray;">자세한 이야기</summary>
-                                <div markdown="1">
-                                    <br>
-                                    <h5>제목: 동행</h5>
-                                    <br>
-                                    <b><p style="font-family: Pretendard; font-size: 16.5px;">ㄱ. 인생을 여행으로 받아들인 여행가</p></b>
-                                    <img src="assets/traveler.png" style="width: 100%; max-width: 700px; margin-bottom: 35px;" alt="여행가 이미지"/>
-                                    <br>
-                                    <b><p style="font-family: Pretendard; font-size: 16.5px;">ㄴ. 감동을 위해 끝없이 고민하는 예술가</p></b>
-                                    <img src="assets/artist.png" style="width: 100%; max-width: 700px; margin-bottom: 35px;" alt="예술가 이미지"/>
-                                    <br>
-                                    <b><p style="font-family: Pretendard; font-size: 16.5px;">ㄷ. 사회의 성장을 희망하는 교육자</p></b>
-                                    <img src="assets/educator.png" style="width: 100%; max-width: 700px; margin-bottom: 35px;" alt="교육자 이미지"/>
-                                    <br>
-                                    <b><p style="font-family: Pretendard; font-size: 16.5px;">ㄹ. 미움받는 걸 두려워하지 않는 낭만주의자</p></b>
-                                    <img src="assets/lover.png" style="width: 100%; max-width: 700px; margin-bottom: 35px;" alt="낭만주의자 이미지"/>
-                                    <br>
-                                    <b><p style="font-family: Pretendard; font-size: 16.5px;">ㅁ. 자신의 운명을 사랑하고 그 풍파 속에서 나아가는 철학가</p></b>
-                                    <img src="assets/philosopher.png" style="width: 100%; max-width: 700px; margin-bottom: 35px;" alt="철학가 이미지"/>
-                                    <br>
-                                    <b><p style="font-family: Pretendard; font-size: 16.5px;">결말: 자신만의 담대함을 깨달은 소년</p></b>
-                                    <img src="assets/ending.png" style="width: 100%; max-width: 700px; margin-bottom: 35px;" alt="결말 이미지"/>
-                                </div>
-                            </details>
-                            <p style="font-family: Pretendard; font-size: 16.5px;">
-                                글의 원문은 <a href="https://github.com/goonbamm/4th_bookathon/blob/main/book/final_output/%EB%8F%99%ED%96%89.pdf" target="blank">여기</a>에서 확인할 수 있습니다.
-                            </p>
-                        </div>
-                    </details>
-                    <p style="font-family: Pretendard; font-size: 19px;">
-                        <i style="margin-right: 5px;" class="fab fa-github"></i><a href="https://github.com/goonbamm/4th_bookathon" target="blank">Github</a><br>
-                        <i style="margin-right: 5px;" class="fab fa-fw fa-blogger-b"></i><a href="https://accessible-bear-91f.notion.site/4-AI-Bookathon-82ac6ae16fe1467bb02e242c79999d89" target="blank">더보기</a>
-                    </p>
-                </div>
-            </div>
-
-            <!-- 프로젝트 항목 3: 2023 Google Solution Challenge -->
-            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 30px;">
-                <div class="Tcontainer mb-0">
-                    <b><p style="font-family: Pretendard; font-size: 26px;">2023 Google Solution Challenge</p></b>
-                    <img src="./assets/gdsc.jpg" style="width: 100%; max-width: 500px; margin-bottom: 20px;" alt="구글 솔루션 챌린지 이미지"/>
-                    <p style="font-family: Pretendard; font-size: 19px;">
-                        <b>AcousticNote</b> in Google Developer Student Clubs (GDSC) SKKU<img src="./assets/img/Emblem_02.png" style="width: 26px; margin-left: 3px; margin-right: 3px; margin-bottom: 5px;" alt="성균관대 엠블럼"/>
-                    </p>
-                    <h5>배경 및 목적</h5>
-                    <p style="font-family: Pretendard; font-size: 19px;">
-                        청각장애를 지닌 분들은 대학교에서 수업을 듣고 학습하는 데에 어려움을 겪고 있어 일반적인 학습 환경에서 다양한 형태의 불평등을 마주하고 있습니다. 이로 인해 성균관대학교를 비롯한 많은 우리나라 대학에서는 장애학생의 실질적 학습권을 보장할 수 있도록 장애대학생의 교육활동에 필요한 각종 편의를 제공할 수 있도록 인력 위주로 확대하고 있는 추세입니다.<br><br>
-                        이러한 흐름 속에서 저희 팀은 청각장애인 분들의 학습권을 보장하기 위한 취지로 청각장애인이 대학에서 수업을 듣고 학습을 하는 데에 필요한 각종 편의 기능들을 제공하는 앱을 개발하였습니다.<br><br>
-                        저희 프로젝트는 “고품질 교육”, “불평등 감소”를 비롯한 <b>UN의 17가지 지속가능한 개발 목표를 주제로 개최되는 Google Solution Challenge</b>에 제출되었으며, 이후 Google사와의 직접적인 협력을 통해 보다 발전해 나가는 것을 목표로 하고 있습니다.
-                    </p>
-                    <details>
-                        <summary style="margin-bottom: 20px; color: gray;">더보기</summary>
-                        <div style="margin-left: 20px;">
-                            <h5>문제 정의 및 기능</h5>
-                            <p style="font-family: Pretendard; font-size: 19px;">
-                                다양한 자료를 조사한 결과 저희는 청각장애인 분들이 학습 과정에서 겪을 수 있는 문제를 3가지로 정의하였습니다. 각 문제에 대한 저희가 생각한 앱의 핵심 기능은 다음과 같습니다.<br>
-                                <b>1. 교수님의 말씀을 잘 듣지 못한다.</b><br>
-                                청각장애인 분들은 장애의 정도에 따라 수업 도중에 교수님의 말씀을 대부분 혹은 일부분을 듣지 못하는 상황에 놓여있습니다. 이에 따라 저희는 교수님의 말씀을 녹음하고, 이를 실시간으로 텍스트로 변환해 주는 기능을 핵심 기능 중 하나로서 제공하고자 합니다.<br>
-                                <b>2. 교수님을 대상으로 질문 및 소통하는 것이 쉽지 않다.</b><br>
-                                청각장애인 분들은 자신의 목소리조차 들리지 않는 경우가 있기 때문에, 자신이 잘 말하고 있는지와 적당한 크기로 말하고 있는지 알지 못할 수 있습니다. 따라서 저희는 “질문 버튼”을 추가하여 자신이 말하고 있는 문장을 텍스트로 표시하고, 데시벨 측정 기능을 통해 적당한 목소리 크기로 말할 수 있도록 지원하는 기능을 부가적으로 추가하고자 합니다.<br>
-                                <b>3. 앞선 이유로 인해 추후 학습에도 어려움이 있다.</b><br>
-                                저희는 청각장애인 분들이 수업 중에 겪는 어려움으로 인해 추후 개인적으로 진행하는 학습에도 어려움이 있을 수 있겠다고 생각했습니다. 우선 녹음한 파일과 변환된 글자를 과목별, 주차별로 정리하여 기록을 편리하게 찾아볼 수 있도록 앱을 디자인할 생각입니다.<br>
-                            </p>
-                            <!-- 추가적인 상세 내용은 생략하고 간략히 요약 -->
-                            <b>기능 요약:</b><br>
-                            - 강의 녹음 및 실시간 텍스트 변환<br>
-                            - 소리 증폭 및 높낮이 조정<br>
-                            - 질문 버튼<br>
-                            - 과목별, 주차별 노트 정리<br>
-                            - 인공지능 기반 기능 (강의 요약, 중요 부분 하이라이트, 과제 인식, 퀴즈 생성)<br>
-                        </div>
-                    </details>
-                    <p style="font-family: Pretendard; font-size: 19px;">
-                        <i style="margin-right: 5px;" class="fab fa-youtube"></i><a href="https://www.youtube.com/watch?v=D3ju_QtCx2I" target="blank">Youtube</a><br>
-                        <i style="margin-right: 5px;" class="fab fa-github"></i><a href="https://github.com/dotgeon-hello/sc2023" target="blank">Github</a>
-                    </p>
-                </div>
-            </div><br><br>
-
-            <!-- 프로젝트 항목 4: 인공지능 기반 트레이딩 시스템 -->
-            <div style="display: flex; align-items: center; justify-content: center;">
-                <div class="Tcontainer mb-0">
-                    <b><p style="font-family: Pretendard; font-size: 26px;">인공지능 기반 트레이딩 시스템💵</p></b>
-                    <img src="./assets/cais.jpg" style="width: 75%; max-width: 400px; margin-bottom: 20px;" alt="트레이딩 시스템 이미지"/>
-                    <p style="font-family: Pretendard; font-size: 19px;">
-                        자동화 트레이딩을 통해 자산을 극대화하는 인공지능(심층강화학습, Time Series Forecasting, DT 등) 기반 시스템을 구축하는 것을 목표로 하는 프로젝트입니다.
-                    </p>
-                    <p style="font-family: Pretendard; font-size: 19px;">
-                        <i style="margin-right: 5px;" class="fab fa-fw fa-blogger-b"></i>
-                        <a href="https://accessible-bear-91f.notion.site/fcdba716c57c4829835bb2f2961007e4" target="blank">Notion</a>
-                    </p>
-                </div>
-            </div>
+        <!-- 댓글 목록 -->
+        <ul id="guestbook-entries" class="list-unstyled"></ul>
         </div>
     </section>
 
-    <!-- 인턴 섹션 -->
-    <section class="page-section bg-light text-black mb-0" id="internship">
+    <!-- 관리자 모드 진입 -->
+    <section class="py-5 bg-light" id="admin">
         <div class="container">
-            <!-- 섹션 제목 -->
-            <h2 class="page-section-heading text-center text-uppercase text-black">인턴 🚀</h2>
-            <!-- 구분선 -->
-            <div class="divider-custom divider-black">
-                <div class="divider-custom-line"></div>
+        <form id="admin-form" class="row g-2 justify-content-center">
+            <div class="col-auto">
+            <input type="password" id="admin-pass" class="form-control" placeholder="관리자 비밀번호">
             </div>
-            <!-- 인턴 내용 -->
-            <div style="display: flex; align-items: center; justify-content: center;">
-                <div class="Tcontainer mb-0">
-                    <b><p style="font-family: Pretendard; font-size: 26px;">삼성전자DS AI센터 AI개발실</p></b>
-                    <img src="./assets/samsung.svg" style="width: 100%; max-width: 500px; margin-bottom: 20px;" alt="삼성전자 로고"/>
-                    <p style="font-family: Pretendard; font-size: 19px;">
-                        <b>회사:</b> 삼성전자DS AI센터 AI개발실 (舊 삼성종합기술원 SAIT AI센터) - 삼성전자 미래기술캠퍼스<br>
-                        <b>직무:</b> 머신러닝 알고리즘 개발 (MLOps)<br>
-                        <b>주요 업무:</b><br>
-                        - MLOps 시스템 개발 및 운영<br>
-                        - Machine Learning/Deep Learning 이해를 바탕으로 반도체에 최적화된 MLOps Platform 구축 및 개발<br>
-                        <b>지도 계획:</b><br>
-                        - 3월: MLOps 개발 환경 습득<br>
-                        - 3~4월: MLOps Pipeline 이해 및 습득<br>
-                        - 4월: Ray tuning/training 기반 슈퍼컴퓨터 환경에서의 모델 학습<br>
-                        - 5월: ML model 학습을 위한 data processing framework 개발<br>
-                        - 6월: Pipeline을 이용한 baseline 모델 학습<br>
-                        - 월별: 학습 내용 발표 세미나 진행<br>
-                        - 매주: 실습 내용 정리 및 개인 과제 현황 발표<br>
-                        <b>목표 성과물:</b> 검사/계측 시스템 적용 및 확산을 위한 MLOps 시스템 개발 및 운영<br>
-                        <b>기간:</b> 2025.03.04~2025.06.20 (16주)
-                    </p>
-                </div>
+            <div class="col-auto">
+            <button class="btn btn-outline-dark" type="submit">관리자 모드</button>
             </div>
+        </form>
         </div>
     </section>
 
-    <!-- 활동 섹션 -->
-    <section class="page-section bg-light text-black mb-0" id="activity">
-        <div class="container">
-            <!-- 섹션 제목 -->
-            <h2 class="page-section-heading text-center text-uppercase text-black">활동 🥊</h2>
-            <!-- 구분선 -->
-            <div class="divider-custom divider-black">
-                <div class="divider-custom-line"></div>
-            </div>
-            <!-- 활동 내용 -->
-            <div style="display: flex; align-items: center; justify-content: center;">
-                <div class="Tcontainer mb-0">
-                    <b><p style="font-family: Pretendard; font-size: 24px;">WorldQuant Brain Research Consultant</p></b>
-                    <p style="font-family: Pretendard; font-size: 19px; margin-bottom: 34px; margin-top: -14px;">2024.02.25~</p>
-                    <b><p style="font-family: Pretendard; font-size: 24px;">실리콘벨리 혁신창업생태계 탐방 및 해외연수 프로그램</p></b>
-                    <p style="font-family: Pretendard; font-size: 19px; margin-bottom: 34px; margin-top: -14px;">
-                        Draper University, Stanford University, UC Berkeley, KOTRA, Plug and Play Tech Center, NVIDIA 등에서 강의 수강 및 연수, 네트워킹
-                    </p>
-                    <b><p style="font-family: Pretendard; font-size: 24px;">
-                        <img src="./assets/경찰복싱.png" style="width: 26px; margin-left: 3px; margin-right: 3px; margin-bottom: 5px;" alt="경찰복싱 아이콘"/>세계경찰무도연맹 경찰무도(복싱) 공인 1단
-                    </p></b>
-                    <p style="font-family: Pretendard; font-size: 19px; margin-bottom: 34px; margin-top: -14px;"><b>취득:</b> 2023.03.04</p>
-                    <b><p style="font-family: Pretendard; font-size: 24px;">성균 SW 멘토링 (매향여자정보고등학교)</p></b>
-                    <p style="font-family: Pretendard; font-size: 19px; margin-bottom: 34px; margin-top: -14px;">
-                        <b>기간:</b> 2021.06 ~ 2021.12<br>
-                        <b>내용:</b> 파이썬 트랙 세미나 진행 (온오프 혼합)
-                    </p>
-                    <b><p style="font-family: Pretendard; font-size: 24px;">성균관대학교 소프트웨어학과 이음단</p></b>
-                    <p style="font-family: Pretendard; font-size: 19px; margin-bottom: 34px; margin-top: -14px;">
-                        <b>기간:</b> 2022.02<br>
-                        <b>내용:</b> 22학번 멘토
-                    </p>
-                    <b><p style="font-family: Pretendard; font-size: 24px;">성균관대학교 소프트웨어융합대학 학생회(제6대 학생회 SW:EAR)</p></b>
-                    <p style="font-family: Pretendard; font-size: 19px; margin-bottom: 34px; margin-top: -14px;">
-                        <b>기간:</b> 2022.03 ~ 2023.01<br>
-                        <b>내용:</b><br>
-                        - 소프트웨어융합대학 제 6 대 학생회 지원국 부원<br>
-                        - SKKURRR WAE EARAE 코드윗미 이벤트 기획 및 수행<br>
-                        - 소통창구(SNS, 에브리타임, 카카오 관리자 채널 등) 관리 및 대응
-                    </p>
-                    <b><p style="font-family: Pretendard; font-size: 24px;">성균관대학교 소프트웨어/반도체시스템공학과/지능형소프트웨어학과 23학번,25학번 Python 사전교육 조교</p></b>
-                    <p style="font-family: Pretendard; font-size: 19px; margin-bottom: 34px; margin-top: -14px;">
-                        <b>기간:</b> 2022.02.13 ~ 2022.02.23, 2025.02.13 ~ 2025.02.21<br>
-                        <b>내용:</b><br>
-                        - 성균관대학교 소프트웨어학과 23학번, 25학번 신입생들에게 Python 수업을 진행<br>
-                        - Pygame을 사용해 Python으로 게임을 만드는 실습 진행
-                    </p>
-                    <b><p style="font-family: Pretendard; font-size: 24px;">미래인재육성재단 장학생 자치기구 '가온회' 서경강 지역 대표</p></b>
-                    <p style="font-family: Pretendard; font-size: 19px; margin-bottom: 34px; margin-top: -14px;">
-                        <b>기간:</b> 2022.07 ~ 2023.07, 2024.07~2025.07<br>
-                        <b>내용:</b> 장학재단 내 프로그램 진행 및 친목도모
-                    </p>
-                    <b><p style="font-family: Pretendard; font-size: 24px;">양천구자원봉사센터 2023년 동장(300시간)</p></b>
-                    <p style="font-family: Pretendard; font-size: 19px; margin-bottom: 34px; margin-top: -14px;">
-                        <b>기간:</b> 2023.12.05.(화) 14:00~17:00<br>
-                        <b>내용:</b> 활동시간 335시간, 참여횟수 122회<br>
-                        행사 참여 및 인증서, 인증배지 수령
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 장학금 섹션 -->
-    <section class="page-section bg-light text-black mb-0" id="janghak">
-        <div class="container">
-            <!-- 섹션 제목 -->
-            <h2 class="page-section-heading text-center text-uppercase text-black">장학금 💰</h2>
-            <!-- 구분선 -->
-            <div class="divider-custom divider-black">
-                <div class="divider-custom-line"></div>
-            </div>
-            <!-- 장학금 내용 -->
-            <div style="display: flex; align-items: center; justify-content: center;">
-                <div class="Tcontainer mb-0">
-                    <b><p style="font-family: Pretendard; font-size: 24px;">미래인재육성재단 - 3년 장학생</p></b>
-                    <p style="font-family: Pretendard; font-size: 19px; margin-top: -14px; margin-bottom: 33px;">
-                        서류평가 및 심층면접을 통해 미래인재육성재단의 장학생으로 선발됨.<br>
-                        (졸업까지 학기당 학업장려금 300만원, 총 1800만원 수혜)
-                    </p>
-                </div>
-            </div>
-            <div style="display: flex; align-items: center; justify-content: center;">
-                <div class="Tcontainer mb-0">
-                    <b><p style="font-family: Pretendard; font-size: 24px;">2024년도 대통령과학장학생 선발</p></b>
-                    <p style="font-family: Pretendard; font-size: 19px; margin-top: -14px; margin-bottom: 33px;">
-                        우수한 이공계 대학생에게 대한민국 대통령 명의로 통해 지급되는 장학금
-                    </p>
-                </div>
-            </div>
-            <div style="display: flex; align-items: center; justify-content: center;">
-                <div class="Tcontainer mb-0">
-                    <b><p style="font-family: Pretendard; font-size: 24px;">성균관대학교 성적우수장학금 - 3학기 (2022-1)</p></b>
-                    <p style="font-family: Pretendard; font-size: 19px; margin-top: -14px; margin-bottom: 33px;">약 45만원</p>
-                </div>
-            </div>
-            <div style="display: flex; align-items: center; justify-content: center;">
-                <div class="Tcontainer mb-0">
-                    <b><p style="font-family: Pretendard; font-size: 24px;">성균관대학교 근로봉사장학금 - 행정실과의 데이터 분석 프로젝트 협업</p></b>
-                    <p style="font-family: Pretendard; font-size: 19px; margin-top: -14px; margin-bottom: 33px;">약 50만원</p>
-                </div>
-            </div>
-            <div style="display: flex; align-items: center; justify-content: center;">
-                <div class="Tcontainer mb-0">
-                    <b><p style="font-family: Pretendard; font-size: 24px;">성균관대학교 창의장학금 - 교내 우수 인재 선발</p></b>
-                    <p style="font-family: Pretendard; font-size: 19px; margin-top: -14px; margin-bottom: 33px;">약 450만원</p>
-                </div>
-            </div>
-            <div style="display: flex; align-items: center; justify-content: center;">
-                <div class="Tcontainer mb-0">
-                    <b><p style="font-family: Pretendard; font-size: 24px;">글로벌챌린지 장학금 [미국 캘리포니아(실리콘벨리) 해외연수 9박10일] - 성균관대학교 소프트웨어대학</p></b>
-                    <p style="font-family: Pretendard; font-size: 19px; margin-top: -14px; margin-bottom: 33px;">
-                        UC Berkeley, Stanford University, NVIDIA 등 방문<br>
-                        약 300만원
-                    </p>
-                </div>
-            </div>
-            <div style="display: flex; align-items: center; justify-content: center;">
-                <div class="Tcontainer mb-0">
-                    <b><p style="font-family: Pretendard; font-size: 24px;">2022 Lab to Market 실리콘벨리 혁신창업생태계 탐방 프로그램[5박 7일] - 성균관대학교 창업지원단</p></b>
-                    <p style="font-family: Pretendard; font-size: 19px; margin-top: -14px; margin-bottom: 33px;">
-                        Draper University, UC Berkeley, KOTRA, Plug and Play Tech Center 등에서 교육 받음.<br>
-                        약 500만원 - 항공비, 숙박비, 식비, 교통비, 교육프로그램 지원비 등
-                    </p>
-                </div>
-            </div>
-            <div class="Ncontainer mb-0">
-                <div class="number_wrapper">
-                    <div id="number">0원</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-
-
-    <!-- 연락처 섹션 -->
-    <section class="page-section" id="contact">
-        <div class="container">
-            <!-- 섹션 제목 -->
-            <h2 class="page-section-heading text-center text-uppercase text-secondary mb-0">Contact Me</h2>
-            <!-- 구분선 -->
-            <div class="divider-custom divider-black">
-                <div class="divider-custom-line"></div>
-            </div>
-            <!-- 연락처 내용 -->
-            <div style="display: flex; align-items: center; justify-content: center;">
-                <div class="Tcontainer mb-0">
-                    <b><p style="font-family: Pretendard; font-size: 25px;">
-                        이메일을 수시로 확인하고 있으니 아래 주소로 연락주시면 빠르게 답변드리겠습니다.
-                    </p></b>
-                    <p style="font-family: Pretendard; font-size: 19px;">
-                        devjanggun21@gmail.com<br><br>
-                        ※ 24시간 내 답변이 오지 않을 경우 다시 한번 메일을 보내거나 다른 방법으로 시도해주시기 바랍니다.
-                    </p>
-                </div>
-            </div>
-            <!-- 방문자 수 통계 -->
-            <div style="display: flex; align-items: center; justify-content: center; margin-top: 60px;">
-                <a href="https://hits.sh/quswlghks.github.io/JiHwan_CV/">
-                    <img alt="Hits" src="https://hits.sh/quswlghks.github.io/JiHwan_CV.svg?view=today-total&style=for-the-badge&label=%EC%98%A4%EB%8A%98%20%EB%B0%A9%EB%AC%B8%EC%9E%90%20%EC%88%98%20%2F%20%EC%B4%9D%20%EB%B0%A9%EB%AC%B8%EC%9E%90%20%EC%88%98&color=9f9f9f&labelColor=332626"/>
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- 푸터 -->
-    <footer class="footer text-center">
-        <div class="container">
-            <div class="row">
-                <!-- 소셜 미디어 아이콘 -->
-                <div style="display: flex; align-items: center; justify-content: center;">
-                    <a class="btn btn-outline-light btn-social mx-1" href="https://blog.naver.com/optimize21" target="_blank" rel="noopener noreferrer">
-                        <i class="fab fa-fw fa-blogger-b"></i>
-                    </a>
-                    <a class="btn btn-outline-light btn-social mx-1" href="https://www.instagram.com/zi_hwaan/" target="_blank" rel="noopener noreferrer">
-                        <i class="fab fa-fw fa-instagram"></i>
-                    </a>
-                    <a class="btn btn-outline-light btn-social mx-1" href="https://www.linkedin.com/in/jihwan-byeon-a8401a229" target="_blank" rel="noopener noreferrer">
-                        <i class="fab fa-fw fa-linkedin-in"></i>
-                    </a>
-                    <a class="btn btn-outline-light btn-social mx-1" href="https://github.com/Quswlghks/" target="_blank" rel="noopener noreferrer">
-                        <i class="fab fa-fw fa-github"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <!-- 외부 JS 라이브러리 -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.3/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.3/ScrollTrigger.min.js"></script>
-    <script src="./js/scripts.js"></script>
-    <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>
+    <script defer src="app.js"></script>
+        
 </body>
 </html>
