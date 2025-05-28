@@ -20,11 +20,14 @@ function fetchComments() {
     .then(r => r.json())
     .then(data => {
         list.innerHTML = data.map(c => `
-            <li data-id="${c.id}">
-              <b>${escapeHTML(c.name)}</b>
+            <li data-id="${c.id}" class="d-flex gap-2 py-2 border-bottom">
+              <img src="${c.image}" alt="" class="avatar mt-1">
+              <div class="flex-grow-1">
+                 <b>${escapeHTML(c.name)}</b>
               <small class="text-muted">${new Date(c.time).toLocaleString()}</small><br>
               <span class="comment-text">${escapeHTML(c.text)}</span>
               <button class="btn btn-sm btn-link text-danger d-none admin-delete">삭제</button>
+            </div>
             </li>`).join('');
       if (adminToken) document.querySelectorAll('.admin-delete').forEach(b => b.classList.remove('d-none'));
     });

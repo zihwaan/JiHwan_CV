@@ -30,7 +30,14 @@ async function verifyKakaoToken(token) {
     const { data } = await axios.get('https://kapi.kakao.com/v2/user/me', {
       headers: { Authorization: `Bearer ${token}` }
     });
-    return data.properties?.nickname || '익명';
+    return {
+      name  : data.properties?.nickname
+              || data.kakao_account?.profile?.nickname
+              || '익명',
+      image : data.properties?.profile_image
+              || data.kakao_account?.profile?.profile_image_url
+              || '/assets/img/default_avatar.png'   // 기본 이미지
+      };
   } catch (_) {
     return null; // 토큰 오류 → 401 반환용
   }
@@ -46,13 +53,19 @@ app.get('/api/comments', async (_, res) => {
 // 댓글 등록 (Kakao 토큰 필요)
 app.post('/api/comments', async (req, res) => {
   const token = (req.headers.authorization || '').split(' ')[1];
-  const name = await verifyKakaoToken(token);
-  if (!name) return res.status(401).json({ error: 'INVALID_TOKEN' });
+  const user = await verifyKakaoToken(token);
+  if (!user) return res.status(401).json({ error: 'INVALID_TOKEN' });
 
   const { text } = req.body;
   if (!text?.trim()) return res.status(400).json({ error: 'TEXT_REQUIRED' });
 
-  const comment = { id: nanoid(), name, text: text.trim(), time: Date.now() };
+  const comment = {
+    id   : nanoid(),
+    name : user.name,
+    image: user.image,
+    text : text.trim(),
+    time : Date.now()
+  };
   db.data.comments.push(comment);
   await db.write();
   res.json({ ok: true });
