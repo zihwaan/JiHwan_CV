@@ -86,4 +86,4 @@ app.get('*', (_, res) => res.sendFile(path.join(path.resolve(), 'index.html')));
 
 const PORT = process.env.PORT || 3000;
 const HOST_MSG = DOMAIN || `http://localhost:${PORT}`;
-app.listen(PORT, () => console.log(`🚀 Server ready @ ${HOST_MSG}`));(`🚀 Server @ http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server ready @ ${HOST_MSG}`));
