@@ -74,10 +74,18 @@ fetchComments();
 loginBtn.onclick = () => {
   Kakao.Auth.login({
     scope: 'profile_nickname,profile_image',
-    success: r => {
+    success: async r => {
       accessToken = r.access_token;
       localStorage.setItem('kakao_token', accessToken);
       renderAuth();
+      try {
+              await fetch('/api/logins', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + accessToken }
+              });
+            } catch(e) {
+              console.warn('⚠️ 로그인 이력 저장 실패', e);
+            }
     },
     fail: () => alert('로그인 실패')
   });
@@ -130,6 +138,7 @@ adminForm.onsubmit = async e => {
   document.body.classList.add('admin-mode');
   alert('✅ 관리자 모드로 전환되었습니다.');
   new bootstrap.Toast($('#adminToast')).show();
+  fetchLoginHistory();
 };
 
 /* ─────────── 댓글 삭제 (위임) ─────────── */
