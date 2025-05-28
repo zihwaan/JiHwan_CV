@@ -4,7 +4,9 @@ import express from 'express';
 import axios from 'axios';
 import cors from 'cors';
 import path from 'path';
-import { Low, JSONFile } from 'lowdb';
+import { Low } from 'lowdb';
+import { JSONFile } from 'lowdb/node';
+
 import { nanoid } from 'nanoid';
 import jwt from 'jsonwebtoken';
 
