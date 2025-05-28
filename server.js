@@ -17,7 +17,11 @@ const DOMAIN = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : ``;
 // DB 초기화 (JSON 파일 기반, 매우 경량)
 // lowdb v6+: 두 번째 인수로 "defaultData" 를 넘겨야 초기 파일이 없을 때 에러가 나지 않습니다.
 // ────────────────────────────────────────────────────────────────────
-const db = new Low(new JSONFile('db.json'), { comments: [], logins: [] });
+const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH || path.resolve('./data');
+await fs.promises.mkdir(DATA_DIR, { recursive: true });   // 폴더가 없으면 생성
+const dbFile = path.join(DATA_DIR, 'db.json');
+const db = new Low(new JSONFile(dbFile), { comments: [], logins: [] });
+
 await db.read();
 db.data ||= { comments: [], logins: [] };
 
