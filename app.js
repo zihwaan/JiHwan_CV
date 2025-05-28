@@ -22,12 +22,16 @@ function fetchComments() {
         list.innerHTML = data.map(c => `
             <li data-id="${c.id}" class="d-flex gap-2 py-2 border-bottom">
               <img src="${c.image}"
-                    onerror="this.src='/assets/img/default_avatar.png'"
-                    alt="avatar" class="avatar mt-1">
-              <div class="flex-grow-1">
-                 <b>${escapeHTML(c.name)}</b>
-              <small class="text-muted">${new Date(c.time).toLocaleString()}</small><br>
-              <span class="comment-text">${escapeHTML(c.text)}</span>
+                    onerror="this.src='/assets/default_avatar.png'"
+                    alt="avatar" class="avatar flex-shrink-0">
+                  <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between">
+                      <strong>${escapeHTML(c.name)}</strong>
+                      <small class="text-muted">
+                        ${new Date(c.time).toLocaleString()}
+                      </small>
+                    </div>
+                    <pre class="comment-text mb-0">${escapeHTML(c.text)}</pre>
               <button class="btn btn-sm btn-link text-danger d-none admin-delete">삭제</button>
             </div>
             </li>`).join('');
@@ -45,7 +49,7 @@ fetchComments();
 
 loginBtn.addEventListener('click', () => {
   Kakao.Auth.login({
-    scope: 'profile_nickname',
+    scope: 'profile_nickname, profile_image',
     success: res => {
       accessToken = res.access_token;
       localStorage.setItem('kakao_token', accessToken);
