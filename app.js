@@ -104,8 +104,7 @@ adminForm.addEventListener('submit', async (e) => {
     document.body.classList.add('admin-mode');
   
     // ④ 알림
-    //alert('✅ 관리자 모드로 전환되었습니다.');
-    showToast(); 
+    alert('✅ 관리자 모드로 전환되었습니다.');
   });
   
 
