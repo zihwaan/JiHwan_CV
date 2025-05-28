@@ -13,7 +13,7 @@ import jwt from 'jsonwebtoken';
 dotenv.config();
 
 // DB 초기화 (JSON 파일 기반, 매우 경량)
-const db = new Low(new JSONFile('db.json'));
+const db = new Low(new JSONFile('db.json'), { comments: [] });
 await db.read();
 db.data ||= { comments: [] };
 
