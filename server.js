@@ -6,21 +6,23 @@ import cors from 'cors';
 import path from 'path';
 import { Low } from 'lowdb';
 import { JSONFile } from 'lowdb/node';
-
 import { nanoid } from 'nanoid';
 import jwt from 'jsonwebtoken';
 
 dotenv.config();
 
+const DOMAIN = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : ``;
+
 // DB 초기화 (JSON 파일 기반, 매우 경량)
+// lowdb v6+: 두 번째 인수로 "defaultData" 를 넘겨야 초기 파일이 없을 때 에러가 나지 않습니다.
 const db = new Low(new JSONFile('db.json'), { comments: [] });
 await db.read();
 db.data ||= { comments: [] };
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: DOMAIN || true }));
 app.use(express.json());
-app.use(express.static(path.join(path.resolve(), 'public')));
+app.use(express.static(path.resolve()));
 
 // ──────────────────────── UTILS ────────────────────────
 async function verifyKakaoToken(token) {
@@ -80,7 +82,8 @@ app.delete('/api/comments/:id', async (req, res) => {
 });
 
 // SPA Fallback (새로고침 대응)
-app.get('*', (_, res) => res.sendFile(path.join(path.resolve(), 'public', 'index.html')));
+app.get('*', (_, res) => res.sendFile(path.join(path.resolve(), 'index.html')));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server @ http://localhost:${PORT}`));
+const HOST_MSG = DOMAIN || `http://localhost:${PORT}`;
+app.listen(PORT, () => console.log(`🚀 Server ready @ ${HOST_MSG}`));(`🚀 Server @ http://localhost:${PORT}`));
