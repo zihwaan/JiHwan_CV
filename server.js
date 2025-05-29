@@ -21,10 +21,10 @@ const DOMAIN = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : ``;
 const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH || path.resolve('./data');
 await fs.promises.mkdir(DATA_DIR, { recursive: true });   // 폴더가 없으면 생성
 const dbFile = path.join(DATA_DIR, 'db.json');
-const db = new Low(new JSONFile(dbFile), { comments: [], logins: [] });
+const db = new Low(new JSONFile(dbFile), { comments: [], logins: [], adminMemos: [] });
 
 await db.read();
-db.data ||= { comments: [], logins: [] };
+db.data ||= { comments: [], logins: [], adminMemos: [] };
 
 const app = express();
 app.use(cors({ origin: DOMAIN || true }));
@@ -137,6 +137,104 @@ app.delete('/api/comments/:id', async (req, res) => {
   await db.write();
   res.json({ ok: true });
 });
+
+// ────────────────── ADMIN MEMOS API ────────────────────
+const adminMemosRouter = express.Router();
+
+// Middleware to check for admin privileges for all memo routes
+adminMemosRouter.use((req, res, next) => {
+  const token = (req.headers.authorization || '').split(' ')[1];
+  if (!isAdmin(token)) {
+    return res.status(401).json({ error: 'NOT_ADMIN' });
+  }
+  next();
+});
+
+// GET /api/admin/memos - Fetch all memos
+adminMemosRouter.get('/', async (req, res) => {
+  await db.read();
+  const memos = db.data.adminMemos.sort((a, b) => b.time - a.time);
+  res.json(memos);
+});
+
+// POST /api/admin/memos - Create a new memo
+adminMemosRouter.post('/', async (req, res) => {
+  const { title, content, color } = req.body;
+
+  if (!title?.trim() || !content?.trim()) {
+    return res.status(400).json({ error: 'TITLE_AND_CONTENT_REQUIRED' });
+  }
+
+  const newMemo = {
+    id: nanoid(),
+    title: title.trim(),
+    content: content.trim(),
+    color: color || '#FFFFCC', // Default color if not provided
+    time: Date.now(),
+  };
+
+  db.data.adminMemos.push(newMemo);
+  await db.write();
+  res.json(newMemo);
+});
+
+// PUT /api/admin/memos/:id - Update an existing memo
+adminMemosRouter.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { title, content, color } = req.body;
+
+  if (title !== undefined && !title.trim()) {
+    return res.status(400).json({ error: 'TITLE_CANNOT_BE_EMPTY' });
+  }
+  if (content !== undefined && !content.trim()) {
+    return res.status(400).json({ error: 'CONTENT_CANNOT_BE_EMPTY' });
+  }
+
+  await db.read();
+  const memoIndex = db.data.adminMemos.findIndex((memo) => memo.id === id);
+
+  if (memoIndex === -1) {
+    return res.status(404).json({ error: 'MEMO_NOT_FOUND' });
+  }
+
+  const updatedMemo = {
+    ...db.data.adminMemos[memoIndex],
+    title: title?.trim() !== undefined ? title.trim() : db.data.adminMemos[memoIndex].title,
+    content: content?.trim() !== undefined ? content.trim() : db.data.adminMemos[memoIndex].content,
+    color: color !== undefined ? color : db.data.adminMemos[memoIndex].color,
+    time: Date.now(), // Update timestamp to reflect modification time
+  };
+  
+  // Ensure title and content are not empty after update if they were intended to be updated
+  if (title?.trim() === "" && db.data.adminMemos[memoIndex].title !== "") {
+      return res.status(400).json({ error: 'TITLE_CANNOT_BE_EMPTY_ON_UPDATE' });
+  }
+  if (content?.trim() === "" && db.data.adminMemos[memoIndex].content !== "") {
+      return res.status(400).json({ error: 'CONTENT_CANNOT_BE_EMPTY_ON_UPDATE' });
+  }
+
+
+  db.data.adminMemos[memoIndex] = updatedMemo;
+  await db.write();
+  res.json(updatedMemo);
+});
+
+// DELETE /api/admin/memos/:id - Delete a memo
+adminMemosRouter.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+  await db.read();
+  const initialLength = db.data.adminMemos.length;
+  db.data.adminMemos = db.data.adminMemos.filter((memo) => memo.id !== id);
+
+  if (db.data.adminMemos.length === initialLength) {
+    return res.status(404).json({ error: 'MEMO_NOT_FOUND' });
+  }
+
+  await db.write();
+  res.json({ ok: true });
+});
+
+app.use('/api/admin/memos', adminMemosRouter);
 
 // ─────────────────── SPA Fallback ──────────────────────
 app.get('*', (_, res) => res.sendFile(path.join(path.resolve(), 'index.html')));
