@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Memos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 20px;
+            padding-bottom: 20px;
+            background-color: #f8f9fa; /* Light background for the page */
+        }
+        .container {
+            max-width: 960px; /* Limit max width for very large screens for better readability */
+        }
+        .memo-box {
+            border: 1px solid #dee2e6; /* Bootstrap subtle border color */
+            padding: 1rem; /* Consistent padding */
+            margin-bottom: 1rem;
+            border-radius: 0.375rem; /* Bootstrap's default border-radius */
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); /* Bootstrap subtle shadow */
+            color: #212529; /* Default dark text color for good contrast on light backgrounds */
+            /* Note: For very dark background colors chosen by the user, 
+               text contrast might be an issue. A JS solution would be needed 
+               to dynamically switch text to white on dark backgrounds. 
+               Users should be advised to pick lighter colors for best readability. */
+            word-wrap: break-word; /* Ensure long words do not overflow */
+            transition: box-shadow 0.2s ease-in-out;
+        }
+        .memo-box:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); /* Enhanced shadow on hover */
+        }
+        .memo-box h5 { /* Memo title (card-title class is used in JS) */
+            margin-top: 0;
+            margin-bottom: 0.75rem; /* Increased space below title */
+            font-weight: 500;
+        }
+        .memo-box .timestamp { /* Class used in JS for timestamp */
+            font-size: 0.85em; /* Slightly larger for readability */
+            color: #6c757d;
+            margin-bottom: 0.75rem; /* Space below timestamp */
+        }
+        .memo-box p.card-text { /* Memo content specific class from JS */
+            margin-bottom: 1rem;
+            white-space: pre-wrap; /* To respect newlines in content */
+            line-height: 1.6; /* Improved line spacing for readability */
+        }
+        .memo-actions {
+            margin-top: 1rem; /* Add space above action buttons */
+            text-align: right; /* Align buttons to the right */
+        }
+        .memo-actions .btn {
+            margin-left: 0.5rem; /* Space between buttons */
+        }
+        #create-memo-section {
+            background-color: #ffffff; /* White background for the form section */
+        }
+        #create-memo-form, #memos-container {
+            margin-top: 1.5rem; /* Standardized margin */
+        }
+        /* Removed custom .form-label style as Bootstrap defaults are generally fine.
+           If specific label styling is needed, it can be added back. */
+        .form-control-color {
+            min-width: 100px; /* Ensure color input is not too small */
+            height: calc(1.5em + 0.75rem + 2px); /* Match height of other form controls */
+        }
+        hr {
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+        header h1 {
+            font-weight: 300; /* Lighter font for the main title */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Admin Memo Management</h1>
+            <div>
+                <a href="index.html" class="btn btn-secondary">Back to Main</a>
+                <button id="admin-logout-btn" class="btn btn-danger">Logout</button>
+            </div>
+        </header>
+
+        <section id="create-memo-section" class="mb-4 p-3 border rounded bg-light">
+            <h2>Create New Memo</h2>
+            <form id="create-memo-form">
+                <div class="mb-3">
+                    <label for="memo-title" class="form-label">Title</label>
+                    <input type="text" class="form-control" id="memo-title" placeholder="Enter memo title" required>
+                </div>
+                <div class="mb-3">
+                    <label for="memo-content" class="form-label">Content</label>
+                    <textarea class="form-control" id="memo-content" rows="3" placeholder="Enter memo content" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="memo-color" class="form-label">Color</label>
+                    <input type="color" class="form-control form-control-color" id="memo-color" value="#FFFFCC" title="Choose your color">
+                </div>
+                <button type="submit" class="btn btn-primary">Create Memo</button>
+            </form>
+        </section>
+
+        <hr>
+
+        <section id="display-memos-section">
+            <h2>Memos</h2>
+            <div id="memos-container">
+                <!-- Memos will be loaded here by JavaScript -->
+                <!-- Example Memo Structure (for reference, will be dynamically generated) -->
+                <!--
+                <div class="memo-box" style="background-color: #FFFFCC;">
+                    <h5>Memo Title</h5>
+                    <p class="timestamp">2023-01-01 10:00 AM</p>
+                    <p>Memo content goes here...</p>
+                    <div class="memo-actions">
+                        <button class="btn btn-sm btn-warning edit-btn" data-id="memo-id-1">Edit</button>
+                        <button class="btn btn-sm btn-danger delete-btn" data-id="memo-id-1">Delete</button>
+                    </div>
+                </div>
+                -->
+            </div>
+        </section>
+    </div>
+
+    <!-- Edit Memo Modal -->
+    <div class="modal fade" id="editMemoModal" tabindex="-1" aria-labelledby="editMemoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editMemoModalLabel">Edit Memo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-memo-form">
+                        <input type="hidden" id="edit-memo-id">
+                        <div class="mb-3">
+                            <label for="edit-memo-title" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="edit-memo-title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-memo-content" class="form-label">Content</label>
+                            <textarea class="form-control" id="edit-memo-content" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-memo-color" class="form-label">Color</label>
+                            <input type="color" class="form-control form-control-color" id="edit-memo-color" title="Choose your color">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="save-memo-changes-btn">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/admin_memos.js"></script>
+</body>
+</html>
