@@ -1,883 +1,1033 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>자동 트레이딩 Bot · Dashboard</title>
-  <link rel="icon" type="image/x-icon" href="assets/img/증사.ico" />
-  <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
-  <link href="https://webfontworld.github.io/pretendard/Pretendard.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-  <style>
-    :root {
-      --bg: #000;
-      --fg: #fff;
-      --accent: #0f0;
-      --accent-rgb: 0, 255, 0;
-      --card-bg: #1a1a1a;
-      --border-color: #333;
-      --table-header-bg: #222;
-      --text-muted-custom: #888;
-    }
-    html, body {
-      min-height: 100%;
-      margin: 0;
-      font-family: "Pretendard", sans-serif;
-      background-color: var(--bg);
-      color: var(--fg);
-    }
-    .navbar-custom {
-      background-color: var(--bg);
-      border-bottom: 1px solid var(--border-color);
-    }
-    .navbar-custom .navbar-brand, .navbar-custom .nav-link {
-      color: var(--fg);
-    }
-    .navbar-custom .nav-link:hover, .navbar-custom .nav-link.active {
-      color: var(--accent);
-    }
-    .navbar-brand .neon {
-        font-weight: bold;
-    }
-    .content-wrapper {
-      padding-top: 2rem;
-      padding-bottom: 2rem;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      color: var(--fg);
-    }
-    .neon {
-      color: var(--accent);
-      text-shadow: 0 0 5px rgba(var(--accent-rgb), 0.7), 0 0 10px rgba(var(--accent-rgb), 0.5);
-    }
-    .text-profit {
-      color: var(--accent);
-    }
-    .text-loss {
-      color: #f00; /* Red for loss */
-      text-shadow: 0 0 5px rgba(255,0,0,0.7);
-    }
-    .card-custom {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border-color);
-      color: var(--fg);
-      height: 100%;
-    }
-    .card-custom .card-header {
-      background-color: var(--table-header-bg);
-      border-bottom: 1px solid var(--border-color);
-      font-weight: bold;
-    }
-    .table-custom {
-      color: var(--fg);
-      border: 1px solid var(--border-color);
-    }
-    .table-custom th {
-      background-color: var(--table-header-bg);
-      color: var(--fg);
-      border-bottom: 2px solid var(--accent);
-    }
-    .table-custom td, .table-custom th {
-      border: 1px solid var(--border-color);
-      vertical-align: middle;
-    }
-    .table-custom tbody tr:hover {
-      background-color: #282828;
-    }
-    .form-control-custom {
-      background-color: var(--card-bg);
-      color: var(--fg);
-      border: 1px solid var(--border-color);
-    }
-    .form-control-custom:focus {
-      background-color: var(--card-bg);
-      color: var(--fg);
-      border-color: var(--accent);
-      box-shadow: 0 0 0 0.25rem rgba(var(--accent-rgb), 0.25);
-    }
-    .form-select-custom {
-      background-color: var(--card-bg);
-      color: var(--fg);
-      border: 1px solid var(--border-color);
-      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%230f0' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
-    }
-    .form-select-custom:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 0.25rem rgba(var(--accent-rgb), 0.25);
-    }
-    .btn-neon {
-      background-color: var(--accent);
-      color: var(--bg);
-      border: 1px solid var(--accent);
-      font-weight: bold;
-    }
-    .btn-neon:hover {
-      background-color: var(--bg);
-      color: var(--accent);
-      border: 1px solid var(--accent);
-      box-shadow: 0 0 10px var(--accent);
-    }
-    .btn-outline-neon {
-      color: var(--accent);
-      border-color: var(--accent);
-    }
-    .btn-outline-neon:hover {
-      color: var(--bg);
-      background-color: var(--accent);
-      border-color: var(--accent);
-      box-shadow: 0 0 10px var(--accent);
-    }
-    .small-text {
-        font-size: 0.85rem;
-        color: var(--text-muted-custom);
-    }
-    .confidence-bar-container {
-        width: 100%;
-        background-color: var(--border-color);
-        border-radius: 0.25rem;
-        height: 20px;
-        overflow: hidden;
-        margin-top: 0.5rem;
-    }
-    .confidence-bar {
-        height: 100%;
-        background-color: var(--accent);
-        text-align: center;
-        line-height: 20px;
-        color: var(--bg);
-        font-weight: bold;
-        font-size: 0.8rem;
-        transition: width 0.5s ease-in-out;
-    }
-    .loading-spinner {
-        display: none; /* Hidden by default */
-        color: var(--accent);
-        margin: 0.5rem auto;
-    }
-    .parameter-section { display: none; } /* Hide all by default */
-    .parameter-section.active { display: block; }
-    .chart-container { /* Added for chart sizing */
-        height: 350px; /* Adjust as needed */
-        position: relative;
-    }
-  </style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>자동 트레이딩 Bot · Dashboard</title>
+    <link rel="icon" type="image/x-icon" href="assets/img/증사.ico" />
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+    <link href="https://webfontworld.github.io/pretendard/Pretendard.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #0d0d0d; /* Slightly less harsh black */
+            --fg: #e0e0e0; /* Light grey for text */
+            --accent: #00ff7f; /* Spring Green - a bit brighter */
+            --accent-rgb: 0, 255, 127;
+            --card-bg: #1a1a1a;
+            --border-color: #333;
+            --table-header-bg: #222;
+            --text-muted-custom: #888;
+            --red: #ff4136; /* Red for loss */
+            --red-rgb: 255, 65, 54;
+        }
+
+        html, body {
+            min-height: 100%;
+            margin: 0;
+            font-family: "Pretendard", sans-serif;
+            background-color: var(--bg);
+            color: var(--fg);
+        }
+
+        .navbar-custom {
+            background-color: var(--bg);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 10px rgba(var(--accent-rgb), 0.1);
+        }
+
+        .navbar-custom .navbar-brand, .navbar-custom .nav-link {
+            color: var(--fg);
+            transition: color 0.2s ease-in-out;
+        }
+
+        .navbar-custom .nav-link:hover, .navbar-custom .nav-link.active {
+            color: var(--accent);
+            text-shadow: 0 0 3px rgba(var(--accent-rgb), 0.5);
+        }
+
+        .navbar-brand .neon {
+            font-weight: bold;
+        }
+        
+        /* Custom Toggler Icon with Neon Effect */
+        .navbar-toggler {
+            border-color: rgba(var(--accent-rgb), 0.5);
+        }
+        .navbar-toggler-icon {
+             background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(0, 255, 127, 0.8)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E") !important;
+             transition: box-shadow 0.2s ease;
+        }
+         .navbar-toggler:hover .navbar-toggler-icon {
+            box-shadow: 0 0 5px rgba(var(--accent-rgb), 0.7);
+         }
+
+
+        .content-wrapper {
+            padding-top: 3rem; /* Increased padding */
+            padding-bottom: 3rem;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--fg);
+            font-weight: 600; /* Slightly bolder headings */
+        }
+
+        .neon {
+            color: var(--accent);
+            text-shadow: 0 0 4px rgba(var(--accent-rgb), 0.6), 0 0 8px rgba(var(--accent-rgb), 0.4);
+        }
+
+        .text-profit {
+            color: var(--accent);
+        }
+
+        .text-loss {
+            color: var(--red);
+            text-shadow: 0 0 5px rgba(var(--red-rgb), 0.7);
+        }
+
+        .card-custom {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--fg);
+            height: 100%;
+            border-radius: 8px; /* Slightly rounded corners */
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+            overflow: hidden; /* Ensure content respects border-radius */
+        }
+        .card-custom:hover {
+            box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.15);
+            transform: translateY(-3px);
+        }
+
+        .card-custom .card-header {
+            background-color: var(--table-header-bg);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: bold;
+            color: var(--accent); /* Header text accent */
+        }
+
+        .table-custom {
+            color: var(--fg);
+            border: 1px solid var(--border-color);
+            margin-bottom: 0; /* Remove default table margin */
+        }
+
+        .table-custom th {
+            background-color: var(--table-header-bg);
+            color: var(--fg);
+            border-bottom: 2px solid var(--accent);
+            white-space: nowrap; /* Prevent headers from wrapping */
+        }
+
+        .table-custom td, .table-custom th {
+            border: 1px solid var(--border-color);
+            vertical-align: middle;
+            padding: 0.85rem; /* Consistent padding */
+        }
+        
+        /* Striped Table */
+        .table-striped > tbody > tr:nth-of-type(odd) > * {
+            background-color: rgba(var(--accent-rgb), 0.03);
+            color: var(--fg);
+        }
+
+        .table-custom tbody tr:hover {
+            background-color: #2a2a2a; /* Slightly lighter hover */
+            color: #fff;
+        }
+        
+        .table-responsive {
+             border-radius: 5px;
+             overflow: hidden; /* Ensure table respects border-radius */
+             border: 1px solid var(--border-color);
+        }
+
+        .form-control-custom, .form-select-custom {
+            background-color: var(--card-bg);
+            color: var(--fg);
+            border: 1px solid var(--border-color);
+        }
+
+        .form-control-custom:focus, .form-select-custom:focus {
+            background-color: var(--card-bg);
+            color: var(--fg);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 0.25rem rgba(var(--accent-rgb), 0.25);
+        }
+        
+        .form-select-custom {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2300ff7f' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+        }
+
+        .btn-neon {
+            background-color: var(--accent);
+            color: var(--bg);
+            border: 1px solid var(--accent);
+            font-weight: bold;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .btn-neon:hover {
+            background-color: var(--bg);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+        }
+        
+        .btn-neon:disabled {
+            background-color: var(--border-color);
+            color: var(--text-muted-custom);
+            border-color: var(--border-color);
+            cursor: not-allowed;
+        }
+
+        .btn-outline-neon {
+            color: var(--accent);
+            border-color: var(--accent);
+             transition: all 0.2s ease-in-out;
+        }
+
+        .btn-outline-neon:hover {
+            color: var(--bg);
+            background-color: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .small-text {
+            font-size: 0.85rem;
+            color: var(--text-muted-custom);
+        }
+
+        .confidence-bar-container {
+            width: 100%;
+            background-color: var(--border-color);
+            border-radius: 0.25rem;
+            height: 20px;
+            overflow: hidden;
+            margin-top: 1rem; /* Added margin */
+            margin-bottom: 0.5rem; /* Added margin */
+        }
+
+        .confidence-bar {
+            height: 100%;
+            background: linear-gradient(90deg, rgba(var(--accent-rgb),0.6) 0%, rgba(var(--accent-rgb),1) 100%); /* Gradient */
+            text-align: center;
+            line-height: 20px;
+            color: var(--bg);
+            font-weight: bold;
+            font-size: 0.8rem;
+            transition: width 0.7s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smoother transition */
+            white-space: nowrap; /* Prevent text wrapping */
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            color: var(--accent);
+            margin: 1rem auto;
+            width: 1.5rem; /* Consistent size */
+            height: 1.5rem;
+        }
+        
+        .loading-placeholder {
+            display: inline-block;
+            min-width: 80px; /* Prevent layout shifts */
+            text-align: center;
+        }
+        
+        .loading-placeholder .spinner-border {
+             width: 1rem;
+             height: 1rem;
+             border-width: .2em;
+        }
+
+        .parameter-section { display: none; }
+        .parameter-section.active { display: block; }
+
+        .chart-container {
+            height: 350px;
+            position: relative;
+        }
+        
+        /* Pagination Styling */
+        .pagination .page-link {
+            background-color: var(--card-bg);
+            color: var(--fg);
+            border: 1px solid var(--border-color);
+        }
+        .pagination .page-link:hover {
+             background-color: var(--border-color);
+             color: var(--accent);
+        }
+        .pagination .page-item.active .page-link {
+            background-color: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg);
+            font-weight: bold;
+        }
+         .pagination .page-item.disabled .page-link {
+            background-color: #111;
+            color: var(--text-muted-custom);
+            border-color: var(--border-color);
+         }
+         
+        /* Badge Styling */
+        .badge.bg-buy { background-color: var(--accent) !important; color: var(--bg) !important; }
+        .badge.bg-sell { background-color: var(--red) !important; color: var(--fg) !important; }
+
+        /* Smooth Scrolling */
+        html { scroll-behavior: smooth; }
+        
+        /* Alert Styling */
+        .alert-custom {
+            background-color: var(--card-bg);
+            color: var(--fg);
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            margin-top: 1rem;
+            border-left-width: 5px;
+        }
+        .alert-custom.alert-success { border-left-color: var(--accent); }
+        .alert-custom.alert-danger { border-left-color: var(--red); }
+        .alert-custom.alert-info { border-left-color: #17a2b8; }
+        .alert-custom .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+
+    </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
-    <div class="container">
-      <a class="navbar-brand" href="#">
-        <i class="fas fa-robot neon"></i> Automated Trading <span class="neon">Bot</span>
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon" style="background-image: url(\"data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(0, 255, 0, 0.7)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E\");"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="#">Dashboard</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#trade-history">Trade History</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#bot-config">Configuration</a>
-          </li>
-           <li class="nav-item">
-            <a class="nav-link" href="index.html"><i class="fas fa-arrow-left me-1"></i>Back to Hub</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
-
-  <div class="container content-wrapper">
-    <header class="text-center mb-5">
-      <h1 class="fw-bold">Trading Bot Dashboard</h1>
-      <p class="lead">Based on <span class="neon">Deep Reinforcement Learning</span></p>
-    </header>
-
-    <section id="dashboard-overview" class="mb-5">
-      <div class="row g-4">
-        <div class="col-lg-3 col-md-6">
-          <div class="card card-custom text-center">
-            <div class="card-body">
-              <h5 class="card-title"><i class="fas fa-wallet me-2 neon"></i>Total Assets</h5>
-              <p class="display-6 fw-bold neon" id="total-assets"><span class="spinner-border spinner-border-sm loading-spinner" role="status"></span></p>
-              <p class="small-text" id="last-updated">Loading...</p>
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-robot neon"></i> Automated Trading <span class="neon">Bot</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#dashboard-overview">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#real-time-status">Portfolio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#trade-history">Trade History</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#bot-config">Configuration</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html"><i class="fas fa-arrow-left me-1"></i>Back to Hub</a>
+                    </li>
+                </ul>
             </div>
-          </div>
         </div>
-        <div class="col-lg-3 col-md-6">
-          <div class="card card-custom text-center">
-            <div class="card-body">
-              <h5 class="card-title"><i class="fas fa-chart-line me-2 neon"></i>Overall P&L</h5>
-              <p class="display-6 fw-bold" id="overall-pnl"><span class="spinner-border spinner-border-sm loading-spinner" role="status"></span></p>
-              <p class="small-text fw-bold" id="overall-pnl-percent"></p>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-          <div class="card card-custom text-center">
-            <div class="card-body">
-                <h5 class="card-title"><i class="fas fa-brain me-2 neon"></i>Bot Confidence</h5>
-                <div class="confidence-bar-container mt-2 mb-1">
-                    <div class="confidence-bar" id="bot-confidence-bar" style="width: 0%;">0%</div>
-                </div>
-                <p class="small-text">Signal: <span class="neon" id="signal-strength">Loading...</span></p>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-          <div class="card card-custom text-center">
-            <div class="card-body">
-              <h5 class="card-title"><i class="fas fa-cogs me-2 neon"></i>Active Model</h5>
-              <p class="fs-4 fw-bold neon mt-3" id="active-model-name"><span class="spinner-border spinner-border-sm loading-spinner" role="status"></span></p>
-              <p class="small-text">Strategy: <span id="active-model-strategy">Loading...</span></p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    </nav>
 
-    <hr style="border-color: var(--border-color); margin: 3rem 0;">
+    <div class="container content-wrapper">
+        <header class="text-center mb-5">
+            <h1 class="fw-bold">Trading Bot Dashboard</h1>
+            <p class="lead">Based on <span class="neon">Deep Reinforcement Learning</span></p>
+        </header>
 
-    <section id="real-time-status" class="mb-5">
-        <div class="row g-4">
-            <div class="col-lg-7">
-                <h3 class="mb-3"><i class="fas fa-tachometer-alt me-2 neon"></i>Real-time Portfolio</h3>
-                <div class="table-responsive">
-                    <table class="table table-custom table-hover">
-                        <thead>
-                        <tr>
-                            <th>Asset (Ticker)</th>
-                            <th>Quantity</th>
-                            <th>Current Price</th>
-                            <th>Total Value</th>
-                            <th>P&L</th>
-                            <th>P&L (%)</th>
-                        </tr>
-                        </thead>
-                        <tbody id="asset-status-table">
-                            <tr><td colspan="6" class="text-center py-5"><div class="spinner-border loading-spinner" role="status" style="display:inline-block;"></div> <span id="asset-status-loading-text">Loading portfolio...</span></td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="col-lg-5">
-                <h3 class="mb-3"><i class="fas fa-chart-pie me-2 neon"></i>Performance Chart</h3>
-                <div class="card card-custom">
-                    <div class="card-body">
-                        <div class="chart-container"> {/* Chart sizing wrapper */}
-                            <canvas id="pnlChart"></canvas>
+        <section id="dashboard-overview" class="mb-5">
+            <div class="row g-4">
+                <div class="col-lg-3 col-md-6">
+                    <div class="card card-custom text-center">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-wallet me-2 neon"></i>Total Assets</h5>
+                            <p class="display-6 fw-bold neon" id="total-assets"><span class="loading-placeholder"><span class="spinner-border spinner-border-sm" role="status"></span></span></p>
+                            <p class="small-text" id="last-updated">Loading...</p>
                         </div>
-                        <div class="spinner-border loading-spinner text-center w-100 mt-3" id="pnlChart-loading" role="status" style="display: none;"></div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="card card-custom text-center">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-chart-line me-2 neon"></i>Overall P&L</h5>
+                            <p class="display-6 fw-bold" id="overall-pnl"><span class="loading-placeholder"><span class="spinner-border spinner-border-sm" role="status"></span></span></p>
+                            <p class="small-text fw-bold" id="overall-pnl-percent"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="card card-custom text-center">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-brain me-2 neon"></i>Bot Confidence</h5>
+                            <div class="confidence-bar-container">
+                                <div class="confidence-bar" id="bot-confidence-bar" style="width: 0;">0%</div> </div>
+                            <p class="small-text">Signal: <span class="neon" id="signal-strength">Loading...</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="card card-custom text-center">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-cogs me-2 neon"></i>Active Model</h5>
+                            <p class="fs-4 fw-bold neon mt-3" id="active-model-name"><span class="loading-placeholder"><span class="spinner-border spinner-border-sm" role="status"></span></span></p>
+                            <p class="small-text">Strategy: <span id="active-model-strategy">Loading...</span></p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <hr style="border-color: var(--border-color); margin: 3rem 0;">
+        <hr style="border-color: var(--border-color); margin: 4rem 0;">
 
-    <section id="trade-history" class="mb-5">
-      <h2 class="text-center mb-4"><i class="fas fa-history me-2 neon"></i>Trade History</h2>
-      <div class="table-responsive">
-        <table class="table table-custom table-striped table-hover">
-          <thead>
-            <tr>
-              <th>Timestamp</th>
-              <th>Ticker</th>
-              <th>Type</th>
-              <th>Price</th>
-              <th>Quantity</th>
-              <th>Total Value</th>
-              <th>Fees</th>
-              <th>Status</th>
-              <th>Realized P&L</th>
-            </tr>
-          </thead>
-          <tbody id="trade-history-table">
-            <tr><td colspan="9" class="text-center py-5"><div class="spinner-border loading-spinner" style="display:inline-block;" role="status"></div> <span id="trade-history-loading-text">Loading trade history...</span></td></tr>
-          </tbody>
-        </table>
-        <nav aria-label="Trade history pagination" id="trade-history-pagination-nav" class="d-none">
-          <ul class="pagination justify-content-center mt-3" id="trade-history-pagination-ul">
-            </ul>
-        </nav>
-      </div>
-    </section>
-
-    <hr style="border-color: var(--border-color); margin: 3rem 0;">
-
-    <section id="bot-config" class="mb-5">
-      <h2 class="text-center mb-4"><i class="fas fa-sliders-h me-2 neon"></i>Bot Configuration</h2>
-      <div class="row justify-content-center">
-        <div class="col-lg-8">
-          <div class="card card-custom">
-            <div class="card-header">
-              Model Management & Parameters
+        <section id="real-time-status" class="mb-5">
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <h3 class="mb-3"><i class="fas fa-tachometer-alt me-2 neon"></i>Real-time Portfolio</h3>
+                    <div class="table-responsive">
+                        <table class="table table-custom table-hover">
+                            <thead>
+                            <tr>
+                                <th>Asset (Ticker)</th>
+                                <th>Quantity</th>
+                                <th>Current Price</th>
+                                <th>Total Value</th>
+                                <th>P&L</th>
+                                <th>P&L (%)</th>
+                            </tr>
+                            </thead>
+                            <tbody id="asset-status-table">
+                                <tr><td colspan="6" class="text-center py-5"><div class="spinner-border loading-spinner" role="status"></div> <div>Loading portfolio...</div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <h3 class="mb-3"><i class="fas fa-chart-pie me-2 neon"></i>Performance Chart</h3>
+                    <div class="card card-custom">
+                        <div class="card-body">
+                            <div class="chart-container"> <canvas id="pnlChart"></canvas>
+                                <div class="spinner-border loading-spinner" id="pnlChart-loading" role="status" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: block;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-              <form id="botConfigForm">
-                <div class="mb-3">
-                  <label for="selectModel" class="form-label">Active AI Model</label>
-                  <select class="form-select form-select-custom" id="selectModel" disabled>
-                    <option>Loading models...</option>
-                  </select>
-                </div>
+        </section>
 
-                <div id="model-parameters-container">
-                    <div class="text-center py-3"><div class="spinner-border loading-spinner" id="model-params-loading" role="status"></div> <span id="model-params-loading-text">Select a model to see parameters.</span></div>
-                </div>
-                
-                <div class="mt-4">
-                  <button type="submit" class="btn btn-neon w-100 mb-2">
-                    <i class="fas fa-save me-2"></i>Save Configuration & Apply Model
-                  </button>
-                </div>
-              </form>
-              
-              <div class="mt-4 pt-3 border-top" style="border-color: var(--border-color) !important;">
-                <label for="uploadModelFile" class="form-label">Upload New Model File (.pth, .h5, .onnx)</label>
-                <div class="input-group">
-                    <input type="file" class="form-control form-control-custom" id="uploadModelFile" aria-describedby="uploadModelAddon" accept=".pth,.h5,.onnx">
-                    <button class="btn btn-outline-neon" type="button" id="uploadModelBtn"><i class="fas fa-upload me-2"></i>Upload</button>
-                </div>
-                 <div class="progress mt-2 d-none" id="uploadProgressBarContainer" style="height: 5px;">
-                    <div class="progress-bar bg-success" id="uploadProgressBar" role="progressbar" style="width: 0%; background-color: var(--accent) !important;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-                <div id="uploadStatus" class="small-text mt-1"></div>
-              </div>
+        <hr style="border-color: var(--border-color); margin: 4rem 0;">
 
+        <section id="trade-history" class="mb-5">
+            <h2 class="text-center mb-4"><i class="fas fa-history me-2 neon"></i>Trade History</h2>
+            <div class="table-responsive">
+                <table class="table table-custom table-striped table-hover">
+                    <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Ticker</th>
+                        <th>Type</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Total Value</th>
+                        <th>Fees</th>
+                        <th>Status</th>
+                        <th>Realized P&L</th>
+                    </tr>
+                    </thead>
+                    <tbody id="trade-history-table">
+                        <tr><td colspan="9" class="text-center py-5"><div class="spinner-border loading-spinner" role="status"></div> <div>Loading trade history...</div></td></tr>
+                    </tbody>
+                </table>
+             </div>
+             <nav aria-label="Trade history pagination" id="trade-history-pagination-nav" class="mt-4">
+                    <ul class="pagination justify-content-center" id="trade-history-pagination-ul">
+                    </ul>
+             </nav>
+        </section>
+
+        <hr style="border-color: var(--border-color); margin: 4rem 0;">
+
+        <section id="bot-config" class="mb-5">
+            <h2 class="text-center mb-4"><i class="fas fa-sliders-h me-2 neon"></i>Bot Configuration</h2>
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card card-custom">
+                        <div class="card-header">
+                            Model Management & Parameters
+                        </div>
+                        <div class="card-body p-4"> <form id="botConfigForm">
+                                <div class="mb-4"> <label for="selectModel" class="form-label">Active AI Model</label>
+                                    <select class="form-select form-select-custom" id="selectModel" disabled>
+                                        <option>Loading models...</option>
+                                    </select>
+                                </div>
+
+                                <div id="model-parameters-container">
+                                    <div class="text-center py-3"><div class="spinner-border loading-spinner" id="model-params-loading" style="display:inline-block;" role="status"></div> <span id="model-params-loading-text">Select a model to see parameters.</span></div>
+                                </div>
+
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-neon w-100 mb-2" id="saveConfigBtn" disabled>
+                                        <i class="fas fa-save me-2"></i>Save Configuration & Apply Model
+                                    </button>
+                                </div>
+                            </form>
+
+                            <div class="mt-4 pt-4 border-top" style="border-color: var(--border-color) !important;">
+                                <label for="uploadModelFile" class="form-label">Upload New Model File (.pth, .h5, .onnx)</label>
+                                <div class="input-group">
+                                    <input type="file" class="form-control form-control-custom" id="uploadModelFile" aria-describedby="uploadModelAddon" accept=".pth,.h5,.onnx">
+                                    <button class="btn btn-outline-neon" type="button" id="uploadModelBtn"><i class="fas fa-upload me-2"></i>Upload</button>
+                                </div>
+                                <div class="progress mt-2 d-none" id="uploadProgressBarContainer" style="height: 5px; background-color: var(--border-color);">
+                                    <div class="progress-bar" id="uploadProgressBar" role="progressbar" style="width: 0%; background-color: var(--accent) !important;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div id="uploadStatus" class="small-text mt-1"></div>
+                            </div>
+                            
+                            <div id="alert-area" class="mt-3"></div>
+
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </div>
+        </section>
+    </div>
 
-  <footer class="text-center py-4" style="background-color: var(--card-bg); border-top: 1px solid var(--border-color);">
-    <p class="mb-0 small-text">&copy; <span id="currentYear"></span> Automated Trading Bot. All rights reserved.</p>
-    <p class="mb-0 small-text"><a href="index.html" class="neon">Back to Portfolio Hub</a></p>
-  </footer>
+    <footer class="text-center py-4" style="background-color: var(--card-bg); border-top: 1px solid var(--border-color);">
+        <p class="mb-0 small-text">&copy; <span id="currentYear"></span> Automated Trading Bot. All rights reserved.</p>
+        <p class="mb-0 small-text"><a href="index.html" class="neon">Back to Portfolio Hub</a></p>
+    </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
-    const API_BASE_URL = '/api/bot'; // Example API base URL
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+        const API_BASE_URL = '/api/bot'; // Example API base URL (used only for logging in this mock)
 
-    let pnlChartInstance;
+        let pnlChartInstance;
+        let currentModels = []; // Cache models
+        let currentActiveModelId = null;
 
-    // Utility Functions
-    function formatCurrency(amount, currency = 'USD') {
-        return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(amount);
-    }
+        // --- Utility Functions ---
+        function formatCurrency(amount, currency = 'USD') {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(amount);
+        }
 
-    function formatPercentage(value) {
-        return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
-    }
+        function formatPercentage(value) {
+            return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+        }
+        
+        function showAlert(message, type = 'info', duration = 5000) {
+            const alertArea = document.getElementById('alert-area');
+            const alertId = 'alert-' + Date.now();
+            const alert = document.createElement('div');
+            alert.className = `alert alert-custom alert-${type} alert-dismissible fade show`;
+            alert.role = 'alert';
+            alert.id = alertId;
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            alertArea.appendChild(alert);
 
-    function showLoading(elementId, textElementId, text) {
-        const spinner = document.getElementById(elementId);
-        const textEl = document.getElementById(textElementId);
-        if (spinner) spinner.style.display = 'inline-block';
-        if (textEl) textEl.textContent = text || 'Loading...';
-    }
+            if (duration) {
+                setTimeout(() => {
+                    const bsAlert = bootstrap.Alert.getOrCreateInstance(`#${alertId}`);
+                    if(bsAlert) bsAlert.close();
+                }, duration);
+            }
+        }
 
-    function hideLoading(elementId, textElementId) {
-        const spinner = document.getElementById(elementId);
-         const textEl = document.getElementById(textElementId);
-        if (spinner) spinner.style.display = 'none';
-        if (textEl && textEl.textContent.toLowerCase().includes('loading')) textEl.textContent = '';
-    }
-    
-    // --- Data Fetching Functions ---
-    async function fetchData(endpoint, options = {}) {
-        // For actual API calls, you'd show a general loading spinner or specific ones.
-        // For this mock, we'll manage spinners more granularly in the calling functions.
-        try {
+        // --- Mock Data Fetching ---
+        async function fetchData(endpoint, options = {}) {
             console.log(`Fetching: ${API_BASE_URL}${endpoint}`);
-            await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 500)); // Simulate network delay
+            await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 800)); // Simulate network delay
 
-            if (endpoint === '/dashboard-overview') {
-                return {
-                    totalAssets: 150723.50 + (Math.random() * 1000 - 500),
-                    overallPnl: 5230.10 + (Math.random() * 500 - 250),
-                    overallPnlPercent: 3.60 + (Math.random() * 1 - 0.5),
-                    botConfidence: Math.floor(Math.random() * 50 + 50), // 50-99
-                    signalStrength: ["Strong Buy", "Buy", "Hold", "Sell", "Strong Sell"][Math.floor(Math.random() * 5)],
-                    activeModel: { id: "DRL_Alpha_v3_2", name: "DRL Alpha v3.2", strategy: "Aggressive Growth" },
-                    lastUpdated: new Date().toISOString()
-                };
-            } else if (endpoint === '/portfolio') {
-                return [
-                    { ticker: "AAPL", name: "Apple Inc.", quantity: 150, currentPrice: 175.50 + (Math.random()*5-2.5), pnl: 1200.00+ (Math.random()*100-50), pnlPercent: 4.78+ (Math.random()*0.5-0.25) },
-                    { ticker: "MSFT", name: "Microsoft Corp.", quantity: 100, currentPrice: 430.10+ (Math.random()*10-5), pnl: 2500.50+ (Math.random()*200-100), pnlPercent: 6.17+ (Math.random()*0.5-0.25) },
-                    { ticker: "TSLA", name: "Tesla Inc.", quantity: 50, currentPrice: 180.25+ (Math.random()*8-4), pnl: -550.00+ (Math.random()*100-50), pnlPercent: -5.75+ (Math.random()*0.5-0.25) },
-                    { ticker: "BTC", name: "Bitcoin", quantity: 0.5, currentPrice: 65300.00+ (Math.random()*1000-500), pnl: 1800.00+ (Math.random()*200-100), pnlPercent: 5.82+ (Math.random()*0.5-0.25) }
-                ];
-            } else if (endpoint.startsWith('/trade-history')) {
-                return {
-                    trades: [
-                        { timestamp: new Date(Date.now() - Math.random()*100000000).toISOString(), ticker: "AAPL", type: "BUY", price: 172.50, quantity: 50, totalValue: 8625.00, fees: 1.50, status: "Filled", realizedPnl: null },
-                        { timestamp: new Date(Date.now() - Math.random()*200000000).toISOString(), ticker: "MSFT", type: "BUY", price: 420.80, quantity: 30, totalValue: 12624.00, fees: 1.00, status: "Filled", realizedPnl: null },
-                        { timestamp: new Date(Date.now() - Math.random()*300000000).toISOString(), ticker: "NVDA", type: "SELL", price: 1105.60, quantity: 10, totalValue: 11056.00, fees: 2.10, status: "Filled", realizedPnl: 850.00 },
-                        { timestamp: new Date(Date.now() - Math.random()*400000000).toISOString(), ticker: "GOOG", type: "BUY", price: 170.10, quantity: 25, totalValue: 4252.50, fees: 0.90, status: "Filled", realizedPnl: null },
-                        { timestamp: new Date(Date.now() - Math.random()*500000000).toISOString(), ticker: "ETH", type: "SELL", price: 3500.00, quantity: 2, totalValue: 7000.00, fees: 7.00, status: "Filled", realizedPnl: -250.75 },
-                    ],
-                    pagination: { currentPage: parseInt(new URLSearchParams(endpoint.split('?')[1] || '').get('page')) || 1, totalPages: 3, totalItems: 15 }
-                };
-            } else if (endpoint === '/models') {
-                return [
-                    { id: "DRL_Alpha_v3_2", name: "DRL Alpha v3.2", description: "Deep Reinforcement Learning" },
-                    { id: "TimeSeries_LSTM_Beta_1_0", name: "TimeSeries LSTM Beta 1.0", description: "LSTM Forecasting" },
-                    { id: "RuleBased_Momentum", name: "RuleBased Momentum", description: "Classic Strategy" },
-                    { id: "SVM_Volatility_v1", name: "SVM Volatility Predictor v1", description: "Support Vector Machine" }
-                ];
-            } else if (endpoint.startsWith('/models/')) { 
-                const modelId = endpoint.split('/')[2];
-                if (modelId === "DRL_Alpha_v3_2") {
-                    return { learningRate: 0.0001, riskLevel: "medium", maxTradeSizePercent: 5, rewardFunction: "SharpeRatio" };
-                } else if (modelId === "TimeSeries_LSTM_Beta_1_0") {
-                    return { sequenceLength: 60, trainingEpochs: 100, lookbackPeriod: 30 };
-                } else if (modelId === "RuleBased_Momentum") {
-                    return { shortTermMA: 20, longTermMA: 50, rsiPeriod: 14 };
-                } else if (modelId === "SVM_Volatility_v1") {
-                    return { kernel: "rbf", C: 1.0, gamma: "scale" };
+            try {
+                if (endpoint === '/dashboard-overview') {
+                    const pnl = 5230.10 + (Math.random() * 500 - 250);
+                    const pnlPercent = 3.60 + (Math.random() * 1 - 0.5);
+                    return {
+                        totalAssets: 150723.50 + (Math.random() * 1000 - 500),
+                        overallPnl: pnl,
+                        overallPnlPercent: pnlPercent,
+                        botConfidence: Math.floor(Math.random() * 50 + 50),
+                        signalStrength: ["Strong Buy", "Buy", "Hold", "Sell", "Strong Sell"][Math.floor(Math.random() * 5)],
+                        activeModel: { id: currentActiveModelId || "DRL_Alpha_v3_2", name: "DRL Alpha v3.2", strategy: "Aggressive Growth" },
+                        lastUpdated: new Date().toISOString()
+                    };
+                } else if (endpoint === '/portfolio') {
+                    return [
+                        { ticker: "AAPL", name: "Apple Inc.", quantity: 150, currentPrice: 175.50 + (Math.random()*5-2.5), pnl: 1200.00+ (Math.random()*100-50), pnlPercent: 4.78+ (Math.random()*0.5-0.25) },
+                        { ticker: "MSFT", name: "Microsoft Corp.", quantity: 100, currentPrice: 430.10+ (Math.random()*10-5), pnl: 2500.50+ (Math.random()*200-100), pnlPercent: 6.17+ (Math.random()*0.5-0.25) },
+                        { ticker: "TSLA", name: "Tesla Inc.", quantity: 50, currentPrice: 180.25+ (Math.random()*8-4), pnl: -550.00+ (Math.random()*100-50), pnlPercent: -5.75+ (Math.random()*0.5-0.25) },
+                        { ticker: "BTC", name: "Bitcoin", quantity: 0.5, currentPrice: 65300.00+ (Math.random()*1000-500), pnl: 1800.00+ (Math.random()*200-100), pnlPercent: 5.82+ (Math.random()*0.5-0.25) }
+                    ];
+                } else if (endpoint.startsWith('/trade-history')) {
+                    const page = parseInt(new URLSearchParams(endpoint.split('?')[1] || '').get('page')) || 1;
+                    return {
+                        trades: Array.from({ length: 5 }, (_, i) => {
+                             const isBuy = Math.random() > 0.5;
+                             const ticker = ["AAPL", "MSFT", "TSLA", "BTC", "ETH", "GOOG", "NVDA"][Math.floor(Math.random() * 7)];
+                             const price = 100 + Math.random() * 500;
+                             const qty = Math.floor(Math.random() * 100 + 1);
+                             const realized = !isBuy && Math.random() > 0.3 ? (Math.random() * 1000 - 500) : null;
+                             return {
+                                timestamp: new Date(Date.now() - Math.random() * 500000000 - (page * 500000000)).toISOString(),
+                                ticker: ticker,
+                                type: isBuy ? "BUY" : "SELL",
+                                price: price,
+                                quantity: qty,
+                                totalValue: price * qty,
+                                fees: Math.random() * 5 + 0.5,
+                                status: "Filled",
+                                realizedPnl: realized
+                            };
+                        }),
+                        pagination: { currentPage: page, totalPages: 4, totalItems: 20 }
+                    };
+                } else if (endpoint === '/models') {
+                     if (currentModels.length === 0) { // Fetch only once or when needed
+                        currentModels = [
+                            { id: "DRL_Alpha_v3_2", name: "DRL Alpha v3.2", description: "Deep Reinforcement Learning" },
+                            { id: "TimeSeries_LSTM_Beta_1_0", name: "TimeSeries LSTM Beta 1.0", description: "LSTM Forecasting" },
+                            { id: "RuleBased_Momentum", name: "RuleBased Momentum", description: "Classic Strategy" },
+                            { id: "SVM_Volatility_v1", name: "SVM Volatility Predictor v1", description: "Support Vector Machine" }
+                        ];
+                    }
+                    return currentModels;
+                } else if (endpoint.startsWith('/models/')) {
+                    const modelId = endpoint.split('/')[2];
+                    switch (modelId) {
+                        case "DRL_Alpha_v3_2": return { learningRate: 0.0001, riskLevel: "medium", maxTradeSizePercent: 5, rewardFunction: "SharpeRatio" };
+                        case "TimeSeries_LSTM_Beta_1_0": return { sequenceLength: 60, trainingEpochs: 100, lookbackPeriod: 30 };
+                        case "RuleBased_Momentum": return { shortTermMA: 20, longTermMA: 50, rsiPeriod: 14 };
+                        case "SVM_Volatility_v1": return { kernel: "rbf", C: 1.0, gamma: "scale" };
+                        default: return { error: "Model not found", detail: "Parameters unavailable" };
+                    }
+                } else if (endpoint === '/pnl-chart-data') {
+                    const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
+                    const data = labels.map((_, i) => 145000 + (i * 800) + (Math.random() * 8000 - 4000));
+                    return { labels, data };
                 }
                 return {};
-            } else if (endpoint === '/pnl-chart-data') {
-                const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
-                const data = labels.map((_, i) => 120000 + (i * 5000) + (Math.random() * 10000 - 5000));
-                return { labels, data };
+            } catch (error) {
+                console.error(`Error fetching ${endpoint}:`, error);
+                showAlert(`Failed to fetch data for ${endpoint}.`, 'danger');
+                return null;
             }
-            return {};
-        } catch (error) {
-            console.error(`Error fetching ${endpoint}:`, error);
-            return null;
         }
-    }
 
-    async function postData(endpoint, body) {
-        console.log(`POSTing to: ${API_BASE_URL}${endpoint}`, body);
-        try {
-            await new Promise(resolve => setTimeout(resolve, 1000)); 
-            alert('Configuration saved successfully (simulated)!');
-            return { success: true, message: "Configuration saved (simulated)." };
-        } catch (error) {
-            console.error(`Error POSTing to ${endpoint}:`, error);
-            alert('Failed to save configuration (simulated).');
-            return { success: false, message: error.message };
-        }
-    }
-
-    // --- Rendering Functions ---
-    function displayDashboardOverview(data) {
-        const overviewSpinners = document.querySelectorAll('#dashboard-overview .loading-spinner');
-        overviewSpinners.forEach(s => s.style.display = 'none');
-
-        if (!data) {
-            document.getElementById('total-assets').textContent = 'Error';
-            document.getElementById('overall-pnl').textContent = 'Error';
-            // ... handle other fields
-            return;
-        }
-        document.getElementById('total-assets').textContent = formatCurrency(data.totalAssets);
-        document.getElementById('overall-pnl').textContent = `${data.overallPnl >=0 ? '+' : ''}${formatCurrency(data.overallPnl).replace('USD','').replace(/\(|\)/g, '')}`; // remove parentheses if any
-        document.getElementById('overall-pnl-percent').textContent = `(${formatPercentage(data.overallPnlPercent)})`;
-        document.getElementById('overall-pnl').className = data.overallPnl >= 0 ? 'display-6 fw-bold text-profit' : 'display-6 fw-bold text-loss';
-        document.getElementById('overall-pnl-percent').className = data.overallPnlPercent >= 0 ? 'small-text fw-bold text-profit' : 'small-text fw-bold text-loss';
-        
-        const confidenceBar = document.getElementById('bot-confidence-bar');
-        const confidenceValue = (typeof data.botConfidence === 'number' && !isNaN(data.botConfidence)) ? Math.max(0, Math.min(100, data.botConfidence)) : 0;
-        confidenceBar.style.width = `${confidenceValue}%`;
-        confidenceBar.textContent = `${confidenceValue.toFixed(0)}%`;
-        document.getElementById('signal-strength').textContent = data.signalStrength;
-        
-        document.getElementById('active-model-name').textContent = data.activeModel.name;
-        document.getElementById('active-model-strategy').textContent = data.activeModel.strategy;
-        document.getElementById('last-updated').textContent = `Updated: ${new Date(data.lastUpdated).toLocaleTimeString()}`;
-    }
-
-    function displayPortfolio(assets) {
-        const tbody = document.getElementById('asset-status-table');
-        tbody.innerHTML = ''; 
-        if (!assets || assets.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No assets in portfolio.</td></tr>';
-            return;
-        }
-        assets.forEach(asset => {
-            const totalValue = asset.quantity * asset.currentPrice;
-            const row = `
-                <tr>
-                    <td><span class="neon">${asset.ticker}</span> (${asset.name})</td>
-                    <td>${asset.quantity.toLocaleString()}</td>
-                    <td>${formatCurrency(asset.currentPrice)}</td>
-                    <td>${formatCurrency(totalValue)}</td>
-                    <td class="${asset.pnl >= 0 ? 'text-profit' : 'text-loss'}">${formatCurrency(asset.pnl).replace('USD','').replace(/\(|\)/g, '')}</td>
-                    <td class="${asset.pnlPercent >= 0 ? 'text-profit' : 'text-loss'}">${formatPercentage(asset.pnlPercent)}</td>
-                </tr>
-            `;
-            tbody.innerHTML += row;
-        });
-    }
-
-    function displayTradeHistory(data) {
-        const tbody = document.getElementById('trade-history-table');
-        tbody.innerHTML = '';
-        if (!data || !data.trades || data.trades.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4">No trade history available.</td></tr>';
-            document.getElementById('trade-history-pagination-nav').classList.add('d-none');
-            return;
-        }
-        data.trades.forEach(trade => {
-            const typeClass = trade.type.toUpperCase() === 'BUY' ? 'bg-success' : 'bg-danger';
-            const pnlText = trade.realizedPnl !== null ? formatCurrency(trade.realizedPnl).replace('USD','').replace(/\(|\)/g, '') : '-';
-            const pnlClass = trade.realizedPnl === null ? '' : (trade.realizedPnl >= 0 ? 'text-profit' : 'text-loss');
-            const row = `
-                <tr>
-                    <td>${new Date(trade.timestamp).toLocaleString()}</td>
-                    <td class="neon">${trade.ticker}</td>
-                    <td><span class="badge ${typeClass}">${trade.type.toUpperCase()}</span></td>
-                    <td>${formatCurrency(trade.price)}</td>
-                    <td>${trade.quantity.toLocaleString()}</td>
-                    <td>${formatCurrency(trade.totalValue)}</td>
-                    <td>${formatCurrency(trade.fees)}</td>
-                    <td>${trade.status}</td>
-                    <td class="${pnlClass}">${pnlText}</td>
-                </tr>
-            `;
-            tbody.innerHTML += row;
-        });
-        setupPagination(data.pagination, 'trade-history-pagination-ul', loadTradeHistory);
-        document.getElementById('trade-history-pagination-nav').classList.remove('d-none');
-    }
-
-    function setupPagination(paginationData, ulId, callback) {
-        const ul = document.getElementById(ulId);
-        ul.innerHTML = '';
-        if (!paginationData || paginationData.totalPages <= 1) return;
-
-        let li = document.createElement('li');
-        li.className = `page-item ${paginationData.currentPage === 1 ? 'disabled' : ''}`;
-        let a = document.createElement('a');
-        a.className = 'page-link form-control-custom';
-        a.href = '#';
-        a.textContent = 'Previous';
-        if (paginationData.currentPage > 1) {
-             a.addEventListener('click', (e) => { e.preventDefault(); callback(paginationData.currentPage - 1); });
-        }
-        li.appendChild(a);
-        ul.appendChild(li);
-
-        for (let i = 1; i <= paginationData.totalPages; i++) {
-            li = document.createElement('li');
-            li.className = `page-item ${i === paginationData.currentPage ? 'active' : ''}`;
-            a = document.createElement('a');
-            a.className = i === paginationData.currentPage ? 'page-link btn-neon' : 'page-link form-control-custom';
-            a.href = '#';
-            a.textContent = i;
-            a.dataset.page = i; // Store page number
-            a.addEventListener('click', (e) => { e.preventDefault(); callback(parseInt(e.target.dataset.page)); });
-            li.appendChild(a);
-            ul.appendChild(li);
-        }
-        
-        li = document.createElement('li');
-        li.className = `page-item ${paginationData.currentPage === paginationData.totalPages ? 'disabled' : ''}`;
-        a = document.createElement('a');
-        a.className = 'page-link form-control-custom';
-        a.href = '#';
-        a.textContent = 'Next';
-        if (paginationData.currentPage < paginationData.totalPages) {
-            a.addEventListener('click', (e) => { e.preventDefault(); callback(paginationData.currentPage + 1); });
-        }
-        li.appendChild(a);
-        ul.appendChild(li);
-    }
-
-
-    function populateModelSelector(models, currentModelId) {
-        const select = document.getElementById('selectModel');
-        select.innerHTML = '';
-        if (!models || models.length === 0) {
-            select.innerHTML = '<option>No models available</option>';
-            select.disabled = true;
-            return;
-        }
-        models.forEach(model => {
-            const option = document.createElement('option');
-            option.value = model.id;
-            option.textContent = `${model.name} (${model.description})`;
-            if (model.id === currentModelId) {
-                option.selected = true;
+        async function postData(endpoint, body) {
+            console.log(`POSTing to: ${API_BASE_URL}${endpoint}`, body);
+            await new Promise(resolve => setTimeout(resolve, 1200));
+            try {
+                // Simulate success/failure
+                if (Math.random() > 0.1) {
+                    console.log("Simulated Save Success");
+                    currentActiveModelId = body.modelId; // Update active model on success
+                    return { success: true, message: "Configuration saved successfully!" };
+                } else {
+                    throw new Error("Simulated backend error.");
+                }
+            } catch (error) {
+                console.error(`Error POSTing to ${endpoint}:`, error);
+                return { success: false, message: error.message || "Failed to save configuration." };
             }
-            select.appendChild(option);
-        });
-        select.disabled = false;
-        select.dispatchEvent(new Event('change'));
-    }
-    
-    function displayModelParameters(modelId, params) {
-        const container = document.getElementById('model-parameters-container');
-        hideLoading('model-params-loading', 'model-params-loading-text');
-        container.innerHTML = ''; 
-        
-        if (!params || Object.keys(params).length === 0) {
-            container.innerHTML = `<p class="text-muted text-center small-text">No parameters to display for this model, or failed to load.</p>`;
-            return;
-        }
-
-        const paramSection = document.createElement('div');
-        paramSection.className = 'parameter-section active'; 
-        
-        const selectedOption = document.getElementById('selectModel').options[document.getElementById('selectModel').selectedIndex];
-        const modelName = selectedOption ? selectedOption.text.split(' (')[0] : modelId;
-        paramSection.innerHTML = `<h5 class="mt-4 mb-3 neon">${modelName} Parameters:</h5>`;
-        
-        const row = document.createElement('div');
-        row.className = 'row g-3';
-
-        for (const key in params) {
-            const col = document.createElement('div');
-            col.className = 'col-md-6';
-
-            const label = document.createElement('label');
-            label.htmlFor = `param-${modelId}-${key}`;
-            label.className = 'form-label small-text';
-            label.textContent = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-
-            let input;
-            if (key === 'riskLevel' || key === 'kernel') { 
-                 input = document.createElement('select');
-                 input.className = 'form-select form-select-custom form-select-sm';
-                 const options = key === 'riskLevel' ? ['low', 'medium', 'high'] : ['rbf', 'linear', 'poly', 'sigmoid'];
-                 options.forEach(opt => {
-                     const optionEl = document.createElement('option');
-                     optionEl.value = opt;
-                     optionEl.textContent = opt.charAt(0).toUpperCase() + opt.slice(1);
-                     if (params[key] === opt) optionEl.selected = true;
-                     input.appendChild(optionEl);
-                 });
-            } else if (typeof params[key] === 'boolean') {
-                input = document.createElement('select');
-                input.className = 'form-select form-select-custom form-select-sm';
-                input.innerHTML = `<option value="true" ${params[key] ? 'selected' : ''}>True</option><option value="false" ${!params[key] ? 'selected' : ''}>False</option>`;
-            } else if (typeof params[key] === 'number') {
-                input = document.createElement('input');
-                input.type = 'number';
-                input.className = 'form-control form-control-custom form-control-sm';
-                input.step = (params[key] % 1 === 0 && key.toLowerCase().includes('percent')) ? '1' :(params[key] % 1 === 0) ? '1' : (key.toLowerCase().includes('rate') ? '0.00001' : '0.01');
-            } else {
-                input = document.createElement('input');
-                input.type = 'text';
-                input.className = 'form-control form-control-custom form-control-sm';
-            }
-            
-            input.id = `param-${modelId}-${key}`;
-            input.name = key; 
-            input.value = params[key];
-            if (key === 'rewardFunction') input.readOnly = true;
-
-            col.appendChild(label);
-            col.appendChild(input);
-            row.appendChild(col);
-        }
-        paramSection.appendChild(row);
-        container.appendChild(paramSection);
-    }
-
-    function initializePnlChart() {
-        const ctx = document.getElementById('pnlChart').getContext('2d');
-        document.getElementById('pnlChart-loading').style.display = 'block';
-        pnlChartInstance = new Chart(ctx, {
-          type: 'line',
-          data: { labels: [], datasets: [{
-              label: 'Portfolio Value ($)', data: [], 
-              borderColor: 'rgba(var(--accent-rgb), 1)', backgroundColor: 'rgba(var(--accent-rgb), 0.1)',
-              fill: true, tension: 0.3, pointRadius: 3, pointBackgroundColor: 'rgba(var(--accent-rgb), 1)',
-              pointBorderColor: '#fff', pointHoverRadius: 7, pointHoverBackgroundColor: '#fff', pointHoverBorderColor: 'rgba(var(--accent-rgb), 1)'
-            }]},
-          options: { 
-            responsive: true, maintainAspectRatio: false,
-            scales: {
-              y: { beginAtZero: false, ticks: { color: 'rgba(255,255,255,0.7)', callback: function(value) { return '$' + value.toLocaleString(); }}, grid: { color: 'rgba(255,255,255,0.1)' } },
-              x: { ticks: { color: 'rgba(255,255,255,0.7)' }, grid: { color: 'rgba(255,255,255,0.1)' } }
-            },
-            plugins: { legend: { labels: { color: 'rgba(255,255,255,0.7)' } }, tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', titleColor: '#fff', bodyColor: '#fff', callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += '$' + context.parsed.y.toLocaleString(); } return label; }}}}
-          }
-        });
-    }
-
-    function updatePnlChart(chartData) {
-        if (!pnlChartInstance || !chartData) return;
-        document.getElementById('pnlChart-loading').style.display = 'none';
-        pnlChartInstance.data.labels = chartData.labels;
-        pnlChartInstance.data.datasets[0].data = chartData.data;
-        pnlChartInstance.update();
-    }
-    
-    // --- Event Handlers & Initial Load ---
-    document.addEventListener('DOMContentLoaded', async () => {
-        initializePnlChart(); 
-        
-        const overviewSpinners = document.querySelectorAll('#dashboard-overview .loading-spinner');
-        overviewSpinners.forEach(s => s.style.display = 'inline-block');
-        showLoading(null, 'asset-status-loading-text', 'Loading portfolio...');
-        showLoading(null, 'trade-history-loading-text', 'Loading trade history...');
-        showLoading('model-params-loading', 'model-params-loading-text', 'Loading models...');
-        document.getElementById('pnlChart-loading').style.display = 'block';
-
-
-        const overviewData = await fetchData('/dashboard-overview');
-        displayDashboardOverview(overviewData);
-
-        const portfolioData = await fetchData('/portfolio');
-        displayPortfolio(portfolioData);
-        hideLoading(null, 'asset-status-loading-text');
-
-        await loadTradeHistory(1); 
-        hideLoading(null, 'trade-history-loading-text');
-        
-        const models = await fetchData('/models');
-        if (overviewData && overviewData.activeModel) {
-            populateModelSelector(models, overviewData.activeModel.id);
-        } else if (models && models.length > 0) {
-             populateModelSelector(models, models[0].id); // Default to first model if no active one
-        } else {
-            populateModelSelector([], null);
         }
         
-        const chartData = await fetchData('/pnl-chart-data');
-        updatePnlChart(chartData);
-    });
+         async function uploadFile(file) {
+            console.log(`Uploading: ${file.name}`);
+            const progressBarContainer = document.getElementById('uploadProgressBarContainer');
+            const progressBar = document.getElementById('uploadProgressBar');
+            const uploadStatus = document.getElementById('uploadStatus');
 
-    async function loadTradeHistory(page = 1) {
-        const loadingTextEl = document.getElementById('trade-history-loading-text');
-        if (loadingTextEl) loadingTextEl.textContent = `Loading page ${page}...`;
-        else document.getElementById('trade-history-table').innerHTML = `<tr><td colspan="9" class="text-center py-5">Loading page ${page}...</td></tr>`;
-        
-        const historyData = await fetchData(`/trade-history?page=${page}&limit=5`);
-        displayTradeHistory(historyData);
-        if (loadingTextEl) loadingTextEl.textContent = ''; 
-    }
-
-    document.getElementById('selectModel').addEventListener('change', async function() {
-        const modelId = this.value;
-        const selectedOption = this.options[this.selectedIndex];
-        const modelName = selectedOption ? selectedOption.text.split(' (')[0] : modelId;
-
-        document.getElementById('active-model-name').textContent = modelName;
-        
-        const paramsContainer = document.getElementById('model-parameters-container');
-        showLoading('model-params-loading', 'model-params-loading-text', `Loading parameters for ${modelName}...`);
-        paramsContainer.innerHTML = `<div class="text-center py-3"><div class="spinner-border loading-spinner" id="model-params-loading" style="display:inline-block" role="status"></div> <span id="model-params-loading-text">Loading parameters for ${modelName}...</span></div>`;
+            uploadStatus.textContent = `Uploading ${file.name}...`;
+            uploadStatus.className = 'small-text mt-1';
+            progressBarContainer.classList.remove('d-none');
+            progressBar.style.width = '0%';
+            progressBar.classList.remove('bg-danger', 'bg-success');
+            progressBar.classList.add('progress-bar-animated', 'progress-bar-striped');
 
 
-        const parameters = await fetchData(`/models/${modelId}/parameters`);
-        displayModelParameters(modelId, parameters);
-        
-        const modelsList = await fetchData('/models'); // Re-fetch or use cached
-        const selectedModelData = modelsList.find(m => m.id === modelId);
-        document.getElementById('active-model-strategy').textContent = selectedModelData?.description || 'N/A';
-    });
-
-    document.getElementById('botConfigForm').addEventListener('submit', async function(event) {
-        event.preventDefault();
-        const selectedModelId = document.getElementById('selectModel').value;
-        const params = {};
-        const paramElements = document.querySelectorAll(`#model-parameters-container .parameter-section.active input, #model-parameters-container .parameter-section.active select`);
-        paramElements.forEach(input => {
-            if (input.name) { // Ensure the element has a name attribute
-                 params[input.name] = input.type === 'number' ? parseFloat(input.value) : 
-                                   (input.tagName === 'SELECT' && (input.value === "true" || input.value === "false") ? (input.value === "true") : input.value);
-            }
-        });
-
-        const configData = {
-            modelId: selectedModelId,
-            parameters: params
-        };
-        
-        console.log("Saving configuration:", configData);
-        const submitButton = this.querySelector('button[type="submit"]');
-        const originalButtonText = submitButton.innerHTML;
-        submitButton.disabled = true;
-        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
-
-        const result = await postData('/configure', configData);
-        
-        submitButton.disabled = false;
-        submitButton.innerHTML = originalButtonText;
-
-        if(result.success) {
-            // Optionally, reload dashboard data to reflect changes
-            // loadInitialData(); 
-        }
-    });
-
-    document.getElementById('uploadModelBtn').addEventListener('click', async function() {
-        const fileInput = document.getElementById('uploadModelFile');
-        const uploadStatus = document.getElementById('uploadStatus');
-        const progressBarContainer = document.getElementById('uploadProgressBarContainer');
-        const progressBar = document.getElementById('uploadProgressBar');
-
-        if (fileInput.files.length === 0) {
-            uploadStatus.textContent = 'Please select a model file first.';
-            uploadStatus.className = 'small-text mt-1 text-warning';
-            return;
-        }
-        const file = fileInput.files[0];
-        const formData = new FormData();
-        formData.append('modelFile', file);
-
-        uploadStatus.textContent = `Uploading ${file.name}...`;
-        uploadStatus.className = 'small-text mt-1 text-info';
-        progressBarContainer.classList.remove('d-none');
-        progressBar.style.width = '0%';
-        progressBar.setAttribute('aria-valuenow', 0);
-        progressBar.classList.remove('bg-danger','bg-success');
-
-
-        try {
-            for (let i = 0; i <= 100; i += 10) {
-                await new Promise(resolve => setTimeout(resolve, 50)); // Faster simulation
-                progressBar.style.width = `${i}%`;
-                progressBar.setAttribute('aria-valuenow', i);
-            }
-            
-            // const response = await fetch(`${API_BASE_URL}/models/upload`, { method: 'POST', body: formData });
-            // if (!response.ok) throw new Error(`Upload failed: ${response.statusText}`);
-            // const result = await response.json();
-            
-            await new Promise(resolve => setTimeout(resolve, 200)); 
-            const result = { success: true, message: `${file.name} uploaded. Awaiting validation.`, newModelId: "Uploaded_Model_ID" };
-
-            if (result.success) {
-                uploadStatus.textContent = result.message;
+            try {
+                for (let i = 0; i <= 100; i += 5) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    progressBar.style.width = `${i}%`;
+                    progressBar.setAttribute('aria-valuenow', i);
+                }
+                
+                progressBar.classList.remove('progress-bar-animated', 'progress-bar-striped');
+                
+                // Simulate success
+                const newModelId = `Uploaded_${file.name.split('.')[0]}_${Date.now()}`;
+                const newModel = { id: newModelId, name: file.name, description: "Uploaded Model"};
+                currentModels.push(newModel); // Add to our mock list
+                
+                uploadStatus.textContent = `${file.name} uploaded successfully. Awaiting validation.`;
                 uploadStatus.className = 'small-text mt-1 text-success';
                 progressBar.classList.add('bg-success');
-                const models = await fetchData('/models'); 
-                const currentSelected = document.getElementById('selectModel').value;
-                populateModelSelector(models, currentSelected);
-            } else {
-                throw new Error(result.message || "Upload processing failed.");
-            }
-        } catch (error) {
-            console.error("Upload error:", error);
-            uploadStatus.textContent = `Error: ${error.message}`;
-            uploadStatus.className = 'small-text mt-1 text-danger';
-            progressBar.classList.add('bg-danger');
-        } finally {
-             setTimeout(() => {
-                 progressBarContainer.classList.add('d-none');
-                 progressBar.style.width = '0%';
-                 progressBar.classList.remove('bg-danger','bg-success');
-             }, 5000);
-        }
-    });
+                populateModelSelector(currentModels, document.getElementById('selectModel').value);
+                showAlert(`${file.name} uploaded and added to list.`, 'success');
 
-  </script>
+            } catch (error) {
+                console.error("Upload error:", error);
+                uploadStatus.textContent = `Error: ${error.message}`;
+                uploadStatus.className = 'small-text mt-1 text-danger';
+                progressBar.classList.add('bg-danger');
+                 showAlert(`Upload failed for ${file.name}.`, 'danger');
+            } finally {
+                setTimeout(() => {
+                    progressBarContainer.classList.add('d-none');
+                    progressBar.style.width = '0%';
+                }, 3000); // Hide after 3 seconds
+            }
+        }
+
+
+        // --- Rendering Functions ---
+        function displayDashboardOverview(data) {
+            if (!data) {
+                ['total-assets', 'overall-pnl', 'signal-strength', 'active-model-name', 'active-model-strategy'].forEach(id => {
+                    document.getElementById(id).textContent = 'Error';
+                    document.getElementById(id).classList.add('text-loss');
+                });
+                return;
+            }
+            document.getElementById('total-assets').textContent = formatCurrency(data.totalAssets);
+            document.getElementById('overall-pnl').textContent = `${data.overallPnl >= 0 ? '+' : ''}${formatCurrency(data.overallPnl).replace('USD', '').replace(/[()]/g, '')}`;
+            document.getElementById('overall-pnl-percent').textContent = `(${formatPercentage(data.overallPnlPercent)})`;
+            document.getElementById('overall-pnl').className = `display-6 fw-bold ${data.overallPnl >= 0 ? 'text-profit' : 'text-loss'}`;
+            document.getElementById('overall-pnl-percent').className = `small-text fw-bold ${data.overallPnlPercent >= 0 ? 'text-profit' : 'text-loss'}`;
+
+            const confidenceBar = document.getElementById('bot-confidence-bar');
+            const confidenceValue = Math.max(0, Math.min(100, data.botConfidence || 0));
+            // Defer update slightly for visual effect
+            setTimeout(() => {
+                 confidenceBar.style.width = `${confidenceValue}%`;
+                 confidenceBar.textContent = `${confidenceValue.toFixed(0)}%`;
+            }, 100);
+
+            document.getElementById('signal-strength').textContent = data.signalStrength;
+            document.getElementById('active-model-name').textContent = data.activeModel.name;
+            document.getElementById('active-model-strategy').textContent = data.activeModel.strategy;
+            document.getElementById('last-updated').textContent = `Updated: ${new Date(data.lastUpdated).toLocaleTimeString()}`;
+            currentActiveModelId = data.activeModel.id; // Update state
+        }
+
+        function displayPortfolio(assets) {
+            const tbody = document.getElementById('asset-status-table');
+            tbody.innerHTML = '';
+            if (!assets || assets.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No assets in portfolio or failed to load.</td></tr>';
+                return;
+            }
+            assets.forEach(asset => {
+                const totalValue = asset.quantity * asset.currentPrice;
+                const pnlClass = asset.pnl >= 0 ? 'text-profit' : 'text-loss';
+                const row = `
+                    <tr>
+                        <td><span class="neon">${asset.ticker}</span> <span class="small-text d-none d-md-inline">(${asset.name})</span></td>
+                        <td>${asset.quantity.toLocaleString()}</td>
+                        <td>${formatCurrency(asset.currentPrice)}</td>
+                        <td>${formatCurrency(totalValue)}</td>
+                        <td class="${pnlClass}">${formatCurrency(asset.pnl).replace('USD', '').replace(/[()]/g, '')}</td>
+                        <td class="${pnlClass}">${formatPercentage(asset.pnlPercent)}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function displayTradeHistory(data) {
+            const tbody = document.getElementById('trade-history-table');
+            tbody.innerHTML = '';
+            if (!data || !data.trades || data.trades.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4">No trade history available or failed to load.</td></tr>';
+                document.getElementById('trade-history-pagination-nav').classList.add('d-none');
+                return;
+            }
+            data.trades.forEach(trade => {
+                const typeClass = trade.type.toUpperCase() === 'BUY' ? 'bg-buy' : 'bg-sell';
+                const pnlText = trade.realizedPnl !== null ? formatCurrency(trade.realizedPnl).replace('USD', '').replace(/[()]/g, '') : '-';
+                const pnlClass = trade.realizedPnl === null ? '' : (trade.realizedPnl >= 0 ? 'text-profit' : 'text-loss');
+                const row = `
+                    <tr>
+                        <td class="small-text">${new Date(trade.timestamp).toLocaleString()}</td>
+                        <td class="neon">${trade.ticker}</td>
+                        <td><span class="badge ${typeClass}">${trade.type.toUpperCase()}</span></td>
+                        <td>${formatCurrency(trade.price)}</td>
+                        <td>${trade.quantity.toLocaleString()}</td>
+                        <td>${formatCurrency(trade.totalValue)}</td>
+                        <td class="small-text">${formatCurrency(trade.fees)}</td>
+                        <td><span class="badge bg-secondary">${trade.status}</span></td>
+                        <td class="${pnlClass}">${pnlText}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+            setupPagination(data.pagination, 'trade-history-pagination-ul', loadTradeHistory);
+            document.getElementById('trade-history-pagination-nav').classList.remove('d-none');
+        }
+
+        function setupPagination(paginationData, ulId, callback) {
+            const ul = document.getElementById(ulId);
+            ul.innerHTML = '';
+            if (!paginationData || paginationData.totalPages <= 1) return;
+
+            const { currentPage, totalPages } = paginationData;
+
+            const createPageItem = (text, page, isDisabled = false, isActive = false) => {
+                const li = document.createElement('li');
+                li.className = `page-item ${isDisabled ? 'disabled' : ''} ${isActive ? 'active' : ''}`;
+                const a = document.createElement('a');
+                a.className = 'page-link';
+                a.href = '#trade-history'; // Link to section for better UX
+                a.innerHTML = text; // Use innerHTML to support icons
+                if (!isDisabled) {
+                    a.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        callback(page);
+                    });
+                }
+                li.appendChild(a);
+                return li;
+            };
+
+            ul.appendChild(createPageItem('&laquo;', currentPage - 1, currentPage === 1));
+
+            for (let i = 1; i <= totalPages; i++) {
+                ul.appendChild(createPageItem(i, i, false, i === currentPage));
+            }
+
+            ul.appendChild(createPageItem('&raquo;', currentPage + 1, currentPage === totalPages));
+        }
+
+        function populateModelSelector(models, currentModelId) {
+            const select = document.getElementById('selectModel');
+            select.innerHTML = '';
+            if (!models || models.length === 0) {
+                select.innerHTML = '<option>No models available</option>';
+                select.disabled = true;
+                return;
+            }
+            models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.id;
+                option.textContent = `${model.name} (${model.description})`;
+                option.selected = model.id === currentModelId;
+                select.appendChild(option);
+            });
+            select.disabled = false;
+            select.dispatchEvent(new Event('change')); // Trigger change to load params
+        }
+
+        function displayModelParameters(modelId, params) {
+            const container = document.getElementById('model-parameters-container');
+            container.innerHTML = ''; // Clear previous/loading state
+
+            if (!params || Object.keys(params).length === 0 || params.error) {
+                container.innerHTML = `<p class="text-muted text-center small-text">No parameters for this model, or failed to load.</p>`;
+                document.getElementById('saveConfigBtn').disabled = true;
+                return;
+            }
+            
+            document.getElementById('saveConfigBtn').disabled = false;
+
+            const selectedOption = document.getElementById('selectModel').options[document.getElementById('selectModel').selectedIndex];
+            const modelName = selectedOption ? selectedOption.text.split(' (')[0] : modelId;
+            const paramSection = document.createElement('div');
+            paramSection.className = 'parameter-section active';
+            paramSection.innerHTML = `<h5 class="mt-4 mb-3 neon">${modelName} Parameters:</h5>`;
+
+            const row = document.createElement('div');
+            row.className = 'row g-3';
+
+            for (const key in params) {
+                const col = document.createElement('div');
+                col.className = 'col-md-6';
+
+                const label = document.createElement('label');
+                label.htmlFor = `param-${modelId}-${key}`;
+                label.className = 'form-label small-text';
+                label.textContent = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+
+                let input;
+                const value = params[key];
+
+                if (key === 'riskLevel' || key === 'kernel') {
+                    input = document.createElement('select');
+                    input.className = 'form-select form-select-custom form-select-sm';
+                    const options = key === 'riskLevel' ? ['low', 'medium', 'high'] : ['rbf', 'linear', 'poly', 'sigmoid'];
+                    options.forEach(opt => {
+                        input.innerHTML += `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt.charAt(0).toUpperCase() + opt.slice(1)}</option>`;
+                    });
+                } else if (typeof value === 'boolean') {
+                    input = document.createElement('select');
+                    input.className = 'form-select form-select-custom form-select-sm';
+                    input.innerHTML = `<option value="true" ${value ? 'selected' : ''}>True</option><option value="false" ${!value ? 'selected' : ''}>False</option>`;
+                } else if (typeof value === 'number') {
+                    input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'form-control form-control-custom form-control-sm';
+                    input.step = (value % 1 === 0 && key.toLowerCase().includes('percent')) ? '1' : (value % 1 === 0) ? '1' : (key.toLowerCase().includes('rate') ? '0.00001' : '0.01');
+                } else {
+                    input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'form-control form-control-custom form-control-sm';
+                }
+
+                input.id = `param-${modelId}-${key}`;
+                input.name = key;
+                input.value = value;
+                if (key === 'rewardFunction') input.readOnly = true;
+
+                col.appendChild(label);
+                col.appendChild(input);
+                row.appendChild(col);
+            }
+            paramSection.appendChild(row);
+            container.appendChild(paramSection);
+        }
+
+        function initializePnlChart() {
+            const ctx = document.getElementById('pnlChart').getContext('2d');
+            pnlChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: { labels: [], datasets: [{
+                    label: 'Portfolio Value ($)', data: [],
+                    borderColor: 'rgba(var(--accent-rgb), 1)', backgroundColor: 'rgba(var(--accent-rgb), 0.1)',
+                    fill: true, tension: 0.3, pointRadius: 3, pointBackgroundColor: 'rgba(var(--accent-rgb), 1)',
+                    pointBorderColor: '#fff', pointHoverRadius: 7, pointHoverBackgroundColor: '#fff', pointHoverBorderColor: 'rgba(var(--accent-rgb), 1)'
+                }]},
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: false, ticks: { color: 'rgba(255,255,255,0.7)', callback: value => '$' + value.toLocaleString() }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                        x: { ticks: { color: 'rgba(255,255,255,0.7)' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+                    },
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', titleColor: '#fff', bodyColor: '#fff', callbacks: { label: context => '$' + context.parsed.y.toLocaleString() }}}
+                }
+            });
+        }
+
+        function updatePnlChart(chartData) {
+            const loadingSpinner = document.getElementById('pnlChart-loading');
+            if (!pnlChartInstance || !chartData) {
+                if (loadingSpinner) loadingSpinner.style.display = 'none';
+                return;
+            }
+            loadingSpinner.style.display = 'none';
+            pnlChartInstance.data.labels = chartData.labels;
+            pnlChartInstance.data.datasets[0].data = chartData.data;
+            pnlChartInstance.update('none'); // Update without animation if needed
+        }
+
+        // --- Loading Functions ---
+        async function loadDashboardData() {
+            const data = await fetchData('/dashboard-overview');
+            displayDashboardOverview(data);
+        }
+
+        async function loadPortfolioData() {
+            const data = await fetchData('/portfolio');
+            displayPortfolio(data);
+        }
+
+        async function loadTradeHistory(page = 1) {
+             const tbody = document.getElementById('trade-history-table');
+             tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5"><div class="spinner-border loading-spinner" role="status"></div> <div>Loading page ${page}...</div></td></tr>`;
+             document.getElementById('trade-history-pagination-nav').classList.add('d-none'); // Hide pagination during load
+
+            const data = await fetchData(`/trade-history?page=${page}`);
+            displayTradeHistory(data);
+        }
+
+        async function loadModelsAndParams() {
+             const models = await fetchData('/models');
+             populateModelSelector(models, currentActiveModelId);
+             // The change event will trigger param loading
+        }
+
+        async function loadChartData() {
+             const data = await fetchData('/pnl-chart-data');
+             updatePnlChart(data);
+        }
+        
+        async function loadInitialData() {
+            initializePnlChart();
+            await Promise.all([
+                loadDashboardData(),
+                loadPortfolioData(),
+                loadTradeHistory(1),
+                loadModelsAndParams(), // This will load models, then trigger param load
+                loadChartData()
+            ]);
+            console.log("Initial data load complete.");
+        }
+
+
+        // --- Event Handlers & Initial Load ---
+        document.addEventListener('DOMContentLoaded', loadInitialData);
+
+        document.getElementById('selectModel').addEventListener('change', async function() {
+            const modelId = this.value;
+            const paramsContainer = document.getElementById('model-parameters-container');
+            paramsContainer.innerHTML = `<div class="text-center py-3"><div class="spinner-border loading-spinner" style="display:inline-block" role="status"></div> <span id="model-params-loading-text">Loading parameters...</span></div>`;
+            document.getElementById('saveConfigBtn').disabled = true; // Disable while loading
+
+            const parameters = await fetchData(`/models/${modelId}/parameters`);
+            displayModelParameters(modelId, parameters);
+        });
+
+        document.getElementById('botConfigForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const submitButton = document.getElementById('saveConfigBtn');
+            const originalButtonText = submitButton.innerHTML;
+
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+
+            const selectedModelId = document.getElementById('selectModel').value;
+            const params = {};
+            const paramElements = document.querySelectorAll(`#model-parameters-container .parameter-section.active input, #model-parameters-container .parameter-section.active select`);
+            paramElements.forEach(input => {
+                if (input.name) {
+                    params[input.name] = input.type === 'number' ? parseFloat(input.value) : (input.value === "true" ? true : (input.value === "false" ? false : input.value));
+                }
+            });
+
+            const configData = { modelId: selectedModelId, parameters: params };
+            console.log("Saving configuration:", configData);
+
+            const result = await postData('/configure', configData);
+
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalButtonText;
+
+            if (result.success) {
+                showAlert(result.message, 'success');
+                await loadDashboardData(); // Refresh overview to show new active model (if changed)
+            } else {
+                showAlert(result.message, 'danger');
+            }
+        });
+
+        document.getElementById('uploadModelBtn').addEventListener('click', function() {
+            const fileInput = document.getElementById('uploadModelFile');
+            const uploadStatus = document.getElementById('uploadStatus');
+
+            if (fileInput.files.length === 0) {
+                uploadStatus.textContent = 'Please select a model file first.';
+                uploadStatus.className = 'small-text mt-1 text-warning';
+                return;
+            }
+            const file = fileInput.files[0];
+            uploadFile(file); // Call the async upload function
+        });
+        
+        // Optional: Update dashboard periodically
+        // setInterval(loadDashboardData, 30000); // Update every 30 seconds
+        // setInterval(loadPortfolioData, 15000); // Update portfolio more often
+
+    </script>
 </body>
 </html>
