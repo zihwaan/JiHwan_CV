@@ -1,25 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Automated Trading Bot · Dashboard</title>
-    <link rel="icon" type="image/x-icon" href="assets/img/증사.ico" /> <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+    <title>자동 트레이딩 Bot · Dashboard</title>
+    <link rel="icon" type="image/x-icon" href="assets/img/증사.ico" />
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
     <link href="https://webfontworld.github.io/pretendard/Pretendard.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/date-fns/locale/en-US/index.js"></script> <style>
+    <style>
         :root {
-            --bg: #0d0d0d;
-            --fg: #e0e0e0;
-            --accent: #00ff7f;
+            --bg: #0d0d0d; /* Slightly less harsh black */
+            --fg: #e0e0e0; /* Light grey for text */
+            --accent: #00ff7f; /* Spring Green - a bit brighter */
             --accent-rgb: 0, 255, 127;
             --card-bg: #1a1a1a;
             --border-color: #333;
             --table-header-bg: #222;
             --text-muted-custom: #888;
-            --red: #ff4136;
+            --red: #ff4136; /* Red for loss */
             --red-rgb: 255, 65, 54;
         }
 
@@ -51,25 +51,27 @@
             font-weight: bold;
         }
         
+        /* Custom Toggler Icon with Neon Effect */
         .navbar-toggler {
             border-color: rgba(var(--accent-rgb), 0.5);
         }
         .navbar-toggler-icon {
-            background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(0, 255, 127, 0.8)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E") !important;
-            transition: box-shadow 0.2s ease;
+             background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(0, 255, 127, 0.8)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E") !important;
+             transition: box-shadow 0.2s ease;
         }
-        .navbar-toggler:hover .navbar-toggler-icon {
+         .navbar-toggler:hover .navbar-toggler-icon {
             box-shadow: 0 0 5px rgba(var(--accent-rgb), 0.7);
-        }
+         }
+
 
         .content-wrapper {
-            padding-top: 3rem;
+            padding-top: 3rem; /* Increased padding */
             padding-bottom: 3rem;
         }
 
         h1, h2, h3, h4, h5, h6 {
             color: var(--fg);
-            font-weight: 600;
+            font-weight: 600; /* Slightly bolder headings */
         }
 
         .neon {
@@ -77,17 +79,23 @@
             text-shadow: 0 0 4px rgba(var(--accent-rgb), 0.6), 0 0 8px rgba(var(--accent-rgb), 0.4);
         }
 
-        .text-profit { color: var(--accent); }
-        .text-loss { color: var(--red); text-shadow: 0 0 5px rgba(var(--red-rgb), 0.7); }
+        .text-profit {
+            color: var(--accent);
+        }
+
+        .text-loss {
+            color: var(--red);
+            text-shadow: 0 0 5px rgba(var(--red-rgb), 0.7);
+        }
 
         .card-custom {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
             color: var(--fg);
             height: 100%;
-            border-radius: 8px;
+            border-radius: 8px; /* Slightly rounded corners */
             transition: box-shadow 0.3s ease, transform 0.3s ease;
-            overflow: hidden;
+            overflow: hidden; /* Ensure content respects border-radius */
         }
         .card-custom:hover {
             box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.15);
@@ -98,42 +106,43 @@
             background-color: var(--table-header-bg);
             border-bottom: 1px solid var(--border-color);
             font-weight: bold;
-            color: var(--accent);
+            color: var(--accent); /* Header text accent */
         }
 
         .table-custom {
             color: var(--fg);
             border: 1px solid var(--border-color);
-            margin-bottom: 0;
+            margin-bottom: 0; /* Remove default table margin */
         }
 
         .table-custom th {
             background-color: var(--table-header-bg);
             color: var(--fg);
             border-bottom: 2px solid var(--accent);
-            white-space: nowrap;
+            white-space: nowrap; /* Prevent headers from wrapping */
         }
 
         .table-custom td, .table-custom th {
             border: 1px solid var(--border-color);
             vertical-align: middle;
-            padding: 0.85rem;
+            padding: 0.85rem; /* Consistent padding */
         }
         
+        /* Striped Table */
         .table-striped > tbody > tr:nth-of-type(odd) > * {
             background-color: rgba(var(--accent-rgb), 0.03);
             color: var(--fg);
         }
 
         .table-custom tbody tr:hover {
-            background-color: #2a2a2a;
+            background-color: #2a2a2a; /* Slightly lighter hover */
             color: #fff;
         }
         
         .table-responsive {
-            border-radius: 5px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
+             border-radius: 5px;
+             overflow: hidden; /* Ensure table respects border-radius */
+             border: 1px solid var(--border-color);
         }
 
         .form-control-custom, .form-select-custom {
@@ -178,7 +187,7 @@
         .btn-outline-neon {
             color: var(--accent);
             border-color: var(--accent);
-            transition: all 0.2s ease-in-out;
+             transition: all 0.2s ease-in-out;
         }
 
         .btn-outline-neon:hover {
@@ -199,57 +208,59 @@
             border-radius: 0.25rem;
             height: 20px;
             overflow: hidden;
-            margin-top: 1rem;
-            margin-bottom: 0.5rem;
+            margin-top: 1rem; /* Added margin */
+            margin-bottom: 0.5rem; /* Added margin */
         }
 
         .confidence-bar {
             height: 100%;
-            background: linear-gradient(90deg, rgba(var(--accent-rgb),0.6) 0%, rgba(var(--accent-rgb),1) 100%);
+            background: linear-gradient(90deg, rgba(var(--accent-rgb),0.6) 0%, rgba(var(--accent-rgb),1) 100%); /* Gradient */
             text-align: center;
             line-height: 20px;
             color: var(--bg);
             font-weight: bold;
             font-size: 0.8rem;
-            transition: width 0.7s cubic-bezier(0.25, 0.8, 0.25, 1);
-            white-space: nowrap;
+            transition: width 0.7s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smoother transition */
+            white-space: nowrap; /* Prevent text wrapping */
         }
 
+        /* Loading Spinner */
         .loading-spinner {
             color: var(--accent);
             margin: 1rem auto;
-            width: 1.5rem;
+            width: 1.5rem; /* Consistent size */
             height: 1.5rem;
         }
         
         .loading-placeholder {
             display: inline-block;
-            min-width: 80px;
+            min-width: 80px; /* Prevent layout shifts */
             text-align: center;
         }
         
         .loading-placeholder .spinner-border {
-            width: 1rem;
-            height: 1rem;
-            border-width: .2em;
+             width: 1rem;
+             height: 1rem;
+             border-width: .2em;
         }
 
         .parameter-section { display: none; }
         .parameter-section.active { display: block; }
 
         .chart-container {
-            height: 350px; 
+            height: 350px;
             position: relative;
         }
         
+        /* Pagination Styling */
         .pagination .page-link {
             background-color: var(--card-bg);
             color: var(--fg);
             border: 1px solid var(--border-color);
         }
         .pagination .page-link:hover {
-            background-color: var(--border-color);
-            color: var(--accent);
+             background-color: var(--border-color);
+             color: var(--accent);
         }
         .pagination .page-item.active .page-link {
             background-color: var(--accent);
@@ -257,17 +268,20 @@
             color: var(--bg);
             font-weight: bold;
         }
-        .pagination .page-item.disabled .page-link {
+         .pagination .page-item.disabled .page-link {
             background-color: #111;
             color: var(--text-muted-custom);
             border-color: var(--border-color);
-        }
-        
+         }
+         
+        /* Badge Styling */
         .badge.bg-buy { background-color: var(--accent) !important; color: var(--bg) !important; }
         .badge.bg-sell { background-color: var(--red) !important; color: var(--fg) !important; }
 
+        /* Smooth Scrolling */
         html { scroll-behavior: smooth; }
         
+        /* Alert Styling */
         .alert-custom {
             background-color: var(--card-bg);
             color: var(--fg);
@@ -280,6 +294,7 @@
         .alert-custom.alert-danger { border-left-color: var(--red); }
         .alert-custom.alert-info { border-left-color: #17a2b8; }
         .alert-custom .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+
     </style>
 </head>
 <body>
@@ -344,8 +359,7 @@
                         <div class="card-body">
                             <h5 class="card-title"><i class="fas fa-brain me-2 neon"></i>Bot Confidence</h5>
                             <div class="confidence-bar-container">
-                                <div class="confidence-bar" id="bot-confidence-bar" style="width: 0;">0%</div>
-                            </div>
+                                <div class="confidence-bar" id="bot-confidence-bar" style="width: 0;">0%</div> </div>
                             <p class="small-text">Signal: <span class="neon" id="signal-strength">Loading...</span></p>
                         </div>
                     </div>
@@ -363,22 +377,8 @@
         </section>
 
         <hr style="border-color: var(--border-color); margin: 4rem 0;">
-        
-        <section id="real-time-status" class="mb-5">
-            <div class="row g-4 mb-4">
-                <div class="col-12">
-                    <h3 class="mb-3"><i class="fas fa-chart-line me-2 neon"></i>Asset Price & Trades (e.g., BTC)</h3>
-                    <div class="card card-custom">
-                        <div class="card-body">
-                            <div class="chart-container" style="height: 400px;">
-                                <canvas id="assetPriceChart"></canvas>
-                                <div class="spinner-border loading-spinner" id="assetPriceChart-loading" role="status" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: block;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
+        <section id="real-time-status" class="mb-5">
             <div class="row g-4">
                 <div class="col-lg-7">
                     <h3 class="mb-3"><i class="fas fa-tachometer-alt me-2 neon"></i>Real-time Portfolio</h3>
@@ -436,11 +436,11 @@
                         <tr><td colspan="9" class="text-center py-5"><div class="spinner-border loading-spinner" role="status"></div> <div>Loading trade history...</div></td></tr>
                     </tbody>
                 </table>
-            </div>
-            <nav aria-label="Trade history pagination" id="trade-history-pagination-nav" class="mt-4">
-                <ul class="pagination justify-content-center" id="trade-history-pagination-ul">
-                </ul>
-            </nav>
+             </div>
+             <nav aria-label="Trade history pagination" id="trade-history-pagination-nav" class="mt-4">
+                    <ul class="pagination justify-content-center" id="trade-history-pagination-ul">
+                    </ul>
+             </nav>
         </section>
 
         <hr style="border-color: var(--border-color); margin: 4rem 0;">
@@ -454,36 +454,36 @@
                             Model Management & Parameters
                         </div>
                         <div class="card-body p-4"> <form id="botConfigForm">
-                            <div class="mb-4"> <label for="selectModel" class="form-label">Active AI Model</label>
-                                <select class="form-select form-select-custom" id="selectModel" disabled>
-                                    <option>Loading models...</option>
-                                </select>
-                            </div>
+                                <div class="mb-4"> <label for="selectModel" class="form-label">Active AI Model</label>
+                                    <select class="form-select form-select-custom" id="selectModel" disabled>
+                                        <option>Loading models...</option>
+                                    </select>
+                                </div>
 
-                            <div id="model-parameters-container">
-                                <div class="text-center py-3"><div class="spinner-border loading-spinner" id="model-params-loading" style="display:inline-block;" role="status"></div> <span id="model-params-loading-text">Select a model to see parameters.</span></div>
-                            </div>
+                                <div id="model-parameters-container">
+                                    <div class="text-center py-3"><div class="spinner-border loading-spinner" id="model-params-loading" style="display:inline-block;" role="status"></div> <span id="model-params-loading-text">Select a model to see parameters.</span></div>
+                                </div>
 
-                            <div class="mt-4">
-                                <button type="submit" class="btn btn-neon w-100 mb-2" id="saveConfigBtn" disabled>
-                                    <i class="fas fa-save me-2"></i>Save Configuration & Apply Model
-                                </button>
-                            </div>
-                        </form>
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-neon w-100 mb-2" id="saveConfigBtn" disabled>
+                                        <i class="fas fa-save me-2"></i>Save Configuration & Apply Model
+                                    </button>
+                                </div>
+                            </form>
 
-                        <div class="mt-4 pt-4 border-top" style="border-color: var(--border-color) !important;">
-                            <label for="uploadModelFile" class="form-label">Upload New Model File (.pth, .h5, .onnx)</label>
-                            <div class="input-group">
-                                <input type="file" class="form-control form-control-custom" id="uploadModelFile" aria-describedby="uploadModelAddon" accept=".pth,.h5,.onnx">
-                                <button class="btn btn-outline-neon" type="button" id="uploadModelBtn"><i class="fas fa-upload me-2"></i>Upload</button>
+                            <div class="mt-4 pt-4 border-top" style="border-color: var(--border-color) !important;">
+                                <label for="uploadModelFile" class="form-label">Upload New Model File (.pth, .h5, .onnx)</label>
+                                <div class="input-group">
+                                    <input type="file" class="form-control form-control-custom" id="uploadModelFile" aria-describedby="uploadModelAddon" accept=".pth,.h5,.onnx">
+                                    <button class="btn btn-outline-neon" type="button" id="uploadModelBtn"><i class="fas fa-upload me-2"></i>Upload</button>
+                                </div>
+                                <div class="progress mt-2 d-none" id="uploadProgressBarContainer" style="height: 5px; background-color: var(--border-color);">
+                                    <div class="progress-bar" id="uploadProgressBar" role="progressbar" style="width: 0%; background-color: var(--accent) !important;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div id="uploadStatus" class="small-text mt-1"></div>
                             </div>
-                            <div class="progress mt-2 d-none" id="uploadProgressBarContainer" style="height: 5px; background-color: var(--border-color);">
-                                <div class="progress-bar" id="uploadProgressBar" role="progressbar" style="width: 0%; background-color: var(--accent) !important;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                            <div id="uploadStatus" class="small-text mt-1"></div>
-                        </div>
-                        
-                        <div id="alert-area" class="mt-3"></div>
+                            
+                            <div id="alert-area" class="mt-3"></div>
 
                         </div>
                     </div>
@@ -500,33 +500,18 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.getElementById('currentYear').textContent = new Date().getFullYear();
-        const API_BASE_URL = '/api/bot'; 
+        const API_BASE_URL = '/api/bot'; // Example API base URL (used only for logging in this mock)
 
         let pnlChartInstance;
-        let assetPriceChartInstance; 
-        let currentModels = []; 
+        let currentModels = []; // Cache models
         let currentActiveModelId = null;
 
         // --- Utility Functions ---
-        function formatCurrency(amount, currency = 'USD') { // Default to USD
-             if (amount === null || typeof amount === 'undefined') return '-';
-             return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(amount);
-        }
-
-        function formatPnlNumber(amount) {
-            if (amount === null || typeof amount === 'undefined') return '-';
-            const sign = amount > 0 ? '+' : (amount < 0 ? '-' : '');
-            return `${sign}${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(amount))}`;
-        }
-        
-        function formatNumber(amount) { 
-             if (amount === null || typeof amount === 'undefined') return '-';
-             const options = Number.isInteger(amount) ? {minimumFractionDigits: 0, maximumFractionDigits: 0} : {minimumFractionDigits: 2, maximumFractionDigits: 4};
-             return new Intl.NumberFormat('en-US', options).format(amount);
+        function formatCurrency(amount, currency = 'USD') {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(amount);
         }
 
         function formatPercentage(value) {
-            if (value === null || typeof value === 'undefined') return '-';
             return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
         }
         
@@ -554,7 +539,7 @@
         // --- Mock Data Fetching ---
         async function fetchData(endpoint, options = {}) {
             console.log(`Fetching: ${API_BASE_URL}${endpoint}`);
-            await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 800)); 
+            await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 800)); // Simulate network delay
 
             try {
                 if (endpoint === '/dashboard-overview') {
@@ -574,18 +559,18 @@
                         { ticker: "AAPL", name: "Apple Inc.", quantity: 150, currentPrice: 175.50 + (Math.random()*5-2.5), pnl: 1200.00+ (Math.random()*100-50), pnlPercent: 4.78+ (Math.random()*0.5-0.25) },
                         { ticker: "MSFT", name: "Microsoft Corp.", quantity: 100, currentPrice: 430.10+ (Math.random()*10-5), pnl: 2500.50+ (Math.random()*200-100), pnlPercent: 6.17+ (Math.random()*0.5-0.25) },
                         { ticker: "TSLA", name: "Tesla Inc.", quantity: 50, currentPrice: 180.25+ (Math.random()*8-4), pnl: -550.00+ (Math.random()*100-50), pnlPercent: -5.75+ (Math.random()*0.5-0.25) },
-                        { ticker: "BTC", name: "Bitcoin", quantity: 0.5123, currentPrice: 65300.00+ (Math.random()*1000-500), pnl: 1800.00+ (Math.random()*200-100), pnlPercent: 5.82+ (Math.random()*0.5-0.25) }
+                        { ticker: "BTC", name: "Bitcoin", quantity: 0.5, currentPrice: 65300.00+ (Math.random()*1000-500), pnl: 1800.00+ (Math.random()*200-100), pnlPercent: 5.82+ (Math.random()*0.5-0.25) }
                     ];
                 } else if (endpoint.startsWith('/trade-history')) {
                     const page = parseInt(new URLSearchParams(endpoint.split('?')[1] || '').get('page')) || 1;
                     return {
                         trades: Array.from({ length: 5 }, (_, i) => {
-                            const isBuy = Math.random() > 0.5;
-                            const ticker = ["AAPL", "MSFT", "TSLA", "BTC", "ETH", "GOOG", "NVDA"][Math.floor(Math.random() * 7)];
-                            const price = (ticker === 'BTC' ? 60000 : 100) + Math.random() * (ticker === 'BTC' ? 5000 : 400);
-                            const qty = ticker === 'BTC' ? parseFloat((Math.random() * 0.1 + 0.01).toFixed(4)) : Math.floor(Math.random() * 100 + 1);
-                            const realized = !isBuy && Math.random() > 0.3 ? (Math.random() * 1000 - 500) : null;
-                            return {
+                             const isBuy = Math.random() > 0.5;
+                             const ticker = ["AAPL", "MSFT", "TSLA", "BTC", "ETH", "GOOG", "NVDA"][Math.floor(Math.random() * 7)];
+                             const price = 100 + Math.random() * 500;
+                             const qty = Math.floor(Math.random() * 100 + 1);
+                             const realized = !isBuy && Math.random() > 0.3 ? (Math.random() * 1000 - 500) : null;
+                             return {
                                 timestamp: new Date(Date.now() - Math.random() * 500000000 - (page * 500000000)).toISOString(),
                                 ticker: ticker,
                                 type: isBuy ? "BUY" : "SELL",
@@ -600,7 +585,7 @@
                         pagination: { currentPage: page, totalPages: 4, totalItems: 20 }
                     };
                 } else if (endpoint === '/models') {
-                    if (currentModels.length === 0) { 
+                     if (currentModels.length === 0) { // Fetch only once or when needed
                         currentModels = [
                             { id: "DRL_Alpha_v3_2", name: "DRL Alpha v3.2", description: "Deep Reinforcement Learning" },
                             { id: "TimeSeries_LSTM_Beta_1_0", name: "TimeSeries LSTM Beta 1.0", description: "LSTM Forecasting" },
@@ -609,55 +594,24 @@
                         ];
                     }
                     return currentModels;
-                } else if (endpoint.startsWith('/models/') && endpoint.endsWith("/parameters")) { // Changed for consistency
+                } else if (endpoint.startsWith('/models/')) {
                     const modelId = endpoint.split('/')[2];
                     switch (modelId) {
                         case "DRL_Alpha_v3_2": return { learningRate: 0.0001, riskLevel: "medium", maxTradeSizePercent: 5, rewardFunction: "SharpeRatio" };
                         case "TimeSeries_LSTM_Beta_1_0": return { sequenceLength: 60, trainingEpochs: 100, lookbackPeriod: 30 };
                         case "RuleBased_Momentum": return { shortTermMA: 20, longTermMA: 50, rsiPeriod: 14 };
                         case "SVM_Volatility_v1": return { kernel: "rbf", C: 1.0, gamma: "scale" };
-                        default: return { error: "Model parameters not found.", detail: "Parameters unavailable for this model." };
+                        default: return { error: "Model not found", detail: "Parameters unavailable" };
                     }
                 } else if (endpoint === '/pnl-chart-data') {
                     const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
                     const data = labels.map((_, i) => 145000 + (i * 800) + (Math.random() * 8000 - 4000));
                     return { labels, data };
-                } else if (endpoint.startsWith('/asset-price-details/')) { 
-                    const ticker = endpoint.split('/').pop(); 
-                    const now = Date.now();
-                    const priceHistory = [];
-                    let currentPrice = ticker === 'BTC' ? 65000 : (ticker === 'AAPL' ? 170 : 250);
-
-                    for (let i = 48; i >= 0; i--) { 
-                        const timestamp = new Date(now - i * 60 * 60 * 1000).toISOString(); // Hourly data for 2 days
-                        currentPrice += (Math.random() - 0.5) * (currentPrice * 0.01); 
-                        priceHistory.push({ x: timestamp, y: parseFloat(currentPrice.toFixed(2)) }); 
-                    }
-
-                    const tradeMarkers = [];
-                    for (let k=0; k < 5; k++) {
-                        const tradeTimeIndex = Math.floor(Math.random() * priceHistory.length);
-                        const tradeTimestamp = priceHistory[tradeTimeIndex].x;
-                        const tradePrice = priceHistory[tradeTimeIndex].y * (1 + (Math.random() -0.5) * 0.002); 
-                        const type = Math.random() > 0.5 ? 'BUY' : 'SELL';
-                        tradeMarkers.push({
-                            x: tradeTimestamp,
-                            y: parseFloat(tradePrice.toFixed(2)),
-                            type: type,
-                            quantity: ticker === 'BTC' ? parseFloat((Math.random() * 0.05 + 0.005).toFixed(3)) : Math.floor(Math.random() * 10 + 1)
-                        });
-                    }
-                    
-                    return {
-                        assetTicker: ticker,
-                        priceHistory: priceHistory,
-                        tradeMarkers: tradeMarkers.sort((a,b) => new Date(a.x) - new Date(b.x)) 
-                    };
                 }
                 return {};
             } catch (error) {
                 console.error(`Error fetching ${endpoint}:`, error);
-                showAlert(`Failed to fetch data for ${endpoint}. Message: ${error.message}`, 'danger');
+                showAlert(`Failed to fetch data for ${endpoint}.`, 'danger');
                 return null;
             }
         }
@@ -666,12 +620,13 @@
             console.log(`POSTing to: ${API_BASE_URL}${endpoint}`, body);
             await new Promise(resolve => setTimeout(resolve, 1200));
             try {
+                // Simulate success/failure
                 if (Math.random() > 0.1) {
                     console.log("Simulated Save Success");
-                    currentActiveModelId = body.modelId; 
+                    currentActiveModelId = body.modelId; // Update active model on success
                     return { success: true, message: "Configuration saved successfully!" };
                 } else {
-                    throw new Error("Simulated backend error during save.");
+                    throw new Error("Simulated backend error.");
                 }
             } catch (error) {
                 console.error(`Error POSTing to ${endpoint}:`, error);
@@ -679,7 +634,7 @@
             }
         }
         
-        async function uploadFile(file) {
+         async function uploadFile(file) {
             console.log(`Uploading: ${file.name}`);
             const progressBarContainer = document.getElementById('uploadProgressBarContainer');
             const progressBar = document.getElementById('uploadProgressBar');
@@ -692,6 +647,7 @@
             progressBar.classList.remove('bg-danger', 'bg-success');
             progressBar.classList.add('progress-bar-animated', 'progress-bar-striped');
 
+
             try {
                 for (let i = 0; i <= 100; i += 5) {
                     await new Promise(resolve => setTimeout(resolve, 50));
@@ -701,9 +657,10 @@
                 
                 progressBar.classList.remove('progress-bar-animated', 'progress-bar-striped');
                 
+                // Simulate success
                 const newModelId = `Uploaded_${file.name.split('.')[0]}_${Date.now()}`;
                 const newModel = { id: newModelId, name: file.name, description: "Uploaded Model"};
-                currentModels.push(newModel); 
+                currentModels.push(newModel); // Add to our mock list
                 
                 uploadStatus.textContent = `${file.name} uploaded successfully. Awaiting validation.`;
                 uploadStatus.className = 'small-text mt-1 text-success';
@@ -716,51 +673,44 @@
                 uploadStatus.textContent = `Error: ${error.message}`;
                 uploadStatus.className = 'small-text mt-1 text-danger';
                 progressBar.classList.add('bg-danger');
-                showAlert(`Upload failed for ${file.name}.`, 'danger');
+                 showAlert(`Upload failed for ${file.name}.`, 'danger');
             } finally {
                 setTimeout(() => {
                     progressBarContainer.classList.add('d-none');
                     progressBar.style.width = '0%';
-                }, 3000); 
+                }, 3000); // Hide after 3 seconds
             }
         }
 
+
         // --- Rendering Functions ---
         function displayDashboardOverview(data) {
-            const totalAssetsEl = document.getElementById('total-assets');
-            const overallPnlEl = document.getElementById('overall-pnl');
-            const activeModelNameEl = document.getElementById('active-model-name');
-
             if (!data) {
-                [totalAssetsEl, overallPnlEl, activeModelNameEl].forEach(el => {
-                    if (el) {
-                        el.innerHTML = 'Error'; 
-                        el.classList.add('text-loss');
-                    }
+                ['total-assets', 'overall-pnl', 'signal-strength', 'active-model-name', 'active-model-strategy'].forEach(id => {
+                    document.getElementById(id).textContent = 'Error';
+                    document.getElementById(id).classList.add('text-loss');
                 });
-                document.getElementById('signal-strength').textContent = 'Error';
-                document.getElementById('active-model-strategy').textContent = 'Error';
-                document.getElementById('last-updated').textContent = 'Error';
                 return;
             }
-            totalAssetsEl.innerHTML = formatCurrency(data.totalAssets);
-            overallPnlEl.innerHTML = formatPnlNumber(data.overallPnl);
+            document.getElementById('total-assets').textContent = formatCurrency(data.totalAssets);
+            document.getElementById('overall-pnl').textContent = `${data.overallPnl >= 0 ? '+' : ''}${formatCurrency(data.overallPnl).replace('USD', '').replace(/[()]/g, '')}`;
             document.getElementById('overall-pnl-percent').textContent = `(${formatPercentage(data.overallPnlPercent)})`;
-            overallPnlEl.className = `display-6 fw-bold ${data.overallPnl >= 0 ? 'text-profit' : 'text-loss'}`;
+            document.getElementById('overall-pnl').className = `display-6 fw-bold ${data.overallPnl >= 0 ? 'text-profit' : 'text-loss'}`;
             document.getElementById('overall-pnl-percent').className = `small-text fw-bold ${data.overallPnlPercent >= 0 ? 'text-profit' : 'text-loss'}`;
 
             const confidenceBar = document.getElementById('bot-confidence-bar');
             const confidenceValue = Math.max(0, Math.min(100, data.botConfidence || 0));
+            // Defer update slightly for visual effect
             setTimeout(() => {
-                confidenceBar.style.width = `${confidenceValue}%`;
-                confidenceBar.textContent = `${confidenceValue.toFixed(0)}%`;
+                 confidenceBar.style.width = `${confidenceValue}%`;
+                 confidenceBar.textContent = `${confidenceValue.toFixed(0)}%`;
             }, 100);
 
             document.getElementById('signal-strength').textContent = data.signalStrength;
-            activeModelNameEl.innerHTML = data.activeModel.name; 
+            document.getElementById('active-model-name').textContent = data.activeModel.name;
             document.getElementById('active-model-strategy').textContent = data.activeModel.strategy;
-            document.getElementById('last-updated').textContent = `Updated: ${new Date(data.lastUpdated).toLocaleTimeString('en-US')}`;
-            currentActiveModelId = data.activeModel.id; 
+            document.getElementById('last-updated').textContent = `Updated: ${new Date(data.lastUpdated).toLocaleTimeString()}`;
+            currentActiveModelId = data.activeModel.id; // Update state
         }
 
         function displayPortfolio(assets) {
@@ -776,10 +726,10 @@
                 const row = `
                     <tr>
                         <td><span class="neon">${asset.ticker}</span> <span class="small-text d-none d-md-inline">(${asset.name})</span></td>
-                        <td>${formatNumber(asset.quantity)}</td>
+                        <td>${asset.quantity.toLocaleString()}</td>
                         <td>${formatCurrency(asset.currentPrice)}</td>
                         <td>${formatCurrency(totalValue)}</td>
-                        <td class="${pnlClass}">${formatPnlNumber(asset.pnl)}</td>
+                        <td class="${pnlClass}">${formatCurrency(asset.pnl).replace('USD', '').replace(/[()]/g, '')}</td>
                         <td class="${pnlClass}">${formatPercentage(asset.pnlPercent)}</td>
                     </tr>
                 `;
@@ -797,15 +747,15 @@
             }
             data.trades.forEach(trade => {
                 const typeClass = trade.type.toUpperCase() === 'BUY' ? 'bg-buy' : 'bg-sell';
-                const pnlText = trade.realizedPnl !== null ? formatPnlNumber(trade.realizedPnl) : '-';
+                const pnlText = trade.realizedPnl !== null ? formatCurrency(trade.realizedPnl).replace('USD', '').replace(/[()]/g, '') : '-';
                 const pnlClass = trade.realizedPnl === null ? '' : (trade.realizedPnl >= 0 ? 'text-profit' : 'text-loss');
                 const row = `
                     <tr>
-                        <td class="small-text">${new Date(trade.timestamp).toLocaleString('en-US')}</td>
+                        <td class="small-text">${new Date(trade.timestamp).toLocaleString()}</td>
                         <td class="neon">${trade.ticker}</td>
                         <td><span class="badge ${typeClass}">${trade.type.toUpperCase()}</span></td>
                         <td>${formatCurrency(trade.price)}</td>
-                        <td>${formatNumber(trade.quantity)}</td>
+                        <td>${trade.quantity.toLocaleString()}</td>
                         <td>${formatCurrency(trade.totalValue)}</td>
                         <td class="small-text">${formatCurrency(trade.fees)}</td>
                         <td><span class="badge bg-secondary">${trade.status}</span></td>
@@ -830,8 +780,8 @@
                 li.className = `page-item ${isDisabled ? 'disabled' : ''} ${isActive ? 'active' : ''}`;
                 const a = document.createElement('a');
                 a.className = 'page-link';
-                a.href = '#trade-history'; 
-                a.innerHTML = text; 
+                a.href = '#trade-history'; // Link to section for better UX
+                a.innerHTML = text; // Use innerHTML to support icons
                 if (!isDisabled) {
                     a.addEventListener('click', (e) => {
                         e.preventDefault();
@@ -851,7 +801,7 @@
             ul.appendChild(createPageItem('&raquo;', currentPage + 1, currentPage === totalPages));
         }
 
-        function populateModelSelector(models, currentModelIdFromDashboard) {
+        function populateModelSelector(models, currentModelId) {
             const select = document.getElementById('selectModel');
             select.innerHTML = '';
             if (!models || models.length === 0) {
@@ -863,19 +813,19 @@
                 const option = document.createElement('option');
                 option.value = model.id;
                 option.textContent = `${model.name} (${model.description})`;
-                option.selected = model.id === (currentActiveModelId || currentModelIdFromDashboard); // Prioritize currentActiveModelId if set by user
+                option.selected = model.id === currentModelId;
                 select.appendChild(option);
             });
             select.disabled = false;
-            select.dispatchEvent(new Event('change')); 
+            select.dispatchEvent(new Event('change')); // Trigger change to load params
         }
 
         function displayModelParameters(modelId, params) {
             const container = document.getElementById('model-parameters-container');
-            container.innerHTML = ''; 
+            container.innerHTML = ''; // Clear previous/loading state
 
             if (!params || Object.keys(params).length === 0 || params.error) {
-                container.innerHTML = `<p class="text-muted text-center small-text">${params && params.detail ? params.detail : 'No parameters for this model, or failed to load.'}</p>`;
+                container.innerHTML = `<p class="text-muted text-center small-text">No parameters for this model, or failed to load.</p>`;
                 document.getElementById('saveConfigBtn').disabled = true;
                 return;
             }
@@ -890,13 +840,6 @@
 
             const row = document.createElement('div');
             row.className = 'row g-3';
-            
-            const paramTranslations = {
-                learningRate: "Learning Rate", riskLevel: "Risk Level", maxTradeSizePercent: "Max Trade Size (%)",
-                rewardFunction: "Reward Function", sequenceLength: "Sequence Length", trainingEpochs: "Training Epochs",
-                lookbackPeriod: "Lookback Period", shortTermMA: "Short-Term MA", longTermMA: "Long-Term MA",
-                rsiPeriod: "RSI Period", kernel: "Kernel", C: "C (Regularization)", gamma: "Gamma"
-            };
 
             for (const key in params) {
                 const col = document.createElement('div');
@@ -905,24 +848,17 @@
                 const label = document.createElement('label');
                 label.htmlFor = `param-${modelId}-${key}`;
                 label.className = 'form-label small-text';
-                label.textContent = paramTranslations[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                label.textContent = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
 
                 let input;
                 const value = params[key];
 
-                if (key === 'riskLevel') { 
+                if (key === 'riskLevel' || key === 'kernel') {
                     input = document.createElement('select');
                     input.className = 'form-select form-select-custom form-select-sm';
-                    const options = {low: "Low", medium: "Medium", high: "High"};
-                    for(const optKey in options) {
-                         input.innerHTML += `<option value="${optKey}" ${value === optKey ? 'selected' : ''}>${options[optKey]}</option>`;
-                    }
-                } else if (key === 'kernel') {
-                     input = document.createElement('select');
-                    input.className = 'form-select form-select-custom form-select-sm';
-                    const options = ['rbf', 'linear', 'poly', 'sigmoid'];
-                     options.forEach(opt => {
-                         input.innerHTML += `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt.charAt(0).toUpperCase() + opt.slice(1)}</option>`;
+                    const options = key === 'riskLevel' ? ['low', 'medium', 'high'] : ['rbf', 'linear', 'poly', 'sigmoid'];
+                    options.forEach(opt => {
+                        input.innerHTML += `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt.charAt(0).toUpperCase() + opt.slice(1)}</option>`;
                     });
                 } else if (typeof value === 'boolean') {
                     input = document.createElement('select');
@@ -965,10 +901,10 @@
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     scales: {
-                        y: { beginAtZero: false, ticks: { color: 'rgba(255,255,255,0.7)', callback: value => formatCurrency(value) }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                        y: { beginAtZero: false, ticks: { color: 'rgba(255,255,255,0.7)', callback: value => '$' + value.toLocaleString() }, grid: { color: 'rgba(255,255,255,0.1)' } },
                         x: { ticks: { color: 'rgba(255,255,255,0.7)' }, grid: { color: 'rgba(255,255,255,0.1)' } }
                     },
-                    plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', titleColor: '#fff', bodyColor: '#fff', callbacks: { label: context => formatCurrency(context.parsed.y) }}}
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', titleColor: '#fff', bodyColor: '#fff', callbacks: { label: context => '$' + context.parsed.y.toLocaleString() }}}
                 }
             });
         }
@@ -979,147 +915,10 @@
                 if (loadingSpinner) loadingSpinner.style.display = 'none';
                 return;
             }
-            if (loadingSpinner) loadingSpinner.style.display = 'none';
+            loadingSpinner.style.display = 'none';
             pnlChartInstance.data.labels = chartData.labels;
             pnlChartInstance.data.datasets[0].data = chartData.data;
-            pnlChartInstance.update('none'); 
-        }
-
-        function initializeAssetPriceChart() {
-            const ctx = document.getElementById('assetPriceChart').getContext('2d');
-            assetPriceChartInstance = new Chart(ctx, {
-                type: 'line', 
-                data: {
-                    datasets: [
-                        {
-                            label: 'Price',
-                            data: [], 
-                            borderColor: 'rgba(var(--accent-rgb), 0.9)', 
-                            backgroundColor: 'transparent', 
-                            fill: false, 
-                            tension: 0.1,
-                            pointRadius: 0, 
-                            borderWidth: 2
-                        },
-                        {
-                            label: 'Buy Order',
-                            data: [], 
-                            type: 'scatter',
-                            pointStyle: 'triangle',
-                            radius: 8,
-                            hoverRadius: 10,
-                            backgroundColor: 'rgba(var(--accent-rgb), 1)', 
-                            borderColor: 'rgba(255, 255, 255, 0.8)',
-                            borderWidth: 1,
-                            rotation: 0, 
-                        },
-                        {
-                            label: 'Sell Order',
-                            data: [], 
-                            type: 'scatter',
-                            pointStyle: 'rectRot', 
-                            radius: 7,
-                            hoverRadius: 9,
-                            backgroundColor: 'rgba(var(--red-rgb), 1)', 
-                            borderColor: 'rgba(255, 255, 255, 0.8)',
-                            borderWidth: 1,
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: {
-                            type: 'time',
-                            adapters: { date: { locale: dateFns.locales['en-US'] } }, // Use en-US locale for date-fns
-                            time: {
-                                unit: 'hour', 
-                                tooltipFormat: 'MMM d, HH:mm', // English date format
-                                displayFormats: {
-                                    hour: 'HH:mm', 
-                                    day: 'MMM d'
-                                }
-                            },
-                            ticks: { color: 'rgba(255,255,255,0.7)' },
-                            grid: { color: 'rgba(255,255,255,0.1)' }
-                        },
-                        y: {
-                            beginAtZero: false,
-                            ticks: { color: 'rgba(255,255,255,0.7)', callback: value => formatCurrency(value) },
-                            grid: { color: 'rgba(255,255,255,0.1)' }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top',
-                            labels: {
-                                color: 'rgba(255,255,255,0.8)',
-                                usePointStyle: true,
-                            }
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0,0,0,0.8)',
-                            titleColor: '#fff',
-                            bodyColor: '#fff',
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) { label += ': '; }
-                                    if (context.parsed.y !== null) {
-                                        label += formatCurrency(context.parsed.y);
-                                    }
-                                    if (context.dataset.label.includes('Order') && context.raw && typeof context.raw.quantity !== 'undefined') {
-                                        label += ` (Qty: ${formatNumber(context.raw.quantity)})`;
-                                    }
-                                    return label;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function updateAssetPriceChart(data) {
-            const loadingSpinner = document.getElementById('assetPriceChart-loading');
-            if (!assetPriceChartInstance || !data) {
-                if (loadingSpinner) loadingSpinner.style.display = 'none';
-                console.error("Asset price chart instance or data missing.");
-                return;
-            }
-            if (loadingSpinner) loadingSpinner.style.display = 'none';
-
-            assetPriceChartInstance.data.datasets[0].data = data.priceHistory; 
-
-            const buyOrders = data.tradeMarkers.filter(trade => trade.type.toUpperCase() === 'BUY');
-            const sellOrders = data.tradeMarkers.filter(trade => trade.type.toUpperCase() === 'SELL');
-
-            assetPriceChartInstance.data.datasets[1].data = buyOrders; 
-            assetPriceChartInstance.data.datasets[2].data = sellOrders; 
-            
-            if (data.priceHistory.length > 0) {
-                const first = new Date(data.priceHistory[0].x).getTime();
-                const last = new Date(data.priceHistory[data.priceHistory.length - 1].x).getTime();
-                const rangeHours = (last - first) / (1000 * 60 * 60);
-
-                if (rangeHours <= 3) { 
-                    assetPriceChartInstance.options.scales.x.time.unit = 'minute';
-                    assetPriceChartInstance.options.scales.x.time.tooltipFormat = 'MMM d, HH:mm';
-                    assetPriceChartInstance.options.scales.x.time.displayFormats.minute = 'HH:mm';
-                } else if (rangeHours <= 72) { 
-                    assetPriceChartInstance.options.scales.x.time.unit = 'hour';
-                    assetPriceChartInstance.options.scales.x.time.tooltipFormat = 'MMM d, HH:mm';
-                } else if (rangeHours <= 24 * 30) { 
-                    assetPriceChartInstance.options.scales.x.time.unit = 'day';
-                    assetPriceChartInstance.options.scales.x.time.tooltipFormat = 'MMM d, yyyy';
-                } else { 
-                    assetPriceChartInstance.options.scales.x.time.unit = 'week';
-                    assetPriceChartInstance.options.scales.x.time.tooltipFormat = 'MMM d, yyyy';
-                }
-            }
-            assetPriceChartInstance.update('none');
+            pnlChartInstance.update('none'); // Update without animation if needed
         }
 
         // --- Loading Functions ---
@@ -1134,60 +933,37 @@
         }
 
         async function loadTradeHistory(page = 1) {
-            const tbody = document.getElementById('trade-history-table');
-            tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5"><div class="spinner-border loading-spinner" role="status"></div> <div>Loading page ${page} of trade history...</div></td></tr>`;
-            document.getElementById('trade-history-pagination-nav').classList.add('d-none'); 
+             const tbody = document.getElementById('trade-history-table');
+             tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5"><div class="spinner-border loading-spinner" role="status"></div> <div>Loading page ${page}...</div></td></tr>`;
+             document.getElementById('trade-history-pagination-nav').classList.add('d-none'); // Hide pagination during load
 
             const data = await fetchData(`/trade-history?page=${page}`);
             displayTradeHistory(data);
         }
 
         async function loadModelsAndParams() {
-            const models = await fetchData('/models');
-            // The active model ID from dashboard overview (if already loaded) should be passed
-            // or it will default to the first model or currentActiveModelId if set by user previously
-            populateModelSelector(models, currentActiveModelId);
+             const models = await fetchData('/models');
+             populateModelSelector(models, currentActiveModelId);
+             // The change event will trigger param loading
         }
 
         async function loadChartData() {
-            const data = await fetchData('/pnl-chart-data');
-            updatePnlChart(data);
-        }
-
-        async function loadAssetPriceChartData(ticker = 'BTC') { 
-            const loadingSpinner = document.getElementById('assetPriceChart-loading');
-            if(loadingSpinner) loadingSpinner.style.display = 'block';
-            
-            const data = await fetchData(`/asset-price-details/${ticker}`);
-            if (data) { 
-                 updateAssetPriceChart(data);
-                 const chartTitleElement = document.querySelector('#real-time-status .row.g-4.mb-4 h3');
-                 if (chartTitleElement) {
-                     chartTitleElement.innerHTML = `<i class="fas fa-chart-line me-2 neon"></i>Asset Price & Trades (${data.assetTicker || ticker})`;
-                 }
-            } else {
-                 if (loadingSpinner) loadingSpinner.style.display = 'none'; 
-                 console.error(`${ticker} asset price data failed to load.`);
-            }
+             const data = await fetchData('/pnl-chart-data');
+             updatePnlChart(data);
         }
         
         async function loadInitialData() {
             initializePnlChart();
-            initializeAssetPriceChart(); 
-
-            // Load dashboard overview first to get currentActiveModelId if possible
-            await loadDashboardData(); 
-            
-            // Then load other components, some of which might use currentActiveModelId
             await Promise.all([
+                loadDashboardData(),
                 loadPortfolioData(),
                 loadTradeHistory(1),
-                loadModelsAndParams(), // Now uses currentActiveModelId from dashboard load
-                loadChartData(),
-                loadAssetPriceChartData('BTC') 
+                loadModelsAndParams(), // This will load models, then trigger param load
+                loadChartData()
             ]);
-            console.log("Initial data loaded.");
+            console.log("Initial data load complete.");
         }
+
 
         // --- Event Handlers & Initial Load ---
         document.addEventListener('DOMContentLoaded', loadInitialData);
@@ -1196,7 +972,7 @@
             const modelId = this.value;
             const paramsContainer = document.getElementById('model-parameters-container');
             paramsContainer.innerHTML = `<div class="text-center py-3"><div class="spinner-border loading-spinner" style="display:inline-block" role="status"></div> <span id="model-params-loading-text">Loading parameters...</span></div>`;
-            document.getElementById('saveConfigBtn').disabled = true; 
+            document.getElementById('saveConfigBtn').disabled = true; // Disable while loading
 
             const parameters = await fetchData(`/models/${modelId}/parameters`);
             displayModelParameters(modelId, parameters);
@@ -1229,8 +1005,7 @@
 
             if (result.success) {
                 showAlert(result.message, 'success');
-                // currentActiveModelId is updated in postData on success
-                await loadDashboardData(); // Refresh overview to reflect new active model and its strategy
+                await loadDashboardData(); // Refresh overview to show new active model (if changed)
             } else {
                 showAlert(result.message, 'danger');
             }
@@ -1246,13 +1021,12 @@
                 return;
             }
             const file = fileInput.files[0];
-            uploadFile(file); 
+            uploadFile(file); // Call the async upload function
         });
         
-        // Optional: Periodic updates
-        // setInterval(loadDashboardData, 30000); 
-        // setInterval(loadPortfolioData, 15000); 
-        // setInterval(() => loadAssetPriceChartData('BTC'), 60000); // Example: reload BTC chart periodically
+        // Optional: Update dashboard periodically
+        // setInterval(loadDashboardData, 30000); // Update every 30 seconds
+        // setInterval(loadPortfolioData, 15000); // Update portfolio more often
 
     </script>
 </body>
