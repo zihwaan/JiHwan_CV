@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminToken = localStorage.getItem('admin_token');
 
     // DOM Elements
-    const logoutBtn = document.getElementById('admin-logout-btn');
     const createMemoForm = document.getElementById('create-memo-form');
     const memoTitleInput = document.getElementById('memo-title');
     const memoContentInput = document.getElementById('memo-content');
@@ -17,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const editMemoContentInput = document.getElementById('edit-memo-content');
     const editMemoColorInput = document.getElementById('edit-memo-color');
     const saveMemoChangesBtn = document.getElementById('save-memo-changes-btn');
-
 
     // Helper function to escape HTML (basic XSS prevention)
     function escapeHTML(str) {
@@ -35,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 1. Admin Authentication Check
     if (!adminToken) {
-        alert('Admin access required. Please log in.');
+        alert('관리자 접근 권한이 필요합니다. 먼저 로그인해주세요.');
         window.location.href = 'index.html';
         return; // Stop script execution
     }
@@ -52,31 +50,37 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (response.status === 401) {
-                alert('Session expired or invalid. Please log in again.');
+                alert('세션이 만료되었거나 유효하지 않습니다. 다시 로그인해주세요.');
                 localStorage.removeItem('admin_token');
                 window.location.href = 'index.html';
                 return;
             }
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to fetch memos');
+                throw new Error(errorData.error || '메모를 불러오는데 실패했습니다.');
             }
 
             const memos = await response.json();
             memosContainer.innerHTML = ''; // Clear existing memos
 
             if (memos.length === 0) {
-                memosContainer.innerHTML = '<p>No memos found. Create one!</p>';
+                const noMemoMessage = document.createElement('div');
+                noMemoMessage.className = 'col-12 text-center text-muted mt-3';
+                noMemoMessage.innerHTML = '<p><i class="fas fa-folder-open fa-2x mb-2"></i><br>메모가 없습니다. 새 메모를 작성해보세요!</p>';
+                memosContainer.appendChild(noMemoMessage);
                 return;
             }
 
             memos.forEach(memo => {
+                const memoCol = document.createElement('div');
+                memoCol.className = 'col'; // For Bootstrap grid
+
                 const memoBox = document.createElement('div');
-                memoBox.className = 'memo-box card';
-                memoBox.style.backgroundColor = escapeHTML(memo.color || '#FFFFCC');
+                memoBox.className = 'memo-box h-100 d-flex flex-column'; // Added h-100 and flex classes
+                memoBox.style.backgroundColor = escapeHTML(memo.color || '#e9ecef');
 
                 const cardBody = document.createElement('div');
-                cardBody.className = 'card-body';
+                cardBody.className = 'card-body d-flex flex-column flex-grow-1'; // Added flex-grow-1
 
                 const title = document.createElement('h5');
                 title.className = 'card-title';
@@ -84,26 +88,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const timestamp = document.createElement('p');
                 timestamp.className = 'timestamp card-subtitle mb-2 text-muted';
-                timestamp.textContent = new Date(memo.time).toLocaleString();
+                timestamp.textContent = new Date(memo.time).toLocaleString('ko-KR');
 
                 const content = document.createElement('p');
-                content.className = 'card-text';
-                content.textContent = escapeHTML(memo.content); // Use textContent for security
+                content.className = 'card-text flex-grow-1'; // Allow content to take available space
+                content.textContent = escapeHTML(memo.content);
 
                 const actions = document.createElement('div');
-                actions.className = 'memo-actions';
+                actions.className = 'memo-actions mt-auto'; // Push actions to the bottom
 
                 const editBtn = document.createElement('button');
-                editBtn.className = 'btn btn-sm btn-warning edit-memo-btn';
-                editBtn.textContent = 'Edit';
+                editBtn.className = 'btn btn-sm btn-outline-primary edit-memo-btn';
+                editBtn.innerHTML = '<i class="fas fa-edit"></i> 수정';
                 editBtn.dataset.id = memo.id;
                 editBtn.dataset.title = memo.title;
                 editBtn.dataset.content = memo.content;
                 editBtn.dataset.color = memo.color;
 
                 const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'btn btn-sm btn-danger delete-memo-btn ms-2';
-                deleteBtn.textContent = 'Delete';
+                deleteBtn.className = 'btn btn-sm btn-outline-danger delete-memo-btn ms-2';
+                deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> 삭제';
                 deleteBtn.dataset.id = memo.id;
 
                 actions.appendChild(editBtn);
@@ -114,13 +118,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 cardBody.appendChild(content);
                 cardBody.appendChild(actions);
                 memoBox.appendChild(cardBody);
-                memosContainer.appendChild(memoBox);
+                memoCol.appendChild(memoBox);
+                memosContainer.appendChild(memoCol);
             });
 
         } catch (error) {
-            console.error('Error fetching memos:', error);
-            alert(`Error: ${error.message}`);
-            memosContainer.innerHTML = `<p class="text-danger">Could not load memos: ${error.message}</p>`;
+            console.error('메모 불러오기 오류:', error);
+            // alert(`오류: ${error.message}`);
+            memosContainer.innerHTML = `<div class="col-12"><p class="text-danger text-center mt-3">메모를 불러올 수 없습니다: ${error.message}</p></div>`;
         }
     }
 
@@ -133,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const color = memoColorInput.value;
 
             if (!title || !content) {
-                alert('Title and content are required.');
+                alert('제목과 내용은 필수입니다.');
                 return;
             }
 
@@ -149,15 +154,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    throw new Error(errorData.error || 'Failed to create memo');
+                    throw new Error(errorData.error || '메모 생성에 실패했습니다.');
                 }
 
-                createMemoForm.reset(); // Reset form
-                memoColorInput.value = '#FFFFCC'; // Reset color to default
-                await fetchAndRenderMemos(); // Refresh list
+                createMemoForm.reset(); 
+                memoColorInput.value = '#e9ecef'; // Reset color to new default
+                await fetchAndRenderMemos(); 
             } catch (error) {
-                console.error('Error creating memo:', error);
-                alert(`Error: ${error.message}`);
+                console.error('메모 생성 오류:', error);
+                alert(`오류: ${error.message}`);
             }
         });
     }
@@ -165,7 +170,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4. Edit Memo & 5. Delete Memo (Event Delegation)
     if (memosContainer) {
         memosContainer.addEventListener('click', async (event) => {
-            const target = event.target;
+            const target = event.target.closest('button'); // Get the button element itself
+            if (!target) return;
+
 
             // Edit Memo
             if (target.classList.contains('edit-memo-btn')) {
@@ -180,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Delete Memo
             if (target.classList.contains('delete-memo-btn')) {
                 const memoId = target.dataset.id;
-                if (confirm('Are you sure you want to delete this memo?')) {
+                if (confirm('이 메모를 정말 삭제하시겠습니까?')) {
                     try {
                         const response = await fetch(`/api/admin/memos/${memoId}`, {
                             method: 'DELETE',
@@ -191,12 +198,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         if (!response.ok) {
                             const errorData = await response.json();
-                            throw new Error(errorData.error || 'Failed to delete memo');
+                            throw new Error(errorData.error || '메모 삭제에 실패했습니다.');
                         }
-                        await fetchAndRenderMemos(); // Refresh list
+                        await fetchAndRenderMemos();
                     } catch (error) {
-                        console.error('Error deleting memo:', error);
-                        alert(`Error: ${error.message}`);
+                        console.error('메모 삭제 오류:', error);
+                        alert(`오류: ${error.message}`);
                     }
                 }
             }
@@ -212,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const color = editMemoColorInput.value;
 
             if (!title || !content) {
-                alert('Title and content are required for editing.');
+                alert('제목과 내용은 수정을 위해 필수입니다.');
                 return;
             }
 
@@ -228,27 +235,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    throw new Error(errorData.error || 'Failed to update memo');
+                    throw new Error(errorData.error || '메모 업데이트에 실패했습니다.');
                 }
                 
                 if (editMemoModal) {
                     editMemoModal.hide();
                 }
-                await fetchAndRenderMemos(); // Refresh list
+                await fetchAndRenderMemos();
             } catch (error) {
-                console.error('Error updating memo:', error);
-                alert(`Error: ${error.message}`);
+                console.error('메모 업데이트 오류:', error);
+                alert(`오류: ${error.message}`);
             }
-        });
-    }
-
-
-    // 6. Admin Logout
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            localStorage.removeItem('admin_token');
-            alert('You have been logged out.');
-            window.location.href = 'index.html';
         });
     }
 
