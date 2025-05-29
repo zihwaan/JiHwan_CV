@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Bot Dashboard</title>
+    <!-- Link to the global styles.css served from the project root's /css directory -->
+    <link href="/css/styles.css" rel="stylesheet" />
+    <!-- Optional: Link to a dashboard-specific stylesheet if needed, would be in trading_bot/static/css/ -->
+    <!-- <link href="/static/css/dashboard_specific.css" rel="stylesheet" /> -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f4f4; color: #333; }
+        .dashboard-container { max-width: 1200px; margin: auto; padding: 20px; background-color: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        
+        /* Mimicking existing navigation style from provided index.html (conceptual) */
+        .navbar { background-color: #333; overflow: hidden; padding: 10px 0; text-align: center; }
+        .navbar a { display: inline-block; color: white; padding: 14px 20px; text-decoration: none; font-size: 1.2em; }
+        .navbar a:hover { background-color: #ddd; color: black; }
+        .navbar .title { font-size: 1.5em; font-weight: bold; color: white; padding: 10px 20px; }
+
+        .section { margin-bottom: 30px; padding: 20px; border: 1px solid #eee; border-radius: 5px; }
+        .section h2 { margin-top: 0; color: #555; }
+        
+        .controls-section button { padding: 10px 15px; background-color: #5cb85c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; }
+        .controls-section button:hover { background-color: #4cae4c; }
+        #botStatusDisplay { margin-top: 10px; font-weight: bold; }
+        
+        .metrics-section { display: flex; justify-content: space-around; text-align: center; }
+        .metric { background-color: #f9f9f9; padding: 15px; border-radius: 5px; box-shadow: 0 0 5px rgba(0,0,0,0.05); flex-basis: 45%; }
+        .metric h3 { margin-top: 0; font-size: 1.1em; color: #666; }
+        .metric p { font-size: 1.5em; font-weight: bold; color: #333; margin-bottom: 0; }
+
+        .charts-section .chart-container { margin-bottom: 20px; }
+        canvas { max-width: 100%; border: 1px solid #ddd; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <span class="title">Trading Bot Dashboard</span>
+        <!-- Example links if you want to navigate back or elsewhere -->
+        <!-- <a href="/">Home</a> -->
+    </nav>
+
+    <div class="dashboard-container">
+        <h1>DRL Trading Bot Dashboard</h1>
+
+        <div class="section controls-section">
+            <h2>Controls</h2>
+            <button id="startTrainingBtn">Start Training</button>
+            <div id="botStatusDisplay">Status: Idle</div>
+        </div>
+
+        <div class="section metrics-section">
+            <div class="metric">
+                <h3>Total Profit/Loss</h3>
+                <p id="totalProfit">-</p>
+            </div>
+            <div class="metric">
+                <h3>Total Trades</h3>
+                <p id="tradeCount">-</p>
+            </div>
+             <div class="metric">
+                <h3>Initial Balance</h3>
+                <p id="initialBalanceDisplay">-</p>
+            </div>
+            <div class="metric">
+                <h3>Final Net Worth</h3>
+                <p id="finalNetWorthDisplay">-</p>
+            </div>
+        </div>
+
+        <div class="section charts-section">
+            <h2>Training Progress</h2>
+            <div class="chart-container">
+                <h3>Portfolio Value per Episode</h3>
+                <canvas id="trainingPortfolioChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3>Reward per Episode</h3>
+                <canvas id="rewardChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3>Epsilon Decay</h3>
+                <canvas id="epsilonChart"></canvas>
+            </div>
+            
+            <h2>Backtest Results</h2>
+            <div class="chart-container">
+                <h3>Portfolio Value Over Time</h3>
+                <canvas id="backtestPortfolioChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/dashboard_scripts.js" defer></script>
+</body>
+</html>
