@@ -1,0 +1,61 @@
+:root {
+    --bg-color: #f8f9fa;
+    --card-bg: #ffffff;
+    --text-color: #212529;
+    --muted-color: #6c757d;
+    --accent-color: #d6336c;
+    --border-color: #dee2e6;
+    --shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+body {
+    font-family: 'Pretendard', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 1rem;
+}
+
+.page-wrapper { max-width: 1400px; margin: 0 auto; }
+.page-header { text-align: center; margin-bottom: 2rem; position: relative; }
+.page-header h1 { font-size: 2.5rem; font-weight: 800; color: var(--accent-color); }
+.back-link { position: absolute; top: 50%; left: 0; transform: translateY(-50%); text-decoration: none; color: var(--muted-color); font-weight: 500; }
+
+.main-content { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 2rem; }
+.game-column { flex: 3; min-width: 700px; }
+.info-column { flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 2rem; }
+
+/* --- Overrides & Fixes --- */
+#game-container { display: flex; flex-direction: column; background-color: var(--card-bg); border-radius: 12px; padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
+#grid-container { margin-right: 0; width: 100%; height: auto; border: 1px solid var(--border-color); }
+#sidebar { width: 100%; margin-top: 1rem; flex-direction: row; justify-content: space-between; align-items: center; }
+
+/* Apple Overflow Fix: Target the pseudo-element */
+.apple::before {
+    top: -2px !important; /* Pull the stem down inside the box */
+}
+
+/* --- New UI Elements --- */
+#leaderboard-container, .how-to-play { background: var(--card-bg); border-radius: 12px; padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
+#leaderboard-container h2, .how-to-play h2 { margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 0.8rem; margin-bottom: 1rem; color: var(--accent-color); }
+#leaderboard-list { list-style: none; padding: 0; }
+.how-to-play ul { padding-left: 1.2rem; }
+.how-to-play li { margin-bottom: 0.5rem; }
+
+/* --- Responsive Scaling --- */
+@media (max-width: 1100px) {
+    .main-content { flex-direction: column; align-items: center; }
+    .game-column, .info-column { min-width: 90%; width: 100%; max-width: 850px; }
+}
+
+@media (max-width: 850px) {
+    /* On smaller screens, we will use JS to scale the game container */
+    .game-column {
+        /* The height will be set by JS to match the scaled content */
+        height: 550px; /* Fallback height */
+    }
+    #game-container {
+        /* Set origin for scaling */
+        transform-origin: top left;
+    }
+}

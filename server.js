@@ -31,7 +31,7 @@ try {
 
 const dbFile = path.join(DATA_DIR, 'db.json');
 console.log(`Using database file: ${dbFile}`);
-const defaultData = { comments: [], logins: [], adminMemos: [] };
+const defaultData = { comments: [], logins: [], adminMemos: [], leaderboard: [] };
 const adapter = new JSONFile(dbFile);
 const db = new Low(adapter, defaultData);
 
@@ -221,6 +221,46 @@ app.delete('/api/comments/:id', async (req, res) => {
     res.status(500).json({ error: 'DATABASE_ERROR', message: '서버에서 댓글 삭제 중 오류가 발생했습니다.' });
   }
 });
+
+// ────────────────── LEADERBOARD API ────────────────────
+app.get('/api/leaderboard', async (req, res) => {
+  try {
+    await db.read();
+    db.data.leaderboard = db.data.leaderboard || [];
+    const topScores = db.data.leaderboard.sort((a, b) => b.score - a.score).slice(0, 10);
+    res.json(topScores);
+  } catch (dbError) {
+    console.error('Database read error in GET /api/leaderboard:', dbError);
+    res.status(500).json({ error: 'DATABASE_READ_ERROR', message: '서버에서 리더보드를 읽어오는 중 오류가 발생했습니다.' });
+  }
+});
+
+app.post('/api/leaderboard', async (req, res) => {
+  const { name, score, message } = req.body;
+  if (!name?.trim() || !message?.trim() || typeof score !== 'number') {
+    return res.status(400).json({ error: 'INVALID_DATA', message: '이름, 점수, 메시지는 필수입니다.' });
+  }
+
+  const newEntry = {
+    id: nanoid(),
+    name: name.trim().slice(0, 10), // Max 10 chars
+    score,
+    message: message.trim().slice(0, 30), // Max 30 chars
+    time: Date.now(),
+  };
+
+  try {
+    await db.read();
+    db.data.leaderboard = db.data.leaderboard || [];
+    db.data.leaderboard.push(newEntry);
+    await db.write();
+    res.status(201).json(newEntry);
+  } catch (dbError) {
+    console.error('Database write error in POST /api/leaderboard:', dbError);
+    res.status(500).json({ error: 'DATABASE_WRITE_ERROR', message: '서버에 리더보드 정보를 저장하는 중 오류가 발생했습니다.' });
+  }
+});
+
 
 // ────────────────── ADMIN MEMOS API ────────────────────
 const adminMemosRouter = express.Router();
