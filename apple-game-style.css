@@ -27,7 +27,7 @@ body {
 
 /* --- Overrides & Fixes --- */
 #game-container { display: flex; flex-direction: column; background-color: var(--card-bg); border-radius: 12px; padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
-#grid-container { margin-right: 0; width: 100%; height: auto; border: 1px solid var(--border-color); }
+#grid-container { margin-right: 0; width: 100%; height: auto; border: 1px solid var(--border-color); position: relative; }
 #sidebar { width: 100%; margin-top: 1rem; flex-direction: row; justify-content: space-between; align-items: center; }
 
 /* Apple Overflow Fix: Target the pseudo-element */
@@ -58,4 +58,39 @@ body {
         /* Set origin for scaling */
         transform-origin: top left;
     }
+}
+
+/* --- Interaction Robustness: prevent selection and event eating --- */
+#game-container, #grid-container, #grid, .apple {
+    user-select: none;
+    -webkit-user-drag: none;
+    -webkit-touch-callout: none;
+    touch-action: none;
+}
+
+/* Selection overlay should never block pointer events */
+#selection-box { pointer-events: none; }
+
+/* Ensure auto-solve overlays are clearly visible and non-interactive */
+.auto-solve-overlay {
+    border: 2px dashed var(--accent-color);
+    background: rgba(214, 51, 108, 0.08);
+    pointer-events: none;
+    border-radius: 6px;
+}
+
+/* Subtle toast for secret hint activation */
+.hint-toast {
+    position: fixed;
+    left: 50%;
+    top: 20px;
+    transform: translateX(-50%);
+    background: #212529;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    font-size: 14px;
+    z-index: 9999;
+    opacity: 0.95;
 }

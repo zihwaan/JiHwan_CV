@@ -115,4 +115,188 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Initial Load ---
     fetchAndRenderLeaderboard();
     handleGameScaling();
+
+    // --- Drag robustness: forward events outside grid ---
+    // The original game only listens on #grid, so when the pointer leaves it,
+    // dragging can feel "eaten". We forward window mouse events back to #grid.
+    try {
+        const gridEl = document.getElementById('grid');
+        const selectionBox = document.getElementById('selection-box');
+        let forwarding = false;
+
+        if (gridEl && selectionBox) {
+            gridEl.addEventListener('mousedown', () => {
+                forwarding = true;
+            });
+
+            window.addEventListener('mouseup', (e) => {
+                if (!forwarding) return;
+                forwarding = false;
+                // If selection is active, ensure the game receives the mouseup
+                if (!selectionBox.classList.contains('hidden')) {
+                    const evt = new MouseEvent('mouseup', {
+                        bubbles: true,
+                        cancelable: true,
+                        clientX: e.clientX,
+                        clientY: e.clientY,
+                    });
+                    gridEl.dispatchEvent(evt);
+                }
+            }, true);
+
+            window.addEventListener('mousemove', (e) => {
+                if (!forwarding) return;
+                if (!selectionBox.classList.contains('hidden')) {
+                    // Avoid duplicating if pointer is already over the grid
+                    if (e.target && (e.target === gridEl || gridEl.contains(e.target))) return;
+                    const evt = new MouseEvent('mousemove', {
+                        bubbles: true,
+                        cancelable: false,
+                        clientX: e.clientX,
+                        clientY: e.clientY,
+                    });
+                    gridEl.dispatchEvent(evt);
+                }
+            }, true);
+        }
+    } catch (err) {
+        console.warn('Drag forwarding setup failed:', err);
+    }
+
+    // --- Secret password: reveal hint overlays for sum 10 ---
+    // Shows on-screen rectangles where dragging forms a valid 10 sum.
+    (function setupSecretHint() {
+        const SECRET = '변지환최고';
+        let buffer = '';
+
+        // Hidden input to better support IME (Korean) composition
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'text';
+        hiddenInput.id = 'secret-capture';
+        hiddenInput.setAttribute('aria-hidden', 'true');
+        hiddenInput.autocomplete = 'off';
+        hiddenInput.style.position = 'absolute';
+        hiddenInput.style.left = '-9999px';
+        hiddenInput.style.top = '-9999px';
+        document.body.appendChild(hiddenInput);
+
+        function checkSecretFrom(str) {
+            buffer = (buffer + str).slice(-SECRET.length);
+            if (buffer.includes(SECRET)) {
+                buffer = '';
+                revealTenOverlays();
+                showHintToast('힌트 활성화: 합이 10인 영역 표시');
+            }
+        }
+
+        // Focus hidden input on general typing to capture IME text
+        document.addEventListener('keydown', (e) => {
+            const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+            const isTypingField = tag === 'input' || tag === 'textarea' || e.isComposing;
+            if (!isTypingField) {
+                hiddenInput.focus({ preventScroll: true });
+            }
+            // Fallback for single-char keys (non-IME)
+            if (e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                checkSecretFrom(e.key);
+            }
+            if (e.key === 'Escape') {
+                buffer = '';
+                const prev = document.getElementById('auto-solve-container');
+                if (prev) prev.remove();
+            }
+        });
+
+        hiddenInput.addEventListener('input', () => {
+            const val = hiddenInput.value || '';
+            // Only keep last SECRET.length characters to bound memory
+            if (val.length > SECRET.length) {
+                hiddenInput.value = val.slice(-SECRET.length);
+            }
+            checkSecretFrom(hiddenInput.value.slice(-1));
+        });
+
+        // Core: replicate the auto-solve overlay logic to show valid 10-sum rectangles
+        function revealTenOverlays() {
+            const grid = document.getElementById('grid');
+            const gridContainer = document.getElementById('grid-container');
+            if (!grid || !gridContainer) return;
+
+            // Remove existing overlays if any
+            const prev = document.getElementById('auto-solve-container');
+            if (prev) prev.remove();
+
+            const overlayRoot = document.createElement('div');
+            overlayRoot.id = 'auto-solve-container';
+            overlayRoot.style.position = 'absolute';
+            overlayRoot.style.top = '0';
+            overlayRoot.style.left = '0';
+            overlayRoot.style.width = '100%';
+            overlayRoot.style.height = '100%';
+            overlayRoot.style.pointerEvents = 'none';
+            gridContainer.appendChild(overlayRoot);
+
+            // The original game uses 10 rows (p) and 17 cols (d)
+            const ROWS = 10;
+            const COLS = 17;
+
+            // Build prefix sums for values and non-empty counts
+            const sum = Array.from({ length: ROWS + 1 }, () => new Array(COLS + 1).fill(0));
+            const count = Array.from({ length: ROWS + 1 }, () => new Array(COLS + 1).fill(0));
+
+            for (let r = 0; r < ROWS; r++) {
+                for (let cIdx = 0; cIdx < COLS; cIdx++) {
+                    const idx = r * COLS + cIdx;
+                    const cell = grid.children[idx];
+                    const value = parseInt(cell?.dataset?.value || '0', 10) || 0;
+                    const occupied = (!cell?.classList?.contains('empty') && value > 0) ? 1 : 0;
+                    sum[r + 1][cIdx + 1] = sum[r + 1][cIdx] + sum[r][cIdx + 1] - sum[r][cIdx] + value;
+                    count[r + 1][cIdx + 1] = count[r + 1][cIdx] + count[r][cIdx + 1] - count[r][cIdx] + occupied;
+                }
+            }
+
+            // Enumerate rectangles and draw overlays for those summing to 10
+            const gcRect = gridContainer.getBoundingClientRect();
+            for (let r0 = 0; r0 < ROWS; r0++) {
+                for (let r1 = r0; r1 < ROWS; r1++) {
+                    for (let c0 = 0; c0 < COLS; c0++) {
+                        for (let c1 = c0; c1 < COLS; c1++) {
+                            const rectSum = sum[r1 + 1][c1 + 1] - sum[r0][c1 + 1] - sum[r1 + 1][c0] + sum[r0][c0];
+                            const rectCount = count[r1 + 1][c1 + 1] - count[r0][c1 + 1] - count[r1 + 1][c0] + count[r0][c0];
+                            if (rectSum === 10 && rectCount > 0) {
+                                const topLeft = grid.children[r0 * COLS + c0].getBoundingClientRect();
+                                const bottomRight = grid.children[r1 * COLS + c1].getBoundingClientRect();
+                                const left = topLeft.left - gcRect.left;
+                                const top = topLeft.top - gcRect.top;
+                                const width = (bottomRight.right - topLeft.left);
+                                const height = (bottomRight.bottom - topLeft.top);
+                                const box = document.createElement('div');
+                                box.className = 'auto-solve-overlay';
+                                box.style.position = 'absolute';
+                                box.style.left = left + 'px';
+                                box.style.top = top + 'px';
+                                box.style.width = width + 'px';
+                                box.style.height = height + 'px';
+                                overlayRoot.appendChild(box);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function showHintToast(msg) {
+            try {
+                const el = document.createElement('div');
+                el.className = 'hint-toast';
+                el.textContent = msg;
+                document.body.appendChild(el);
+                setTimeout(() => {
+                    el.style.transition = 'opacity 300ms ease';
+                    el.style.opacity = '0';
+                    setTimeout(() => el.remove(), 400);
+                }, 1400);
+            } catch {}
+        }
+    })();
 });
