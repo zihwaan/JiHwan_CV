@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameColumn = document.querySelector('.game-column');
     const gameContainer = document.getElementById('game-container');
 
-    const GAME_NATURAL_WIDTH = 850; // Approximate natural width of the game container
+    let GAME_NATURAL_WIDTH = null; // Will be measured after initial layout
 
     // --- Functions ---
     async function fetchAndRenderLeaderboard() {
@@ -55,11 +55,24 @@ document.addEventListener('DOMContentLoaded', () => {
         return str.toString().replace(/[&<>'"/]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;' }[m]));
     }
 
+    function computeNaturalWidth() {
+        if (!gameContainer) return;
+        // Temporarily clear transform to measure natural width
+        const prev = gameContainer.style.transform;
+        gameContainer.style.transform = 'none';
+        const w = gameContainer.getBoundingClientRect().width;
+        if (w > 0) GAME_NATURAL_WIDTH = w;
+        gameContainer.style.transform = prev;
+    }
+
     function handleGameScaling() {
         if (!gameContainer || !gameColumn) return;
+        if (!GAME_NATURAL_WIDTH) computeNaturalWidth();
+        if (!GAME_NATURAL_WIDTH) return;
         const viewportWidth = window.innerWidth;
         if (viewportWidth < GAME_NATURAL_WIDTH) {
             const scale = viewportWidth / GAME_NATURAL_WIDTH;
+            gameContainer.style.transformOrigin = 'top left';
             gameContainer.style.transform = `scale(${scale})`;
             const scaledHeight = gameContainer.getBoundingClientRect().height;
             gameColumn.style.height = `${scaledHeight}px`;
@@ -114,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Initial Load ---
     fetchAndRenderLeaderboard();
+    computeNaturalWidth();
     handleGameScaling();
 
     // --- Drag robustness: forward events outside grid ---
@@ -123,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const gridEl = document.getElementById('grid');
         const selectionBox = document.getElementById('selection-box');
         let forwarding = false;
+        let synthDispatch = false;
 
         if (gridEl && selectionBox) {
             gridEl.addEventListener('mousedown', () => {
@@ -131,9 +146,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             window.addEventListener('mouseup', (e) => {
                 if (!forwarding) return;
+                if (synthDispatch) return;
                 forwarding = false;
                 // If selection is active, ensure the game receives the mouseup
                 if (!selectionBox.classList.contains('hidden')) {
+                    synthDispatch = true;
                     const evt = new MouseEvent('mouseup', {
                         bubbles: true,
                         cancelable: true,
@@ -141,14 +158,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         clientY: e.clientY,
                     });
                     gridEl.dispatchEvent(evt);
+                    synthDispatch = false;
                 }
             }, true);
 
             window.addEventListener('mousemove', (e) => {
                 if (!forwarding) return;
+                if (synthDispatch) return;
                 if (!selectionBox.classList.contains('hidden')) {
                     // Avoid duplicating if pointer is already over the grid
                     if (e.target && (e.target === gridEl || gridEl.contains(e.target))) return;
+                    synthDispatch = true;
                     const evt = new MouseEvent('mousemove', {
                         bubbles: true,
                         cancelable: false,
@@ -156,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         clientY: e.clientY,
                     });
                     gridEl.dispatchEvent(evt);
+                    synthDispatch = false;
                 }
             }, true);
         }
@@ -382,5 +403,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 1400);
             } catch {}
         }
+
+        // Explicit UI: floating button that asks for password
+        try {
+            const fab = document.createElement('button');
+            fab.className = 'hint-fab';
+            fab.type = 'button';
+            fab.textContent = '힌트';
+            fab.addEventListener('click', () => {
+                const input = window.prompt('비밀번호를 입력하세요');
+                if (input && input.trim() === SECRET) {
+                    revealTenOverlays();
+                    showHintToast('힌트 활성화: 합이 10인 영역 표시');
+                } else if (input) {
+                    showHintToast('비밀번호가 올바르지 않습니다');
+                }
+            });
+            document.body.appendChild(fab);
+        } catch {}
     })();
 });

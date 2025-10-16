@@ -17,18 +17,18 @@ body {
 }
 
 .page-wrapper { max-width: 1400px; margin: 0 auto; }
-.page-header { text-align: center; margin-bottom: 2rem; position: relative; }
-.page-header h1 { font-size: 2.5rem; font-weight: 800; color: var(--accent-color); }
-.back-link { position: absolute; top: 50%; left: 0; transform: translateY(-50%); text-decoration: none; color: var(--muted-color); font-weight: 500; }
+.page-header { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 2rem; position: relative; }
+.page-header h1 { font-size: 2.2rem; font-weight: 800; color: var(--accent-color); margin: 0; text-align: center; }
+.back-link { order: -1; position: static; margin-right: auto; text-decoration: none; color: var(--muted-color); font-weight: 600; }
 
 .main-content { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 2rem; }
 .game-column { flex: 3; min-width: 700px; }
 .info-column { flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 2rem; }
 
 /* --- Overrides & Fixes --- */
-#game-container { display: flex; flex-direction: column; background-color: var(--card-bg); border-radius: 12px; padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
-#grid-container { margin-right: 0; width: 100%; height: auto; border: 1px solid var(--border-color); position: relative; }
-#sidebar { width: 100%; margin-top: 1rem; flex-direction: row; justify-content: space-between; align-items: center; }
+#game-container { display: flex; flex-direction: row; background-color: var(--card-bg); border-radius: 12px; padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid var(--border-color); }
+#grid-container { position: relative; width: 950px; height: 555px; margin-right: 20px; border: 2px solid #ccc; }
+#sidebar { width: 300px; margin-top: 0; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; }
 
 /* Apple Overflow Fix: Target the pseudo-element */
 .apple::before {
@@ -45,19 +45,14 @@ body {
 /* --- Responsive Scaling --- */
 @media (max-width: 1100px) {
     .main-content { flex-direction: column; align-items: center; }
-    .game-column, .info-column { min-width: 90%; width: 100%; max-width: 850px; }
+    .game-column, .info-column { min-width: 100%; width: 100%; max-width: 100%; }
+    .page-header h1 { font-size: 1.8rem; }
 }
 
 @media (max-width: 850px) {
-    /* On smaller screens, we will use JS to scale the game container */
-    .game-column {
-        /* The height will be set by JS to match the scaled content */
-        height: 550px; /* Fallback height */
-    }
-    #game-container {
-        /* Set origin for scaling */
-        transform-origin: top left;
-    }
+    /* On smaller screens, JS scales #game-container uniformly to prevent breakage */
+    .game-column { height: 620px; }
+    #game-container { transform-origin: top left; }
 }
 
 /* --- Interaction Robustness: prevent selection and event eating --- */
@@ -93,4 +88,20 @@ body {
     font-size: 14px;
     z-index: 9999;
     opacity: 0.95;
+}
+
+/* Floating button to explicitly trigger the hint via password */
+.hint-fab {
+    position: fixed;
+    right: 14px;
+    bottom: 18px;
+    background: var(--accent-color);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 10px 14px;
+    box-shadow: var(--shadow);
+    font-weight: 700;
+    cursor: pointer;
+    z-index: 9999;
 }
