@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameColumn = document.querySelector('.game-column');
     const gameContainer = document.getElementById('game-container');
 
-    let GAME_NATURAL_WIDTH = null; // Will be measured after initial layout
+    let GAME_NATURAL_WIDTH = null; // no longer used for transform scaling
 
     // --- Functions ---
     async function fetchAndRenderLeaderboard() {
@@ -55,32 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return str.toString().replace(/[&<>'"/]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;' }[m]));
     }
 
-    function computeNaturalWidth() {
-        if (!gameContainer) return;
-        // Temporarily clear transform to measure natural width
-        const prev = gameContainer.style.transform;
-        gameContainer.style.transform = 'none';
-        const w = gameContainer.getBoundingClientRect().width;
-        if (w > 0) GAME_NATURAL_WIDTH = w;
-        gameContainer.style.transform = prev;
-    }
-
-    function handleGameScaling() {
-        if (!gameContainer || !gameColumn) return;
-        if (!GAME_NATURAL_WIDTH) computeNaturalWidth();
-        if (!GAME_NATURAL_WIDTH) return;
-        const viewportWidth = window.innerWidth;
-        if (viewportWidth < GAME_NATURAL_WIDTH) {
-            const scale = viewportWidth / GAME_NATURAL_WIDTH;
-            gameContainer.style.transformOrigin = 'top left';
-            gameContainer.style.transform = `scale(${scale})`;
-            const scaledHeight = gameContainer.getBoundingClientRect().height;
-            gameColumn.style.height = `${scaledHeight}px`;
-        } else {
-            gameContainer.style.transform = 'none';
-            gameColumn.style.height = 'auto';
-        }
-    }
+    function computeNaturalWidth() {}
+    function handleGameScaling() { /* CSS controls sizing; no JS transform */ }
 
     // --- Event Listeners ---
     leaderboardForm.addEventListener('submit', async (e) => {
@@ -127,7 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Initial Load ---
     fetchAndRenderLeaderboard();
-    computeNaturalWidth();
     handleGameScaling();
 
     // --- Drag robustness: forward events outside grid ---
