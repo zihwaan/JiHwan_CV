@@ -413,4 +413,132 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.appendChild(fab);
         } catch {}
     })();
+
+    // --- Keep hint overlays updated whenever apples change ---
+    (function setupHintAutoRefresh(){
+        let timer = null;
+        function debounceRefresh() {
+            if (timer) clearTimeout(timer);
+            timer = setTimeout(() => { recomputeHintOverlaysIfActive(); }, 80);
+        }
+
+        function recomputeHintOverlaysIfActive() {
+            try {
+                const existing = document.getElementById('auto-solve-container');
+                const grid = document.getElementById('grid');
+                const gridContainer = document.getElementById('grid-container');
+                if (!existing || !grid || !gridContainer) return;
+
+                // Remove and rebuild
+                existing.remove();
+                const overlayRoot = document.createElement('div');
+                overlayRoot.id = 'auto-solve-container';
+                overlayRoot.style.position = 'absolute';
+                overlayRoot.style.top = '0';
+                overlayRoot.style.left = '0';
+                overlayRoot.style.width = '100%';
+                overlayRoot.style.height = '100%';
+                overlayRoot.style.pointerEvents = 'none';
+                gridContainer.appendChild(overlayRoot);
+
+                const ROWS = (window.__APPLE_ROWS__||10);
+                const COLS = (window.__APPLE_COLS__||17);
+                const sum = Array.from({ length: ROWS + 1 }, () => new Array(COLS + 1).fill(0));
+                const count = Array.from({ length: ROWS + 1 }, () => new Array(COLS + 1).fill(0));
+                for (let r = 0; r < ROWS; r++) {
+                    for (let c = 0; c < COLS; c++) {
+                        const idx = r * COLS + c;
+                        const cell = grid.children[idx];
+                        const value = parseInt((cell && cell.dataset && cell.dataset.value) || '0', 10) || 0;
+                        const occupied = (cell && !cell.classList.contains('empty') && value > 0) ? 1 : 0;
+                        sum[r + 1][c + 1] = sum[r + 1][c] + sum[r][c + 1] - sum[r][c] + value;
+                        count[r + 1][c + 1] = count[r + 1][c] + count[r][c + 1] - count[r][c] + occupied;
+                    }
+                }
+                const gcRect = gridContainer.getBoundingClientRect();
+                for (let r0 = 0; r0 < ROWS; r0++) {
+                    for (let r1 = r0; r1 < ROWS; r1++) {
+                        for (let c0 = 0; c0 < COLS; c0++) {
+                            for (let c1 = c0; c1 < COLS; c1++) {
+                                const rectSum = sum[r1 + 1][c1 + 1] - sum[r0][c1 + 1] - sum[r1 + 1][c0] + sum[r0][c0];
+                                const rectCount = count[r1 + 1][c1 + 1] - count[r0][c1 + 1] - count[r1 + 1][c0] + count[r0][c0];
+                                if (rectSum === 10 && rectCount > 0) {
+                                    const tl = grid.children[r0 * COLS + c0].getBoundingClientRect();
+                                    const br = grid.children[r1 * COLS + c1].getBoundingClientRect();
+                                    const left = tl.left - gcRect.left;
+                                    const top = tl.top - gcRect.top;
+                                    const width = (br.right - tl.left);
+                                    const height = (br.bottom - tl.top);
+                                    const box = document.createElement('div');
+                                    box.className = 'auto-solve-overlay';
+                                    box.style.position = 'absolute';
+                                    box.style.left = left + 'px';
+                                    box.style.top = top + 'px';
+                                    box.style.width = width + 'px';
+                                    box.style.height = height + 'px';
+                                    overlayRoot.appendChild(box);
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch {}
+        }
+
+        function ensureHintActiveAndRefresh() {
+            try {
+                let existing = document.getElementById('auto-solve-container');
+                const gridContainer = document.getElementById('grid-container');
+                if (!existing) {
+                    existing = document.createElement('div');
+                    existing.id = 'auto-solve-container';
+                    existing.style.position = 'absolute';
+                    existing.style.top = '0';
+                    existing.style.left = '0';
+                    existing.style.width = '100%';
+                    existing.style.height = '100%';
+                    existing.style.pointerEvents = 'none';
+                    gridContainer && gridContainer.appendChild(existing);
+                }
+                recomputeHintOverlaysIfActive();
+                window.__HINT_ACTIVE = true;
+            } catch {}
+        }
+
+        // Observe grid changes to keep overlays in sync, if active
+        try {
+            const grid = document.getElementById('grid');
+            if (grid) {
+                const obs = new MutationObserver(debounceRefresh);
+                obs.observe(grid, { subtree: true, attributes: true, childList: true, characterData: true, attributeFilter: ['class','data-value'] });
+                grid.addEventListener('animationend', debounceRefresh, true);
+            }
+        } catch {}
+
+        // Add a reliable hint button if not present, with password prompt
+        try {
+            if (!document.querySelector('.hint-fab')) {
+                const fab = document.createElement('button');
+                fab.className = 'hint-fab';
+                fab.type = 'button';
+                fab.textContent = '힌트';
+                fab.addEventListener('click', () => {
+                    const input = window.prompt('비밀번호를 입력하세요');
+                    if (input && input.trim() === '변지환최고') {
+                        ensureHintActiveAndRefresh();
+                    }
+                });
+                document.body.appendChild(fab);
+            }
+        } catch {}
+
+        // ESC clears overlays
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const prev = document.getElementById('auto-solve-container');
+                if (prev) prev.remove();
+                window.__HINT_ACTIVE = false;
+            }
+        });
+    })();
 });

@@ -55,6 +55,11 @@ body {
     #sidebar { width: 100%; }
 }
 
+/* Mobile: hide apple stem so numbers are readable */
+@media (max-width: 600px) {
+    #grid .apple::before { display: none !important; }
+}
+
 /* --- Interaction Robustness: prevent selection and event eating --- */
 #game-container, #grid-container, #grid, .apple {
     user-select: none;
