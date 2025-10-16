@@ -78,6 +78,20 @@
     </div>
 
     <!-- 3. Load Original Game JS FIRST -->
+    <script>
+        (function(){
+            var isMobile = (window.matchMedia && window.matchMedia('(max-width: 540px)').matches) || /Mobi|Android/i.test(navigator.userAgent);
+            window.__APPLE_IS_MOBILE_LAYOUT__ = !!isMobile;
+            if (isMobile) {
+                // Mobile-optimized grid size (cols x rows)
+                window.__APPLE_COLS__ = 13;
+                window.__APPLE_ROWS__ = 8;
+            } else {
+                window.__APPLE_COLS__ = 17;
+                window.__APPLE_ROWS__ = 10;
+            }
+        })();
+    </script>
     <script type="module" crossorigin src="/game-assets/assets/index-Ds9_MN2s.js"></script>
     <!-- 4. Load My Augmenting JS SECOND -->
     <script type="module" src="/apple-game.js"></script>

@@ -8,30 +8,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeButton = document.getElementById('close-button');
     const gameColumn = document.querySelector('.game-column');
     const gameContainer = document.getElementById('game-container');
+    const leaderboardTitle = document.querySelector('#leaderboard-container h2');
 
     let GAME_NATURAL_WIDTH = null; // no longer used for transform scaling
+    const IS_MOBILE_LAYOUT = !!window.__APPLE_IS_MOBILE_LAYOUT__;
+    const GRID_COLS = window.__APPLE_COLS__ || 17;
+    const GRID_ROWS = window.__APPLE_ROWS__ || 10;
+    const LEADERBOARD_ENDPOINT = IS_MOBILE_LAYOUT ? '/api/leaderboard_mobile' : '/api/leaderboard';
 
     // --- Functions ---
     async function fetchAndRenderLeaderboard() {
         if (!leaderboardList) return;
 
         try {
-            const response = await fetch('/api/leaderboard');
-            if (!response.ok) throw new Error('리더보드 데이터를 불러오는 데 실패했습니다.');
+            const response = await fetch(LEADERBOARD_ENDPOINT);
+            if (!response.ok) throw new Error('由щ뜑蹂대뱶 ?곗씠?곕? 遺덈윭?ㅻ뒗 ???ㅽ뙣?덉뒿?덈떎.');
             
             const topScores = await response.json();
 
             if (topScores.length === 0) {
-                leaderboardList.innerHTML = '<li>아직 등록된 기록이 없습니다.</li>';
+                leaderboardList.innerHTML = '<li>?꾩쭅 ?깅줉??湲곕줉???놁뒿?덈떎.</li>';
                 return;
             }
 
             leaderboardList.innerHTML = topScores.map((entry, index) => {
                 let rank;
                 switch (index) {
-                    case 0: rank = '🥇'; break;
-                    case 1: rank = '🥈'; break;
-                    case 2: rank = '🥉'; break;
+                    case 0: rank = '?쪍'; break;
+                    case 1: rank = '?쪎'; break;
+                    case 2: rank = '?쪏'; break;
                     default: rank = `${index + 1}`;
                 }
                 return `
@@ -41,13 +46,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="name">${escapeHTML(entry.name)}</span>
                             <span class="message">${escapeHTML(entry.message)}</span>
                         </div>
-                        <span class="leaderboard-score">${entry.score}점</span>
+                        <span class="leaderboard-score">${entry.score}??/span>
                     </li>
                 `;
             }).join('');
         } catch (error) {
             console.error('Error fetching leaderboard:', error);
-            leaderboardList.innerHTML = '<li>리더보드를 불러올 수 없습니다.</li>';
+            leaderboardList.innerHTML = '<li>由щ뜑蹂대뱶瑜?遺덈윭?????놁뒿?덈떎.</li>';
         }
     }
 
@@ -59,6 +64,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleGameScaling() { /* CSS controls sizing; no JS transform */ }
 
     // --- Event Listeners ---
+    if (leaderboardTitle && IS_MOBILE_LAYOUT) {
+        try { leaderboardTitle.textContent = '모바일 리더보드'; } catch {}
+    }
     leaderboardForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = nameInput.value.trim();
@@ -69,12 +77,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!name || !message) { return; }
 
         try {
-            const response = await fetch('/api/leaderboard', {
+            const response = await fetch(LEADERBOARD_ENDPOINT, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, score, message })
             });
-            if (!response.ok) throw new Error('점수 등록에 실패했습니다.');
+            if (!response.ok) throw new Error('?먯닔 ?깅줉???ㅽ뙣?덉뒿?덈떎.');
 
             // Hide form and refresh leaderboard
             leaderboardForm.style.display = 'none';
@@ -102,6 +110,15 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', handleGameScaling);
 
     // --- Initial Load ---
+    // Sync CSS variables for grid size (cols/rows)
+    try {
+        const gridRoot = document.getElementById('grid');
+        if (gridRoot) {
+            gridRoot.style.setProperty('--cols', String(GRID_COLS));
+            gridRoot.style.setProperty('--rows', String(GRID_ROWS));
+        }
+    } catch {}
+
     fetchAndRenderLeaderboard();
     handleGameScaling();
 
@@ -246,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Secret password: reveal hint overlays for sum 10 ---
     // Shows on-screen rectangles where dragging forms a valid 10 sum.
     (function setupSecretHint() {
-        const SECRET = '변지환최고';
+        const SECRET = '蹂吏?섏턀怨?;
         let buffer = '';
 
         // Hidden input to better support IME (Korean) composition
@@ -265,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (buffer.includes(SECRET)) {
                 buffer = '';
                 revealTenOverlays();
-                showHintToast('힌트 활성화: 합이 10인 영역 표시');
+                showHintToast('?뚰듃 ?쒖꽦?? ?⑹씠 10???곸뿭 ?쒖떆');
             }
         }
 
@@ -317,8 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
             gridContainer.appendChild(overlayRoot);
 
             // The original game uses 10 rows (p) and 17 cols (d)
-            const ROWS = 10;
-            const COLS = 17;
+            const ROWS = (window.__APPLE_ROWS__||10);\n            const COLS = (window.__APPLE_COLS__||17);
 
             // Build prefix sums for values and non-empty counts
             const sum = Array.from({ length: ROWS + 1 }, () => new Array(COLS + 1).fill(0));
@@ -384,14 +400,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const fab = document.createElement('button');
             fab.className = 'hint-fab';
             fab.type = 'button';
-            fab.textContent = '힌트';
+            fab.textContent = '?뚰듃';
             fab.addEventListener('click', () => {
-                const input = window.prompt('비밀번호를 입력하세요');
+                const input = window.prompt('鍮꾨?踰덊샇瑜??낅젰?섏꽭??);
                 if (input && input.trim() === SECRET) {
                     revealTenOverlays();
-                    showHintToast('힌트 활성화: 합이 10인 영역 표시');
+                    showHintToast('?뚰듃 ?쒖꽦?? ?⑹씠 10???곸뿭 ?쒖떆');
                 } else if (input) {
-                    showHintToast('비밀번호가 올바르지 않습니다');
+                    showHintToast('鍮꾨?踰덊샇媛 ?щ컮瑜댁? ?딆뒿?덈떎');
                 }
             });
             document.body.appendChild(fab);

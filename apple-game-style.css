@@ -111,8 +111,8 @@ body {
     --cell: clamp(32px, 5.2vw, 50px);
     --gap: clamp(3px, 0.7vw, 5px);
     display: grid;
-    grid-template-columns: repeat(17, var(--cell));
-    grid-template-rows: repeat(10, var(--cell));
+    grid-template-columns: repeat(var(--cols, 17), var(--cell));
+    grid-template-rows: repeat(var(--rows, 10), var(--cell));
     gap: var(--gap);
     padding: var(--gap);
     box-sizing: border-box;
