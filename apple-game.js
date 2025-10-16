@@ -163,6 +163,90 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn('Drag forwarding setup failed:', err);
     }
 
+    // --- Mobile touch support: translate Pointer/Touch -> Mouse events ---
+    try {
+        const gridEl = document.getElementById('grid');
+        if (gridEl) {
+            let activePointerId = null;
+            let bridging = false;
+
+            function dispatchMouse(type, srcEvent) {
+                const evt = new MouseEvent(type, {
+                    bubbles: true,
+                    cancelable: true,
+                    clientX: srcEvent.clientX,
+                    clientY: srcEvent.clientY,
+                    screenX: srcEvent.screenX || 0,
+                    screenY: srcEvent.screenY || 0,
+                });
+                gridEl.dispatchEvent(evt);
+            }
+
+            function setupPointerBridge() {
+                gridEl.addEventListener('pointerdown', (e) => {
+                    if (e.pointerType === 'mouse') return; // native mouse already works
+                    activePointerId = e.pointerId;
+                    bridging = true;
+                    try { gridEl.setPointerCapture(activePointerId); } catch {}
+                    dispatchMouse('mousedown', e);
+                    e.preventDefault();
+                }, { passive: false });
+
+                gridEl.addEventListener('pointermove', (e) => {
+                    if (!bridging || e.pointerId !== activePointerId) return;
+                    dispatchMouse('mousemove', e);
+                    e.preventDefault();
+                }, { passive: false });
+
+                const endPointer = (e) => {
+                    if (!bridging || e.pointerId !== activePointerId) return;
+                    dispatchMouse('mouseup', e);
+                    try { gridEl.releasePointerCapture(activePointerId); } catch {}
+                    activePointerId = null;
+                    bridging = false;
+                    e.preventDefault();
+                };
+
+                gridEl.addEventListener('pointerup', endPointer, { passive: false });
+                gridEl.addEventListener('pointercancel', endPointer, { passive: false });
+            }
+
+            function setupTouchBridge() {
+                // Fallback for very old browsers without Pointer Events
+                const getTouch = (e) => e.touches[0] || e.changedTouches[0];
+                gridEl.addEventListener('touchstart', (e) => {
+                    const t = getTouch(e); if (!t) return;
+                    bridging = true;
+                    dispatchMouse('mousedown', t);
+                    e.preventDefault();
+                }, { passive: false });
+                gridEl.addEventListener('touchmove', (e) => {
+                    if (!bridging) return;
+                    const t = getTouch(e); if (!t) return;
+                    dispatchMouse('mousemove', t);
+                    e.preventDefault();
+                }, { passive: false });
+                const end = (e) => {
+                    if (!bridging) return;
+                    const t = getTouch(e); if (!t) return;
+                    dispatchMouse('mouseup', t);
+                    bridging = false;
+                    e.preventDefault();
+                };
+                gridEl.addEventListener('touchend', end, { passive: false });
+                gridEl.addEventListener('touchcancel', end, { passive: false });
+            }
+
+            if (window.PointerEvent) {
+                setupPointerBridge();
+            } else {
+                setupTouchBridge();
+            }
+        }
+    } catch (err) {
+        console.warn('Touch bridge setup failed:', err);
+    }
+
     // --- Secret password: reveal hint overlays for sum 10 ---
     // Shows on-screen rectangles where dragging forms a valid 10 sum.
     (function setupSecretHint() {
