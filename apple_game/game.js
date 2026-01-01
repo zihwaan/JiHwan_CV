@@ -319,6 +319,14 @@ async function saveScore(finalScore) {
         
         if (data.isTop10) {
             // Mandatory Input Mode
+            const btn = document.getElementById('submit-score-btn');
+            if(btn) {
+                btn.disabled = false;
+                btn.textContent = '등록하기';
+            }
+            const msgInput = document.getElementById('top10-msg');
+            if(msgInput) msgInput.value = '';
+
             document.getElementById('top10-form').classList.remove('d-none');
             document.getElementById('normal-actions').classList.add('d-none'); // Hide normal buttons
         } else {
@@ -355,6 +363,11 @@ document.getElementById('submit-score-btn').addEventListener('click', async (e) 
             alert('성공적으로 등록되었습니다!');
             document.getElementById('top10-form').classList.add('d-none');
             document.getElementById('normal-actions').classList.remove('d-none');
+            
+            // Reset button for next time
+            btn.disabled = false;
+            btn.textContent = '등록하기';
+            
             loadLeaderboard(); // Reload to show new entry
         } else {
             const err = await res.json();
