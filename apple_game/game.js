@@ -1,11 +1,29 @@
-// Initialize Kakao
-if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
-    Kakao.init(window.KAKAO_JS_KEY || document.querySelector('meta[name="kakao-key"]').content);
-}
+// Main Entry Point
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Initialize Kakao SDK
+    try {
+        if (typeof Kakao === 'undefined') {
+            console.error('Kakao SDK not loaded');
+        } else if (!Kakao.isInitialized()) {
+            Kakao.init(window.KAKAO_JS_KEY || document.querySelector('meta[name="kakao-key"]').content);
+            console.log("Kakao Initialized");
+        }
+    } catch (e) {
+        console.error("Kakao Init Error:", e);
+    }
+
+    // 2. Mobile Check
+    if (!checkMobile()) return; // Stop if desktop
+
+    // 3. Init Auth Check
+    checkAuth();
+    
+    // 4. Load Leaderboard (Initial load)
+    loadLeaderboard();
+});
 
 // Mobile Check
 function checkMobile() {
-    // Basic check: Width < 768 or specific UA. 
     // Allowing wider screens if touch is present might be good, but prompt said "Mobile Only".
     // Let's stick to width for simplicity + touch capability check?
     const isMobile = window.innerWidth <= 768 || ('ontouchstart' in window);
@@ -17,8 +35,6 @@ function checkMobile() {
     }
     return true;
 }
-
-if (!checkMobile()) throw new Error("Desktop detected");
 
 // DOM Elements
 const gridContainer = document.getElementById('grid-container');
@@ -53,7 +69,86 @@ const TOTAL_APPLES = ROWS * COLS;
 const GAME_TIME = 35;
 
 // Auth Functions
-// ... (previous checkAuth)
+async function checkAuth() {
+    if (!accessToken) {
+        showOverlay(loginOverlay);
+        return;
+    }
+    try {
+        const res = await fetch('/api/game/myscore', {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            myBestScoreEl.textContent = data.score;
+            showOverlay(startOverlay);
+        } else {
+            console.warn("Token invalid");
+            localStorage.removeItem('kakao_token');
+            accessToken = null;
+            showOverlay(loginOverlay);
+        }
+    } catch (e) {
+        console.error("Auth check failed:", e);
+        if(!accessToken) showOverlay(loginOverlay);
+    }
+}
+
+function showOverlay(el) {
+    [loginOverlay, startOverlay, resultOverlay, leaderboardOverlay].forEach(o => o.classList.add('d-none'));
+    if(el) el.classList.remove('d-none');
+}
+
+const kakaoBtn = document.getElementById('kakao-login-btn');
+if (kakaoBtn) {
+    kakaoBtn.addEventListener('click', () => {
+        if (typeof Kakao === 'undefined') {
+             alert('카카오 SDK 로드 실패. 새로고침 해주세요.');
+             return;
+        }
+        if (!Kakao.isInitialized()) {
+             // Try init again just in case
+             try {
+                Kakao.init(window.KAKAO_JS_KEY || document.querySelector('meta[name="kakao-key"]').content);
+             } catch(e) {
+                alert('카카오 SDK 초기화 실패: ' + e.message);
+                return;
+             }
+        }
+        
+        Kakao.Auth.login({
+            scope: 'profile_nickname,profile_image',
+            success: (authObj) => {
+                accessToken = authObj.access_token;
+                localStorage.setItem('kakao_token', accessToken);
+                checkAuth();
+            },
+            fail: (err) => {
+                console.error(err);
+                alert('로그인에 실패했습니다: ' + JSON.stringify(err));
+            }
+        });
+    });
+}
+
+// Game Logic
+function initGrid() {
+    gridContainer.innerHTML = '';
+    gridContainer.appendChild(selectionBox);
+    allApples = [];
+    
+    for (let i = 0; i < TOTAL_APPLES; i++) {
+        const num = Math.floor(Math.random() * 9) + 1; // 1-9
+        const apple = document.createElement('div');
+        apple.classList.add('apple');
+        apple.textContent = num;
+        apple.dataset.value = num;
+        apple.dataset.index = i;
+        
+        gridContainer.appendChild(apple);
+        allApples.push(apple);
+    }
+}
 
 function startGame() {
     score = 0;
@@ -191,11 +286,7 @@ function checkSum() {
     
     if (sum === 10) {
         // Success
-        score += selectedApples.length; // 1 point per apple? Or simple 10?
-        // Let's do 10 points fixed? Or dynamic?
-        // User said "Total 10", "Collect score".
-        // Let's give score = count of apples. Removing more apples at once is harder? Not really.
-        // Let's simply add the count of apples removed to the score.
+        score += selectedApples.length; 
         scoreEl.textContent = score;
         
         selectedApples.forEach(apple => {
@@ -204,7 +295,6 @@ function checkSum() {
             apple.textContent = '';
         });
         
-        // Optional: play sound
     } else {
         // Fail
         selectedApples.forEach(apple => apple.classList.remove('selected'));
@@ -284,6 +374,7 @@ async function loadLeaderboard() {
     
     try {
         const res = await fetch('/api/game/leaderboard');
+        if (!res.ok) throw new Error('Network response was not ok');
         const data = await res.json();
         
         if (data.length === 0) {
@@ -326,7 +417,3 @@ document.getElementById('close-rank-btn').addEventListener('click', () => {
 
 document.getElementById('game-start-btn').addEventListener('click', startGame);
 document.getElementById('restart-btn').addEventListener('click', startGame);
-
-// Init
-checkMobile();
-checkAuth();
