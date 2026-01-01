@@ -393,7 +393,8 @@ async function loadLeaderboard() {
                 let badge = index < 3 ? ['🥇','🥈','🥉'][index] : `<span class="badge bg-secondary rounded-pill">${index+1}</span>`;
                 
                 const date = new Date(entry.time || Date.now());
-                const dateStr = `${date.getMonth()+1}.${date.getDate()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+                const year = date.getFullYear().toString().slice(-2);
+                const dateStr = `${year}.${date.getMonth()+1}.${date.getDate()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
 
                 return `
                 <div class="d-flex justify-content-between align-items-center border-bottom px-3 py-2 bg-white">
