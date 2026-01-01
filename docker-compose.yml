@@ -12,6 +12,8 @@ services:
       - ADMIN_PASS=${ADMIN_PASS:-admin1234} 
       - DOMAIN=${DOMAIN:-localhost:8080}
       - KAKAO_JS_KEY=${KAKAO_JS_KEY}
+    volumes:
+      - ./assets:/usr/src/app/assets
     depends_on:
       - mongo
     restart: always
