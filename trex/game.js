@@ -332,14 +332,26 @@ if (submitMsgBtn) {
 
 async function loadLeaderboard() {
     try {
-        const res = await fetch('/api/game/leaderboard');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 sec timeout
+
+        const res = await fetch('/api/game/leaderboard', { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (!res.ok) throw new Error('Server returned ' + res.status);
+        
         const data = await res.json();
+        
+        if (data.length === 0) {
+            leaderboardList.innerHTML = '<p class="text-center text-muted py-3">아직 기록이 없습니다. 첫 번째 주인공이 되어보세요!</p>';
+            return;
+        }
         
         leaderboardList.innerHTML = data.map((entry, index) => {
             let badgeColor = 'bg-secondary';
             if(index === 0) badgeColor = 'bg-warning text-dark';
-            if(index === 1) badgeColor = 'bg-secondary'; // Silver-ish
-            if(index === 2) badgeColor = 'bg-danger'; // Bronze-ish?
+            if(index === 1) badgeColor = 'bg-secondary';
+            if(index === 2) badgeColor = 'bg-danger'; // Bronze color usually requires custom CSS, keeping red for now
             
             const messageHtml = entry.message ? `<div class="small text-muted text-start w-100 ps-5 ms-2">💬 "${entry.message}"</div>` : '';
 
@@ -348,7 +360,7 @@ async function loadLeaderboard() {
                 <div class="d-flex align-items-center justify-content-between w-100">
                     <div class="user-info">
                         <div class="rank-badge ${badgeColor}">${index + 1}</div>
-                        <img src="${entry.image || '/assets/default_avatar.png'}" class="user-avatar" alt="">
+                        <img src="${entry.image || '../assets/default_avatar.png'}" class="user-avatar" alt="">
                         <span class="fw-semibold">${entry.name}</span>
                     </div>
                     <span class="fw-bold">${entry.score}</span>
@@ -358,9 +370,32 @@ async function loadLeaderboard() {
             `;
         }).join('');
     } catch (e) {
-        leaderboardList.innerHTML = '<p class="text-center text-danger">랭킹을 불러오는데 실패했습니다.</p>';
+        console.error("Leaderboard error:", e);
+        leaderboardList.innerHTML = `<div class="text-center py-3 text-danger">
+            <p class="mb-1">랭킹 로딩 실패</p>
+            <button onclick="loadLeaderboard()" class="btn btn-sm btn-outline-dark">재시도</button>
+        </div>`;
     }
 }
+
+document.getElementById('kakao-login-btn').addEventListener('click', () => {
+    if (!window.Kakao || !window.Kakao.isInitialized()) {
+        alert('카카오 SDK가 초기화되지 않았습니다. 새로고침 해주세요.');
+        return;
+    }
+    window.Kakao.Auth.login({
+        scope: 'profile_nickname,profile_image',
+        success: (authObj) => {
+            accessToken = authObj.access_token;
+            localStorage.setItem('kakao_token', accessToken);
+            checkAuth();
+        },
+        fail: (err) => {
+            console.error(err);
+            alert('로그인에 실패했습니다. (팝업 차단 확인 필요)');
+        }
+    });
+});
 
 // ... (rest of the code)
 
