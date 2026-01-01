@@ -391,13 +391,20 @@ async function loadLeaderboard() {
         } else {
             htmlContent = data.map((entry, index) => {
                 let badge = index < 3 ? ['🥇','🥈','🥉'][index] : `<span class="badge bg-secondary rounded-pill">${index+1}</span>`;
+                
+                const date = new Date(entry.time || Date.now());
+                const dateStr = `${date.getMonth()+1}.${date.getDate()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+
                 return `
                 <div class="d-flex justify-content-between align-items-center border-bottom px-3 py-2 bg-white">
                     <div class="d-flex align-items-center gap-2" style="min-width: 0;">
                         <div style="width:25px;text-align:center;flex-shrink:0;">${badge}</div>
                         <img src="${entry.image}" style="width:28px;height:28px;border-radius:50%;flex-shrink:0;object-fit:cover;">
                         <div class="d-flex flex-column text-truncate">
-                            <span class="fw-bold small text-truncate">${entry.name}</span>
+                            <div class="d-flex align-items-center gap-1">
+                                <span class="fw-bold small text-truncate">${entry.name}</span>
+                                <span class="text-muted" style="font-size:0.6rem;">${dateStr}</span>
+                            </div>
                             ${entry.message ? `<span class="text-muted text-truncate" style="font-size:0.7rem;">"${entry.message}"</span>` : ''}
                         </div>
                     </div>
@@ -416,6 +423,10 @@ async function loadLeaderboard() {
 
 document.getElementById('game-start-btn').addEventListener('click', startGame);
 document.getElementById('restart-btn').addEventListener('click', startGame);
+document.getElementById('go-home-btn')?.addEventListener('click', () => {
+    showOverlay(startOverlay);
+    loadLeaderboard(); // Refresh leaderboard when going back
+});
 
 // Init
 checkMobile();
