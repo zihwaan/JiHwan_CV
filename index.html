@@ -97,6 +97,13 @@
             padding: 1.5rem;
             margin-top: 2rem;
         }
+        body {
+            padding-top: 56px;
+        }
+        .navbar-brand {
+            font-family: "Pretendard", sans-serif;
+            font-weight: 700;
+        }
     </style>
     
     <script>
@@ -105,7 +112,14 @@
     <meta name="kakao-key" content="9fd1b882e2cee4f435584bb9c3e3761c">
     <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
 </head>
-<body>
+<body id="page-top">
+    <!-- 내비게이션 바 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="#page-top">지환닷컴</a>
+        </div>
+    </nav>
+
     <!-- Intro / Hero -->
     <header class="masthead">
         <div class="container">
