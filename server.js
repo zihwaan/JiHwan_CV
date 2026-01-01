@@ -341,7 +341,7 @@ app.get('/api/game/myscore', async (req, res) => {
 // 게임 리더보드 (TOP 10)
 app.get('/api/game/leaderboard', async (req, res) => {
   try {
-    const topScores = await GameScore.find({}, { name: 1, image: 1, score: 1, message: 1, _id: 0 })
+    const topScores = await GameScore.find({}, { name: 1, image: 1, score: 1, message: 1, time: 1, _id: 0 })
       .sort({ score: -1 })
       .limit(10);
     res.json(topScores);
