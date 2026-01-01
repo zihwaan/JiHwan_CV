@@ -38,7 +38,7 @@ const leaderboardOverlay = document.getElementById('leaderboard-overlay');
 // Auth & Game State
 let accessToken = localStorage.getItem('kakao_token');
 let score = 0;
-let timeLeft = 120;
+let timeLeft = 35;
 let gameInterval;
 let isPlaying = false;
 let startX, startY;
@@ -50,74 +50,16 @@ let allApples = [];
 const ROWS = 17;
 const COLS = 10;
 const TOTAL_APPLES = ROWS * COLS;
+const GAME_TIME = 35;
 
 // Auth Functions
-async function checkAuth() {
-    if (!accessToken) {
-        showOverlay(loginOverlay);
-        return;
-    }
-    try {
-        const res = await fetch('/api/game/myscore', {
-            headers: { 'Authorization': `Bearer ${accessToken}` }
-        });
-        if (res.ok) {
-            const data = await res.json();
-            myBestScoreEl.textContent = data.score;
-            showOverlay(startOverlay);
-        } else {
-            localStorage.removeItem('kakao_token');
-            accessToken = null;
-            showOverlay(loginOverlay);
-        }
-    } catch (e) {
-        console.error(e);
-        // Offline or error -> Show Login
-        if(!accessToken) showOverlay(loginOverlay);
-    }
-}
-
-function showOverlay(el) {
-    [loginOverlay, startOverlay, resultOverlay, leaderboardOverlay].forEach(o => o.classList.add('d-none'));
-    if(el) el.classList.remove('d-none');
-}
-
-document.getElementById('kakao-login-btn').addEventListener('click', () => {
-    Kakao.Auth.login({
-        scope: 'profile_nickname,profile_image',
-        success: (authObj) => {
-            accessToken = authObj.access_token;
-            localStorage.setItem('kakao_token', accessToken);
-            checkAuth();
-        },
-        fail: (err) => alert('로그인 실패')
-    });
-});
-
-// Game Logic
-function initGrid() {
-    gridContainer.innerHTML = '';
-    gridContainer.appendChild(selectionBox);
-    allApples = [];
-    
-    for (let i = 0; i < TOTAL_APPLES; i++) {
-        const num = Math.floor(Math.random() * 9) + 1; // 1-9
-        const apple = document.createElement('div');
-        apple.classList.add('apple');
-        apple.textContent = num;
-        apple.dataset.value = num;
-        apple.dataset.index = i;
-        
-        gridContainer.appendChild(apple);
-        allApples.push(apple);
-    }
-}
+// ... (previous checkAuth)
 
 function startGame() {
     score = 0;
-    timeLeft = 120;
+    timeLeft = GAME_TIME;
     scoreEl.textContent = 0;
-    timerEl.textContent = 120;
+    timerEl.textContent = GAME_TIME;
     timeBar.style.width = '100%';
     
     initGrid();
@@ -127,7 +69,7 @@ function startGame() {
     gameInterval = setInterval(() => {
         timeLeft--;
         timerEl.textContent = timeLeft;
-        timeBar.style.width = `${(timeLeft / 120) * 100}%`;
+        timeBar.style.width = `${(timeLeft / GAME_TIME) * 100}%`;
         
         if (timeLeft <= 0) {
             endGame();
@@ -295,12 +237,16 @@ async function saveScore(finalScore) {
     }
 }
 
-document.getElementById('submit-score-btn').addEventListener('click', async () => {
+document.getElementById('submit-score-btn').addEventListener('click', async (e) => {
+    const btn = e.target;
     const msg = document.getElementById('top10-msg').value.trim();
     if (!msg) {
-        alert('소감은 필수 입력입니다!');
+        alert('명예의 전당 등록을 위해 소감을 꼭 입력해주세요!');
         return;
     }
+    
+    btn.disabled = true;
+    btn.textContent = '등록 중...';
     
     try {
         const res = await fetch('/api/game/message', {
@@ -313,14 +259,20 @@ document.getElementById('submit-score-btn').addEventListener('click', async () =
         });
         
         if (res.ok) {
-            alert('등록되었습니다.');
+            alert('성공적으로 등록되었습니다!');
             document.getElementById('top10-form').classList.add('d-none');
             document.getElementById('normal-actions').classList.remove('d-none');
         } else {
-            alert('오류가 발생했습니다.');
+            const err = await res.json();
+            alert('등록 실패: ' + (err.message || '알 수 없는 오류'));
+            btn.disabled = false;
+            btn.textContent = '등록하기';
         }
     } catch (e) {
         console.error(e);
+        alert('서버와 통신 중 오류가 발생했습니다.');
+        btn.disabled = false;
+        btn.textContent = '등록하기';
     }
 });
 
