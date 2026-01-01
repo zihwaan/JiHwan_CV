@@ -164,9 +164,18 @@
         <div id="login-overlay" class="overlay">
             <h1 class="display-4 fw-bold mb-3">🍎 사과 게임</h1>
             <p class="mb-4 text-muted">드래그해서 합이 10이 되면 점수 획득!</p>
-            <button id="kakao-login-btn" class="btn btn-warning btn-lg shadow-sm">
+            <button id="kakao-login-btn" class="btn btn-warning btn-lg shadow-sm mb-4">
                 <i class="fas fa-comment"></i> 카카오 로그인
             </button>
+            
+            <!-- Embedded Leaderboard -->
+            <div class="card w-100 shadow-sm" style="max-height: 300px; overflow-y: auto;">
+                <div class="card-header bg-white fw-bold"><i class="fas fa-trophy text-warning"></i> 명예의 전당</div>
+                <div id="leaderboard-list-login" class="card-body p-0">
+                    <div class="text-center py-3"><div class="spinner-border spinner-border-sm text-secondary"></div></div>
+                </div>
+            </div>
+            
             <a href="../index.html" class="btn btn-link text-muted mt-3">나가기</a>
         </div>
 
@@ -175,8 +184,15 @@
             <h2 class="mb-3">준비되셨나요?</h2>
             <p class="lead">제한시간 <b>35초</b> 동안<br>최대한 많은 사과를 없애세요!</p>
             <p class="text-muted small">내 최고 점수: <span id="my-best-score">0</span></p>
-            <button id="game-start-btn" class="btn btn-primary btn-lg w-100 py-3 fw-bold shadow">게임 시작</button>
-            <button id="show-rank-btn" class="btn btn-outline-dark w-100 mt-2">랭킹 보기</button>
+            <button id="game-start-btn" class="btn btn-primary btn-lg w-100 py-3 fw-bold shadow mb-4">게임 시작</button>
+            
+            <!-- Embedded Leaderboard -->
+            <div class="card w-100 shadow-sm" style="max-height: 300px; overflow-y: auto;">
+                <div class="card-header bg-white fw-bold"><i class="fas fa-trophy text-warning"></i> 명예의 전당</div>
+                <div id="leaderboard-list-start" class="card-body p-0">
+                    <div class="text-center py-3"><div class="spinner-border spinner-border-sm text-secondary"></div></div>
+                </div>
+            </div>
         </div>
 
         <!-- Game Over / Top 10 Overlay -->
@@ -197,18 +213,6 @@
             <!-- Normal Restart -->
             <div id="normal-actions">
                 <button id="restart-btn" class="btn btn-dark btn-lg w-100 mb-2">다시 하기</button>
-                <button id="result-rank-btn" class="btn btn-outline-secondary w-100">랭킹 보기</button>
-            </div>
-        </div>
-
-        <!-- Leaderboard Overlay -->
-        <div id="leaderboard-overlay" class="overlay d-none" style="justify-content: flex-start; padding-top: 80px; overflow-y: auto;">
-            <div class="position-absolute top-0 end-0 p-3">
-                <button id="close-rank-btn" class="btn-close"></button>
-            </div>
-            <h3 class="mb-4 fw-bold"><i class="fas fa-trophy text-warning"></i> 명예의 전당</h3>
-            <div id="leaderboard-list" class="w-100 px-3">
-                <div class="spinner-border text-primary" role="status"></div>
             </div>
         </div>
 

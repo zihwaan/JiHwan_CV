@@ -49,7 +49,7 @@ const myBestScoreEl = document.getElementById('my-best-score');
 const loginOverlay = document.getElementById('login-overlay');
 const startOverlay = document.getElementById('start-overlay');
 const resultOverlay = document.getElementById('result-overlay');
-const leaderboardOverlay = document.getElementById('leaderboard-overlay');
+// const leaderboardOverlay = document.getElementById('leaderboard-overlay'); // Removed
 
 // Auth & Game State
 let accessToken = localStorage.getItem('kakao_token');
@@ -95,7 +95,7 @@ async function checkAuth() {
 }
 
 function showOverlay(el) {
-    [loginOverlay, startOverlay, resultOverlay, leaderboardOverlay].forEach(o => o.classList.add('d-none'));
+    [loginOverlay, startOverlay, resultOverlay].forEach(o => o.classList.add('d-none'));
     if(el) el.classList.remove('d-none');
 }
 
@@ -321,6 +321,9 @@ async function saveScore(finalScore) {
             // Mandatory Input Mode
             document.getElementById('top10-form').classList.remove('d-none');
             document.getElementById('normal-actions').classList.add('d-none'); // Hide normal buttons
+        } else {
+            // Not Top 10, check if we need to reload leaderboard in background
+            if(data.newRecord) loadLeaderboard();
         }
     } catch (e) {
         console.error(e);
@@ -352,6 +355,7 @@ document.getElementById('submit-score-btn').addEventListener('click', async (e) 
             alert('성공적으로 등록되었습니다!');
             document.getElementById('top10-form').classList.add('d-none');
             document.getElementById('normal-actions').classList.remove('d-none');
+            loadLeaderboard(); // Reload to show new entry
         } else {
             const err = await res.json();
             alert('등록 실패: ' + (err.message || '알 수 없는 오류'));
@@ -369,51 +373,50 @@ document.getElementById('submit-score-btn').addEventListener('click', async (e) 
 
 // Ranking UI
 async function loadLeaderboard() {
-    const list = document.getElementById('leaderboard-list');
-    list.innerHTML = '<div class="spinner-border text-primary"></div>';
+    const listLogin = document.getElementById('leaderboard-list-login');
+    const listStart = document.getElementById('leaderboard-list-start');
+    const lists = [listLogin, listStart];
+    
+    lists.forEach(l => { if(l) l.innerHTML = '<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-secondary"></div></div>'; });
     
     try {
         const res = await fetch('/api/game/leaderboard');
         if (!res.ok) throw new Error('Network response was not ok');
         const data = await res.json();
         
-        if (data.length === 0) {
-            list.innerHTML = '<p class="text-center text-muted">기록이 없습니다.</p>';
-            return;
-        }
+        let htmlContent = '';
 
-        list.innerHTML = data.map((entry, index) => {
-            let badge = index < 3 ? ['🥇','🥈','🥉'][index] : `<span class="badge bg-secondary">${index+1}</span>`;
-            return `
-            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-                <div class="d-flex align-items-center gap-2">
-                    <div style="width:25px;text-align:center;">${badge}</div>
-                    <img src="${entry.image}" style="width:30px;height:30px;border-radius:50%;">
-                    <div class="d-flex flex-column">
-                        <span class="fw-bold small">${entry.name}</span>
-                        ${entry.message ? `<span class="text-muted" style="font-size:0.75rem;">"${entry.message}"</span>` : ''}
+        if (data.length === 0) {
+            htmlContent = '<p class="text-center text-muted py-3 small">아직 기록이 없습니다.</p>';
+        } else {
+            htmlContent = data.map((entry, index) => {
+                let badge = index < 3 ? ['🥇','🥈','🥉'][index] : `<span class="badge bg-secondary rounded-pill">${index+1}</span>`;
+                return `
+                <div class="d-flex justify-content-between align-items-center border-bottom px-3 py-2 bg-white">
+                    <div class="d-flex align-items-center gap-2" style="min-width: 0;">
+                        <div style="width:25px;text-align:center;flex-shrink:0;">${badge}</div>
+                        <img src="${entry.image}" style="width:28px;height:28px;border-radius:50%;flex-shrink:0;object-fit:cover;">
+                        <div class="d-flex flex-column text-truncate">
+                            <span class="fw-bold small text-truncate">${entry.name}</span>
+                            ${entry.message ? `<span class="text-muted text-truncate" style="font-size:0.7rem;">"${entry.message}"</span>` : ''}
+                        </div>
                     </div>
+                    <span class="fw-bold text-primary small flex-shrink-0 ms-2">${entry.score}</span>
                 </div>
-                <span class="fw-bold text-primary">${entry.score}</span>
-            </div>
-            `;
-        }).join('');
+                `;
+            }).join('');
+        }
+        
+        lists.forEach(l => { if(l) l.innerHTML = htmlContent; });
+
     } catch (e) {
-        list.innerHTML = '로드 실패';
+        lists.forEach(l => { if(l) l.innerHTML = '<p class="text-center text-danger small py-3">로드 실패</p>'; });
     }
 }
 
-document.getElementById('show-rank-btn').addEventListener('click', () => {
-    showOverlay(leaderboardOverlay);
-    loadLeaderboard();
-});
-document.getElementById('result-rank-btn').addEventListener('click', () => {
-    showOverlay(leaderboardOverlay);
-    loadLeaderboard();
-});
-document.getElementById('close-rank-btn').addEventListener('click', () => {
-    showOverlay(startOverlay); // Go back to start
-});
-
 document.getElementById('game-start-btn').addEventListener('click', startGame);
 document.getElementById('restart-btn').addEventListener('click', startGame);
+
+// Init
+checkMobile();
+checkAuth();
