@@ -317,7 +317,7 @@ async function saveScore(finalScore) {
         });
         const data = await res.json();
         
-        if (data.isTop10) {
+        if (data.isTop10 && data.newRecord) {
             // Mandatory Input Mode
             const btn = document.getElementById('submit-score-btn');
             if(btn) {
