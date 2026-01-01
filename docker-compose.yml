@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - MONGODB_URI=mongodb://mongo:27017/jihwan_cv
+      # Replace these with your actual secrets or load from .env file
+      - ADMIN_PASS=${ADMIN_PASS:-admin1234} 
+      - DOMAIN=${DOMAIN:-localhost:8080}
+      - KAKAO_JS_KEY=${KAKAO_JS_KEY}
+    depends_on:
+      - mongo
+    restart: always
+
+  mongo:
+    image: mongo:6.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: always
+
+volumes:
+  mongo_data:

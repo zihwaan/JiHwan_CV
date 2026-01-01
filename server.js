@@ -1,80 +1,69 @@
 // server.js
 import dotenv from 'dotenv';
-import fs from 'fs';
 import express from 'express';
 import axios from 'axios';
 import cors from 'cors';
 import path from 'path';
-import { Low } from 'lowdb';
-import { JSONFile } from 'lowdb/node';
+import mongoose from 'mongoose';
 import { nanoid } from 'nanoid';
 import jwt from 'jsonwebtoken';
 
 dotenv.config();
 
 const DOMAIN = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : ``;
+const PORT = process.env.PORT || 8080;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/jihwan_cv';
 
 // ────────────────────────────────────────────────────────────────────
-// DB 초기화 (JSON 파일 기반, 매우 경량)
+// MongoDB 연결 및 스키마 정의
 // ────────────────────────────────────────────────────────────────────
-const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH || path.resolve('./data');
-try {
-    if (!fs.existsSync(DATA_DIR)) {
-        await fs.promises.mkdir(DATA_DIR, { recursive: true });
-        console.log(`Data directory created: ${DATA_DIR}`);
-    }
-} catch (mkdirError) {
-    console.error(`Error creating data directory ${DATA_DIR}:`, mkdirError);
-    // Decide if you want to throw or exit if directory creation fails.
-    // For now, we'll let LowDB attempt to handle file creation.
-}
+mongoose.connect(MONGODB_URI)
+  .then(() => console.log('✅ Connected to MongoDB'))
+  .catch(err => {
+    console.error('❌ MongoDB Connection Error:', err);
+    process.exit(1);
+  });
 
-const dbFile = path.join(DATA_DIR, 'db.json');
-console.log(`Using database file: ${dbFile}`);
-const defaultData = { comments: [], logins: [], adminMemos: [], leaderboard: [] };
-const adapter = new JSONFile(dbFile);
-const db = new Low(adapter, defaultData);
+const commentSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  name: String,
+  image: String,
+  text: String,
+  time: Number
+});
 
-async function initializeDatabase() {
-    try {
-        await db.read();
-        // Ensure db.data is not null and has the default structure if the file was empty or just created
-        db.data = db.data || { ...defaultData };
-        // Ensure all top-level keys exist
-        for (const key in defaultData) {
-            if (!db.data[key]) {
-                db.data[key] = defaultData[key];
-            }
-        }
-        // LowDB v6 doesn't automatically write if db.data was just initialized from defaultData.
-        // Let's do an initial write if the file was newly created by JSONFile adapter
-        // This part is a bit tricky, as JSONFile creates an empty file if it doesn't exist.
-        // A more robust way might be to check if dbFile existed before new Low().
-        // For now, we assume if db.data was null after read, it means it's new or empty.
-        // However, db.read() should fill db.data if the file exists and is valid JSON.
-        // If file doesn't exist, adapter creates it, db.read() might result in db.data being null (older versions)
-        // or the defaultData (newer adapter behavior).
-        // The `db.data ||= defaultData` or `db.data = db.data || defaultData` is the key.
-        // If after db.read(), db.data is still pointing to the initial defaultData object by reference
-        // (or was null and then assigned defaultData), an initial write might be needed
-        // if the file was truly non-existent or empty.
-        // However, with the new Low(adapter, defaultData), db.data should be populated
-        // with defaultData if the file is empty/new.
-        // A write here ensures the file is created with default structure if it was completely missing.
-        // await db.write(); // Consider if this is needed or if first actual data change handles it.
-        console.log('Database initialized and read successfully.');
-    } catch (initDbError) {
-        console.error('Fatal error initializing database:', initDbError);
-        // If the database can't be read or initialized, the app likely can't function.
-        // You might want to exit the process or implement a more graceful fallback.
-        process.exit(1); // Example: exit if DB is critical
-    }
-}
+const loginSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  name: String,
+  image: String,
+  time: Number,
+  msg: String
+});
 
-// Initialize DB before starting the app
-await initializeDatabase();
+const leaderboardSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  name: String,
+  score: Number,
+  message: String,
+  time: Number
+});
 
+const adminMemoSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  title: String,
+  content: String,
+  color: String,
+  time: Number
+});
 
+const Comment = mongoose.model('Comment', commentSchema);
+const Login = mongoose.model('Login', loginSchema);
+const Leaderboard = mongoose.model('Leaderboard', leaderboardSchema);
+const AdminMemo = mongoose.model('AdminMemo', adminMemoSchema);
+
+// ────────────────────────────────────────────────────────────────────
+// Express 앱 설정
+// ────────────────────────────────────────────────────────────────────
 const app = express();
 app.use(cors({ origin: DOMAIN || true }));
 app.use(express.json());
@@ -115,9 +104,8 @@ function isAdmin(token) {
 // 전체 댓글 조회
 app.get('/api/comments', async (_, res) => {
   try {
-    await db.read();
-    db.data.comments = db.data.comments || [];
-    res.json(db.data.comments.sort((a, b) => b.time - a.time));
+    const comments = await Comment.find().sort({ time: -1 });
+    res.json(comments);
   } catch (dbError) {
     console.error('Database read error in GET /api/comments:', dbError);
     res.status(500).json({ error: 'DATABASE_READ_ERROR', message: '서버에서 댓글을 읽어오는 중 오류가 발생했습니다.' });
@@ -133,18 +121,15 @@ app.post('/api/comments', async (req, res) => {
   const { text } = req.body;
   if (!text?.trim()) return res.status(400).json({ error: 'TEXT_REQUIRED' });
 
-  const comment = {
-    id   : nanoid(),
-    name : user.name,
-    image: user.image,
-    text : text.trim(),
-    time : Date.now()
-  };
   try {
-    await db.read();
-    db.data.comments = db.data.comments || [];
-    db.data.comments.push(comment);
-    await db.write();
+    const comment = new Comment({
+      id: nanoid(),
+      name: user.name,
+      image: user.image,
+      text: text.trim(),
+      time: Date.now()
+    });
+    await comment.save();
     res.status(201).json({ ok: true });
   } catch (dbError) {
     console.error('Database write error in POST /api/comments:', dbError);
@@ -158,18 +143,15 @@ app.post('/api/logins', async (req, res) => {
   const user = await verifyKakaoToken(token);
   if (!user) return res.status(401).json({ error: 'INVALID_TOKEN' });
 
-  const record = {
-    id   : nanoid(),
-    name : user.name,
-    image: user.image,
-    time : Date.now(),
-    msg  : '로그인되었습니다.'
-  };
   try {
-    await db.read();
-    db.data.logins = db.data.logins || [];
-    db.data.logins.push(record);
-    await db.write();
+    const record = new Login({
+      id: nanoid(),
+      name: user.name,
+      image: user.image,
+      time: Date.now(),
+      msg: '로그인되었습니다.'
+    });
+    await record.save();
     res.status(201).json({ ok: true });
   } catch (dbError) {
     console.error('Database write error in POST /api/logins:', dbError);
@@ -192,9 +174,8 @@ app.get('/api/admin/logins', async (req, res) => {
   if (!isAdmin(token)) return res.status(401).json({ error: 'NOT_ADMIN' });
 
   try {
-    await db.read();
-    db.data.logins = db.data.logins || [];
-    res.json(db.data.logins.sort((a, b) => b.time - a.time));
+    const logins = await Login.find().sort({ time: -1 });
+    res.json(logins);
   } catch (dbError) {
     console.error('Database read error in GET /api/admin/logins:', dbError);
     res.status(500).json({ error: 'DATABASE_READ_ERROR', message: '서버에서 로그인 이력을 읽어오는 중 오류가 발생했습니다.' });
@@ -207,14 +188,10 @@ app.delete('/api/comments/:id', async (req, res) => {
   if (!isAdmin(token)) return res.status(401).json({ error: 'NOT_ADMIN' });
 
   try {
-    await db.read();
-    db.data.comments = db.data.comments || [];
-    const initialLength = db.data.comments.length;
-    db.data.comments = db.data.comments.filter((c) => c.id !== req.params.id);
-    if (db.data.comments.length === initialLength) {
+    const result = await Comment.findOneAndDelete({ id: req.params.id });
+    if (!result) {
         return res.status(404).json({ error: 'COMMENT_NOT_FOUND' });
     }
-    await db.write();
     res.json({ ok: true });
   } catch (dbError) {
     console.error('Database error in DELETE /api/comments/:id:', dbError);
@@ -225,9 +202,7 @@ app.delete('/api/comments/:id', async (req, res) => {
 // ────────────────── LEADERBOARD API ────────────────────
 app.get('/api/leaderboard', async (req, res) => {
   try {
-    await db.read();
-    db.data.leaderboard = db.data.leaderboard || [];
-    const topScores = db.data.leaderboard.sort((a, b) => b.score - a.score).slice(0, 10);
+    const topScores = await Leaderboard.find().sort({ score: -1 }).limit(10);
     res.json(topScores);
   } catch (dbError) {
     console.error('Database read error in GET /api/leaderboard:', dbError);
@@ -241,19 +216,15 @@ app.post('/api/leaderboard', async (req, res) => {
     return res.status(400).json({ error: 'INVALID_DATA', message: '이름, 점수, 메시지는 필수입니다.' });
   }
 
-  const newEntry = {
-    id: nanoid(),
-    name: name.trim().slice(0, 10), // Max 10 chars
-    score,
-    message: message.trim().slice(0, 30), // Max 30 chars
-    time: Date.now(),
-  };
-
   try {
-    await db.read();
-    db.data.leaderboard = db.data.leaderboard || [];
-    db.data.leaderboard.push(newEntry);
-    await db.write();
+    const newEntry = new Leaderboard({
+      id: nanoid(),
+      name: name.trim().slice(0, 10), // Max 10 chars
+      score,
+      message: message.trim().slice(0, 30), // Max 30 chars
+      time: Date.now(),
+    });
+    await newEntry.save();
     res.status(201).json(newEntry);
   } catch (dbError) {
     console.error('Database write error in POST /api/leaderboard:', dbError);
@@ -275,9 +246,7 @@ adminMemosRouter.use((req, res, next) => {
 
 adminMemosRouter.get('/', async (req, res) => {
   try {
-    await db.read();
-    db.data.adminMemos = db.data.adminMemos || [];
-    const memos = db.data.adminMemos.sort((a, b) => b.time - a.time);
+    const memos = await AdminMemo.find().sort({ time: -1 });
     res.json(memos);
   } catch (dbError) {
     console.error('Database read error in GET /api/admin/memos:', dbError);
@@ -290,18 +259,16 @@ adminMemosRouter.post('/', async (req, res) => {
   if (!title?.trim() || !content?.trim()) {
     return res.status(400).json({ error: 'TITLE_AND_CONTENT_REQUIRED', message: '제목과 내용은 필수입니다.' });
   }
-  const newMemo = {
-    id: nanoid(),
-    title: title.trim(),
-    content: content.trim(),
-    color: color || '#e9ecef', // Updated default color
-    time: Date.now(),
-  };
+
   try {
-    await db.read(); // Ensure latest data
-    db.data.adminMemos = db.data.adminMemos || [];
-    db.data.adminMemos.push(newMemo);
-    await db.write();
+    const newMemo = new AdminMemo({
+      id: nanoid(),
+      title: title.trim(),
+      content: content.trim(),
+      color: color || '#e9ecef', // Updated default color
+      time: Date.now(),
+    });
+    await newMemo.save();
     res.status(201).json(newMemo);
   } catch (dbError) {
     console.error('Database write error in POST /api/admin/memos:', dbError);
@@ -321,34 +288,22 @@ adminMemosRouter.put('/:id', async (req, res) => {
   }
 
   try {
-    await db.read();
-    db.data.adminMemos = db.data.adminMemos || [];
-    const memoIndex = db.data.adminMemos.findIndex((memo) => memo.id === id);
+    const updateData = {};
+    if (title !== undefined) updateData.title = title.trim();
+    if (content !== undefined) updateData.content = content.trim();
+    if (color !== undefined) updateData.color = color;
+    updateData.time = Date.now();
 
-    if (memoIndex === -1) {
+    const updatedMemo = await AdminMemo.findOneAndUpdate(
+      { id: id },
+      updateData,
+      { new: true } // Return updated document
+    );
+
+    if (!updatedMemo) {
       return res.status(404).json({ error: 'MEMO_NOT_FOUND', message: '해당 ID의 메모를 찾을 수 없습니다.' });
     }
 
-    const originalMemo = db.data.adminMemos[memoIndex];
-    const updatedMemo = {
-      ...originalMemo,
-      title: title?.trim() !== undefined ? title.trim() : originalMemo.title,
-      content: content?.trim() !== undefined ? content.trim() : originalMemo.content,
-      color: color !== undefined ? color : originalMemo.color,
-      time: Date.now(),
-    };
-    
-    // This extra check might be redundant if the initial checks for !title.trim() are sufficient
-    // but kept for explicitness if only one field is updated.
-    if (updatedMemo.title === "" && originalMemo.title !== "") {
-        return res.status(400).json({ error: 'TITLE_CANNOT_BE_EMPTY_ON_UPDATE', message: '수정 시 제목을 비울 수 없습니다.' });
-    }
-    if (updatedMemo.content === "" && originalMemo.content !== "") {
-        return res.status(400).json({ error: 'CONTENT_CANNOT_BE_EMPTY_ON_UPDATE', message: '수정 시 내용을 비울 수 없습니다.' });
-    }
-
-    db.data.adminMemos[memoIndex] = updatedMemo;
-    await db.write();
     res.json(updatedMemo);
   } catch (dbError) {
     console.error(`Database error in PUT /api/admin/memos/${id}:`, dbError);
@@ -359,15 +314,11 @@ adminMemosRouter.put('/:id', async (req, res) => {
 adminMemosRouter.delete('/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    await db.read();
-    db.data.adminMemos = db.data.adminMemos || [];
-    const initialLength = db.data.adminMemos.length;
-    db.data.adminMemos = db.data.adminMemos.filter((memo) => memo.id !== id);
+    const result = await AdminMemo.findOneAndDelete({ id: id });
 
-    if (db.data.adminMemos.length === initialLength) {
+    if (!result) {
       return res.status(404).json({ error: 'MEMO_NOT_FOUND', message: '삭제할 메모를 찾을 수 없습니다.' });
     }
-    await db.write();
     res.json({ ok: true, message: '메모가 성공적으로 삭제되었습니다.' });
   } catch (dbError) {
     console.error(`Database error in DELETE /api/admin/memos/${id}:`, dbError);
@@ -380,25 +331,12 @@ app.use('/api/admin/memos', adminMemosRouter);
 // ─────────────────── SPA Fallback ──────────────────────
 app.get('*', (_, res) => {
     const indexPath = path.join(path.resolve(), 'index.html');
-    // Optional: Check if index.html exists
-    // fs.access(indexPath, fs.constants.F_OK, (err) => {
-    //    if (err) {
-    //        console.error("index.html not found for SPA fallback:", err);
-    //        return res.status(404).send('Client application not found.');
-    //    }
-    //    res.sendFile(indexPath);
-    // });
     res.sendFile(indexPath);
 });
 
 
 // ──────────────────── SERVER ON ────────────────────────
-const PORT = process.env.PORT || 8080;
-const HOST_MSG = DOMAIN || `http://localhost:${PORT}`;
-
 app.listen(PORT, () => {
-  console.log(`🚀 Server ready @ ${HOST_MSG}`);
+  console.log(`🚀 Server ready @ ${DOMAIN || `http://localhost:${PORT}`}`);
   console.log(`Serving static files from: ${path.resolve()}`);
-  console.log(`Database directory: ${DATA_DIR}`);
-  console.log(`Database file: ${dbFile}`);
 });
