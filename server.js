@@ -61,6 +61,17 @@ const Login = mongoose.model('Login', loginSchema);
 const Leaderboard = mongoose.model('Leaderboard', leaderboardSchema);
 const AdminMemo = mongoose.model('AdminMemo', adminMemoSchema);
 
+const gameScoreSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  userId: { type: String, required: true }, // Kakao ID or unique identifier
+  name: String,
+  image: String,
+  score: Number,
+  message: String,
+  time: Number
+});
+const GameScore = mongoose.model('GameScore', gameScoreSchema);
+
 // ────────────────────────────────────────────────────────────────────
 // Express 앱 설정
 // ────────────────────────────────────────────────────────────────────
@@ -81,6 +92,7 @@ async function verifyKakaoToken(token) {
     img = img.replace(/^http:\/\//, 'https://');
 
     return {
+      id: data.id.toString(),
       name  : data.properties?.nickname ||
               data.kakao_account?.profile?.nickname ||
               '익명',
@@ -231,6 +243,113 @@ app.post('/api/leaderboard', async (req, res) => {
     res.status(500).json({ error: 'DATABASE_WRITE_ERROR', message: '서버에 리더보드 정보를 저장하는 중 오류가 발생했습니다.' });
   }
 });
+
+// ────────────────── GAME API ──────────────────────────
+// 게임 점수 저장 (최고 기록만 갱신)
+app.post('/api/game/score', async (req, res) => {
+  const token = (req.headers.authorization || '').split(' ')[1];
+  const user = await verifyKakaoToken(token);
+  if (!user) return res.status(401).json({ error: 'INVALID_TOKEN' });
+
+  const { score } = req.body;
+  if (typeof score !== 'number') return res.status(400).json({ error: 'INVALID_SCORE' });
+
+  try {
+    const existingScore = await GameScore.findOne({ userId: user.id });
+    let savedScore = score;
+    let isNewRecord = false;
+
+    if (existingScore) {
+      if (score > existingScore.score) {
+        existingScore.score = score;
+        existingScore.time = Date.now();
+        existingScore.name = user.name;
+        existingScore.image = user.image;
+        await existingScore.save();
+        savedScore = score;
+        isNewRecord = true;
+      } else {
+        savedScore = existingScore.score;
+      }
+    } else {
+      const newScore = new GameScore({
+        id: nanoid(),
+        userId: user.id,
+        name: user.name,
+        image: user.image,
+        score,
+        time: Date.now()
+      });
+      await newScore.save();
+      savedScore = score;
+      isNewRecord = true;
+    }
+
+    // Check if Top 10
+    const betterScoresCount = await GameScore.countDocuments({ score: { $gt: savedScore } });
+    const isTop10 = betterScoresCount < 10;
+
+    return res.json({ newRecord: isNewRecord, score: savedScore, isTop10 });
+  } catch (err) {
+    console.error('Game score save error:', err);
+    res.status(500).json({ error: 'DB_ERROR' });
+  }
+});
+
+// 소감 등록 (Top 10 유저용)
+app.put('/api/game/message', async (req, res) => {
+    const token = (req.headers.authorization || '').split(' ')[1];
+    const user = await verifyKakaoToken(token);
+    if (!user) return res.status(401).json({ error: 'INVALID_TOKEN' });
+
+    const { message } = req.body;
+    if (!message) return res.status(400).json({ error: 'MESSAGE_REQUIRED' });
+
+    try {
+        const record = await GameScore.findOne({ userId: user.id });
+        if (!record) return res.status(404).json({ error: 'NO_RECORD' });
+        
+        // Verify Top 10 again to be safe
+        const betterScoresCount = await GameScore.countDocuments({ score: { $gt: record.score } });
+        if (betterScoresCount >= 10) {
+             return res.status(403).json({ error: 'NOT_TOP_10', message: 'Top 10 순위 밖입니다.' });
+        }
+
+        record.message = message.trim().slice(0, 50); // Max 50 chars
+        await record.save();
+        res.json({ ok: true });
+    } catch (err) {
+        console.error('Game message update error:', err);
+        res.status(500).json({ error: 'DB_ERROR' });
+    }
+});
+
+// 내 최고 점수 조회
+app.get('/api/game/myscore', async (req, res) => {
+  const token = (req.headers.authorization || '').split(' ')[1];
+  const user = await verifyKakaoToken(token);
+  if (!user) return res.status(401).json({ error: 'INVALID_TOKEN' });
+
+  try {
+    const record = await GameScore.findOne({ userId: user.id });
+    res.json({ score: record ? record.score : 0 });
+  } catch (err) {
+    res.status(500).json({ error: 'DB_ERROR' });
+  }
+});
+
+// 게임 리더보드 (TOP 10)
+app.get('/api/game/leaderboard', async (req, res) => {
+  try {
+    const topScores = await GameScore.find({}, { name: 1, image: 1, score: 1, message: 1, _id: 0 })
+      .sort({ score: -1 })
+      .limit(10);
+    res.json(topScores);
+  } catch (err) {
+    res.status(500).json({ error: 'DB_ERROR' });
+  }
+});
+
 
 
 // ────────────────── ADMIN MEMOS API ────────────────────
