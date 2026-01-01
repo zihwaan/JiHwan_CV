@@ -1,0 +1,25 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches:
+      - aws
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Executing remote ssh commands using key
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          port: 22
+          script: |
+            cd ~/JiHwan_CV
+            git pull origin aws
+            # Docker Compose 다시 빌드 및 실행 (중단 시간 최소화)
+            docker-compose up -d --build
+            # (선택사항) 사용하지 않는 구버전 이미지 정리
+            docker image prune -f

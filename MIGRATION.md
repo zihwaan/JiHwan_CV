@@ -180,3 +180,25 @@ sudo certbot --nginx -d zihwan.com -d www.zihwan.com
 *   **로그 확인**: `docker compose logs -f`
 *   **앱 재시작**: `docker compose restart app`
 *   **컨테이너 중지**: `docker compose down`
+
+---
+
+## 7. 자동 배포 설정 (CI/CD)
+
+GitHub의 `aws` 브랜치에 코드를 푸시(Push)하면, 자동으로 서버에 반영되도록 설정되어 있습니다. 이를 작동시키려면 **GitHub Secrets** 설정이 필요합니다.
+
+### 7-1. GitHub Secrets 등록
+GitHub 리포지토리의 **Settings > Secrets and variables > Actions** 메뉴에서 다음 3개의 시크릿을 등록하세요.
+
+| Name | 값 (Value) |
+| :--- | :--- |
+| `HOST` | AWS 서버의 퍼블릭 IP (예: 13.210.xx.xx) |
+| `USERNAME` | `ec2-user` |
+| `KEY` | `.pem` 키 파일의 내용을 메모장으로 열어서 전체 복사/붙여넣기 |
+
+### 7-2. 작동 방식
+1.  로컬에서 코드 수정 후 `git push origin aws` 실행.
+2.  GitHub Actions가 자동으로 감지하여 서버에 SSH 접속.
+3.  `git pull` -> `docker-compose up -d --build` 순차 실행.
+4.  약 1~2분 후 서버에 변경 사항이 자동 반영됨.
+
