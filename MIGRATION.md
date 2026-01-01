@@ -30,54 +30,53 @@ ssh -i "your-key-pair.pem" ubuntu@퍼블릭IPv4주소
 
 ---
 
-## 2. 서버 환경 구축 (Docker 설치)
+## 2. 서버 환경 구축 (Docker 및 Git 설치)
 
-서버에 접속한 상태에서 아래 명령어들을 한 줄씩 입력하여 Docker를 설치합니다.
+Amazon Linux에서는 Docker 엔진과 **Docker Compose**를 각각 설치해야 합니다.
 
 ```bash
-# 패키지 업데이트
-sudo apt-get update
-sudo apt-get install -y ca-certificates curl gnupg
+# 1. 시스템 업데이트
+sudo yum update -y
 
-# Docker GPG 키 추가
-sudo mkdir -m 0755 -p /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+# 2. Docker 및 Git 설치
+sudo yum install -y docker git
 
-# 리포지토리 설정
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-# Docker 엔진 설치
-sudo apt-get update
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-# 권한 설정 (재로그인 필요)
+# 3. Docker 서비스 시작
+sudo systemctl start docker
+sudo systemctl enable docker
 sudo usermod -aG docker $USER
+
+# 4. Docker Compose 설치 (필수)
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+
+# 5. Docker Buildx 설치 (필수 - 최신 버전 사용)
+mkdir -p ~/.docker/cli-plugins/
+curl -SL https://github.com/docker/buildx/releases/download/v0.19.3/buildx-v0.19.3.linux-amd64 -o ~/.docker/cli-plugins/docker-buildx
+chmod +x ~/.docker/cli-plugins/docker-buildx
+
+# 6. 적용을 위해 재로그인
 exit
-# (다시 ssh 접속하세요)
+# (다시 ssh 접속)
 ```
 
 ---
 
-## 3. 프로젝트 업로드 및 실행
+## 3. GitHub 코드 가져오기 및 실행
 
-### 3-1. 파일 업로드
-내 컴퓨터의 프로젝트 폴더를 서버로 옮깁니다. `scp` 명령어를 쓰거나 FileZilla 같은 FTP 프로그램을 사용하세요.
-
-**[FileZilla 사용 시]**
-*   호스트: `sftp://퍼블릭IP`
-*   사용자: `ubuntu`
-*   키 파일: 다운로드 받은 `.pem` 파일 선택
-*   업로드 위치: `/home/ubuntu/JiHwan_CV` (폴더 생성 후 통째로 업로드)
+### 3-1. AWS 브랜치 클론 (Clone)
+```bash
+cd ~
+git clone -b aws https://github.com/zihwaan/JiHwan_CV.git
+cd JiHwan_CV
+```
 
 ### 3-2. 환경 변수 설정
-서버의 프로젝트 폴더로 이동해 `.env` 파일을 만듭니다.
-
 ```bash
-cd ~/JiHwan_CV
 nano .env
 ```
-**내용 붙여넣기:**
+**내용 입력:**
 ```env
 PORT=8080
 MONGODB_URI=mongodb://mongo:27017/jihwan_cv
@@ -85,11 +84,12 @@ ADMIN_PASS=원하는관리자비번
 DOMAIN=zihwan.com
 KAKAO_JS_KEY=카카오자바스크립트키
 ```
-(`Ctrl+O` 엔터로 저장, `Ctrl+X` 로 종료)
+(`Ctrl+O` 엔터, `Ctrl+X` 종료)
 
-### 3-3. 서버 실행
+### 3-3. 서비스 실행
+`docker-compose` 명령어를 사용합니다.
 ```bash
-docker compose up -d --build
+docker-compose up -d --build
 ```
 이제 `http://퍼블릭IP:8080` 으로 접속되는지 확인합니다.
 
