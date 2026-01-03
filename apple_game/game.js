@@ -12,27 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("Kakao Init Error:", e);
     }
 
-    // 2. Mobile Check
-    if (!checkMobile()) return; // Stop if desktop
-
     // 3. Init Auth Check
     checkAuth();
     
     // 4. Load Leaderboard & Stats (Initial load)
     loadLeaderboard();
 });
-
-// Mobile Check
-function checkMobile() {
-    const isMobile = window.innerWidth <= 768 || ('ontouchstart' in window);
-    
-    if (!isMobile) {
-        document.getElementById('desktop-warning').classList.remove('d-none');
-        document.getElementById('game-wrapper').style.display = 'none';
-        return false;
-    }
-    return true;
-}
 
 // DOM Elements
 const gridContainer = document.getElementById('grid-container');
@@ -433,5 +418,4 @@ document.getElementById('go-home-btn')?.addEventListener('click', () => {
 });
 
 // Init
-checkMobile();
 checkAuth();
