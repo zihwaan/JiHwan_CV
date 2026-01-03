@@ -7,11 +7,14 @@ WORKDIR /usr/src/app
 # Copy package.json and package-lock.json first to leverage Docker cache
 COPY package*.json ./
 
+# Install bash and build dependencies for node-pty
+RUN apk add --no-cache bash python3 make g++
+
 # Install app dependencies
 RUN npm install
 
-# Install bash for web terminal
-RUN apk add --no-cache bash
+# Remove build dependencies to keep image small (Optional but recommended)
+# RUN apk del python3 make g++
 
 # Copy the rest of the application code
 COPY . .

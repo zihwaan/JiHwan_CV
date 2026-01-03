@@ -143,11 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Receive Data
         socket.on('data', (data) => {
-            // Fix stair-stepping: Ensure \n is preceded by \r
-            // If data comes as just \n, xterm prints it starting at the next line but same column.
-            // We replace all \n that are NOT preceded by \r with \r\n.
-            const formatted = data.replace(/(?<!\r)\n/g, '\r\n');
-            term.write(formatted);
+            term.write(data);
         });
 
         // Send Data

@@ -13,6 +13,7 @@
         "jsonwebtoken": "^9.0.0",
         "mongoose": "^9.1.1",
         "nanoid": "^4.0.0",
+        "node-pty": "^1.0.0",
         "nodemailer": "^7.0.12",
         "socket.io": "^4.8.3"
     }

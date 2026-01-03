@@ -8,7 +8,8 @@ import mongoose from 'mongoose';
 import { nanoid } from 'nanoid';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
-import { spawn } from 'child_process';
+// import { spawn } from 'child_process'; // Removed in favor of node-pty
+import pty from 'node-pty';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 
@@ -486,41 +487,43 @@ io.on('connection', async (socket) => {
 
     console.log(`[Terminal] Session started: ${user.name}`);
     
-    // Spawn simple shell (bash) - Use explicit path
-    const shell = spawn('bash', ['-i'], { // -i for interactive mode
-        env: { ...process.env, TERM: 'xterm-256color' },
-        cwd: process.cwd()
-    });
-
-    shell.on('error', (err) => {
-        console.error(`[Terminal] Shell error:`, err);
-        socket.emit('data', `\r\n\x1b[31mFailed to start shell: ${err.message}\x1b[0m\r\n`);
-    });
-
-    shell.on('close', (code) => {
-        console.log(`[Terminal] Shell exited with code ${code}`);
-        socket.disconnect();
+    // Create a pseudo-terminal
+    const shell = pty.spawn('bash', [], {
+        name: 'xterm-256color',
+        cols: 80,
+        rows: 24,
+        cwd: process.cwd(),
+        env: process.env
     });
 
     // Pipe outputs to socket
-    shell.stdout.on('data', (data) => socket.emit('data', data.toString()));
-    shell.stderr.on('data', (data) => socket.emit('data', data.toString()));
+    shell.onData((data) => socket.emit('data', data));
 
     // Handle inputs from client
     socket.on('input', (data) => {
-        if (shell.stdin.writable) shell.stdin.write(data);
+        shell.write(data);
     });
     
-    // Handle kill/exit
-    socket.on('disconnect', () => {
-        shell.kill();
-        console.log(`[Terminal] Session ended: ${user.name}`);
-    });
-    
-    // Simple pseudo-resize handling (Not real PTY resize, but environment var attempt)
+    // Handle resize
     socket.on('resize', ({ cols, rows }) => {
-        // Without PTY, we can't truly resize the tty columns/rows.
-        // We just ignore or maybe set env vars if we were restarting shell (too late here).
+        try {
+            shell.resize(cols, rows);
+        } catch (e) {
+            console.error('Resize error:', e);
+        }
+    });
+
+    // Handle exit
+    shell.onExit(({ exitCode, signal }) => {
+         console.log(`[Terminal] Shell exited with code ${exitCode}`);
+         socket.disconnect();
+    });
+
+    socket.on('disconnect', () => {
+        try {
+            shell.kill();
+        } catch(e) {}
+        console.log(`[Terminal] Session ended: ${user.name}`);
     });
 });
 
