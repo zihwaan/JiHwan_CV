@@ -69,31 +69,20 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">성격 키워드</label>
-                        <input type="text" class="form-control" id="personality" placeholder="예: 활발한, 차분한, 긍정적인..." required>
-                    </div>
-
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">좋아하는 색상 (포인트 컬러)</label>
                             <input type="text" class="form-control" id="favColor" placeholder="예: 파스텔 핑크, 네이비" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">취미 / 활동</label>
-                            <input type="text" class="form-control" id="hobby" placeholder="예: 독서, 축구, 코딩" required>
+                            <label class="form-label">좋아하는 동물</label>
+                            <input type="text" class="form-control" id="favAnimal" placeholder="예: 고양이, 호랑이, 펭귄" required>
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">착용하고 싶은 악세서리</label>
-                            <input type="text" class="form-control" id="accessory" placeholder="예: 안경, 모자, 헤드셋" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">원하는 배경 분위기</label>
-                            <input type="text" class="form-control" id="bgVibe" placeholder="예: 우주, 숲속, 모던한 방" required>
-                        </div>
+                    <div class="mb-3">
+                        <label class="form-label">원하는 배경 분위기</label>
+                        <input type="text" class="form-control" id="bgVibe" placeholder="예: 우주, 숲속, 모던한 방" required>
                     </div>
 
                     <button type="submit" class="btn btn-dark w-100 py-2">캐릭터 생성하기 🍌</button>
@@ -131,10 +120,8 @@
             const photo = document.getElementById('photo').files[0];
             const mbti = document.getElementById('mbti').value;
             const gender = document.getElementById('gender').value;
-            const personality = document.getElementById('personality').value;
             const favColor = document.getElementById('favColor').value;
-            const hobby = document.getElementById('hobby').value;
-            const accessory = document.getElementById('accessory').value;
+            const favAnimal = document.getElementById('favAnimal').value;
             const bgVibe = document.getElementById('bgVibe').value;
 
             if (!photo) return alert('사진을 올려주세요!');
@@ -143,10 +130,8 @@
             formData.append('photo', photo);
             formData.append('mbti', mbti);
             formData.append('gender', gender);
-            formData.append('personality', personality);
             formData.append('favColor', favColor);
-            formData.append('hobby', hobby);
-            formData.append('accessory', accessory);
+            formData.append('favAnimal', favAnimal);
             formData.append('bgVibe', bgVibe);
 
             document.getElementById('nano-form').classList.add('d-none');
@@ -194,8 +179,8 @@
                                 ${sub.generatedImage ? `<img src="data:image/png;base64,${sub.generatedImage}" class="submission-img">` : ''}
                             </div>
                             <p class="small mb-1"><strong>${sub.mbti} / ${sub.gender}</strong></p>
-                            <p class="small text-muted">${sub.personality}</p>
-                            <p class="small text-muted">🎨 ${sub.favColor} | ⚽ ${sub.hobby}</p>
+                            <p class="small text-muted">🎨 ${sub.favColor}</p>
+                            <p class="small text-muted">🐾 ${sub.favAnimal}</p>
                             <p class="small text-muted">${new Date(sub.time).toLocaleString()}</p>
                         </div>
                     `;

@@ -83,10 +83,8 @@ const nanoSchema = new mongoose.Schema({
   photo: String, 
   mbti: String,
   gender: String,
-  personality: String,
   favColor: String,
-  hobby: String,
-  accessory: String,
+  favAnimal: String,
   bgVibe: String,
   generatedImage: String,
   promptUsed: String,
@@ -443,29 +441,29 @@ app.get('/api/game/leaderboard', async (req, res) => {
 // ────────────────── Nanobanana Service ────────────────────
 app.post('/api/nanobanana/generate', upload.single('photo'), async (req, res) => {
   try {
-    const { mbti, gender, personality, favColor, hobby, accessory, bgVibe } = req.body;
+    const { mbti, gender, favColor, favAnimal, bgVibe } = req.body;
     const file = req.file;
     if (!file) return res.status(400).json({ error: 'NO_FILE' });
 
-    console.log(`[Nanobanana] Processing request: ${mbti}, ${gender}, ${favColor}`);
+    console.log(`[Nanobanana] Processing: ${gender}, ${mbti}, ${favColor}, ${favAnimal}`);
 
+    // Read and encode image
     const imagePath = file.path;
     const imageData = fs.readFileSync(imagePath);
     const imageBase64 = imageData.toString('base64');
     
-    // Construct a rich prompt
+    // Construct Prompt using provided example structure
     const promptText = `
-    Transform this person's photo into a cute, black and white line art character (chibi style).
-    Gender: ${gender}
-    Personality: ${mbti}, ${personality}
-    Features to emphasize:
-    - Favorite Color (as an accent or vibe): ${favColor}
-    - Hobby/Activity: ${hobby}
-    - Accessory: ${accessory}
-    - Background Atmosphere: ${bgVibe}
+    Create a black and white line art sticker (chibi style) based on this person's face.
+    The character should reflect the following traits:
+    - Gender: ${gender}
+    - Personality: ${mbti}
+    - Theme: The character should be interacting with or dressed as a cute ${favAnimal}.
+    - Style: Minimalist, thick lines, high contrast, white background.
+    - Atmosphere: ${bgVibe}.
+    - Accent Color: ${favColor} (use sparingly for emphasis).
     
-    Style: Minimalist, clean thick lines, white background, high contrast sticker style.
-    Make it look like a professional character illustration. 🍌
+    Make it cute, simple, and suitable for a sticker. 🍌
     `;
 
     const prompt = [
@@ -473,34 +471,44 @@ app.post('/api/nanobanana/generate', upload.single('photo'), async (req, res) =>
         { inlineData: { mimeType: file.mimetype, data: imageBase64 } }
     ];
 
+    console.log(`[Nanobanana] Sending request to Gemini 2.5...`);
+
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash-image", // Or "gemini-1.5-flash-8b" if 2.5 is not yet fully rolled out for this key, but user requested 2.5
+        model: "gemini-2.5-flash-image", 
         contents: prompt
     });
 
     let generatedImageB64 = '';
     
-    // Parse response for image
-    const candidates = response.candidates || [];
-    if (candidates.length > 0 && candidates[0].content && candidates[0].content.parts) {
-        for (const part of candidates[0].content.parts) {
-            if (part.inlineData) {
-                generatedImageB64 = part.inlineData.data;
-                break;
+    // Parse response exactly as shown in example
+    if (response && response.candidates && response.candidates.length > 0) {
+        const candidate = response.candidates[0];
+        if (candidate.content && candidate.content.parts) {
+            for (const part of candidate.content.parts) {
+                if (part.inlineData) {
+                    generatedImageB64 = part.inlineData.data;
+                    break; 
+                }
             }
         }
     }
 
     if (!generatedImageB64) {
-        console.error("No image generated in response");
-        return res.status(500).json({ error: 'GENERATION_FAILED', details: 'No image data received from Gemini.' });
+        console.error("[Nanobanana] No image data found in response.");
+        // Try to log the text if available for debugging
+        const textPart = response?.candidates?.[0]?.content?.parts?.find(p => p.text);
+        if (textPart) console.log("[Nanobanana] Response Text:", textPart.text);
+        
+        return res.status(500).json({ error: 'GENERATION_FAILED', details: 'No image generated.' });
     }
+
+    console.log(`[Nanobanana] Image generated successfully.`);
 
     // Save
     const submission = new NanoSubmission({
         id: nanoid(),
         photo: file.path,
-        mbti, gender, personality, favColor, hobby, accessory, bgVibe,
+        mbti, gender, favColor, favAnimal, bgVibe,
         generatedImage: generatedImageB64,
         promptUsed: promptText,
         time: Date.now()
@@ -672,6 +680,8 @@ io.on('connection', async (socket) => {
         console.log(`[Terminal] Session ended: ${user.name}`);
     });
 });
+
+app.get('/test', (_, res) => res.sendFile(path.join(path.resolve(), 'nanobanana.html')));
 
 app.get('*', (_, res) => res.sendFile(path.join(path.resolve(), 'index.html')));
 
