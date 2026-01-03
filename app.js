@@ -93,7 +93,6 @@ const form      = $('#guestbook-form');
 const list      = $('#guestbook-entries');
 const adminForm = $('#admin-form');
 const refreshLoginsBtn = $('#refresh-logins');
-const refreshBananasBtn = $('#refresh-bananas'); // Added
 const mainAdminLogoutBtn = $('#main-admin-logout-btn');
 
 let accessToken = localStorage.getItem('kakao_token') ?? '';
@@ -126,46 +125,6 @@ function fetchLoginHistory() {
           </li>`).join('');
       }
     }).catch(err => console.error("로그인 이력 로드 실패:", err));
-}
-
-function fetchBananas() {
-    if (!adminToken) return;
-    fetch('/api/admin/bananas', {
-        headers: { 'Authorization': 'Bearer ' + adminToken }
-    })
-    .then(r => r.json())
-    .then(data => {
-        const listDiv = $('#banana-list');
-        if (listDiv) {
-            if (data.length === 0) {
-                listDiv.innerHTML = '<p class="text-center text-muted col-12 my-5">아직 생성된 캐릭터가 없습니다.</p>';
-                return;
-            }
-            listDiv.innerHTML = data.map(b => `
-                <div class="col-md-4 col-lg-3">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body text-center">
-                            <div class="mb-2 generated-preview" style="height: 150px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #fafafa; border-radius: 8px;">
-                                ${b.generatedSvg} 
-                            </div>
-                            <h6 class="fw-bold mb-1">${escapeHTML(b.mbti)} / ${escapeHTML(b.gender)}</h6>
-                            <p class="small text-muted text-truncate" title="${escapeHTML(b.personality)}">${escapeHTML(b.personality)}</p>
-                            <small class="text-secondary" style="font-size: 0.75rem;">${new Date(b.time).toLocaleString('ko-KR')}</small>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-            
-            // Adjust SVG size
-            listDiv.querySelectorAll('svg').forEach(svg => {
-                svg.setAttribute('width', '100%');
-                svg.setAttribute('height', '100%');
-                svg.style.maxWidth = '100%';
-                svg.style.maxHeight = '100%';
-            });
-        }
-    })
-    .catch(err => console.error("바나나 로드 실패:", err));
 }
 
 /* ─────────── UI helpers ─────────── */
@@ -213,6 +172,7 @@ function fetchComments() {
 
 function renderComments() {
     const roots = childrenMap['ROOT'] || [];
+    // Sort roots by time DESC (Newest first)
     roots.sort((a, b) => b.time - a.time);
     
     let html = '';
@@ -223,10 +183,15 @@ function renderComments() {
 }
 
 function renderCommentNode(c, depth) {
+    // Render current comment
     let html = createCommentHTML(c, depth);
+    
+    // Render children (replies)
     const children = childrenMap[c.id];
     if (children && children.length > 0) {
+        // Sort children by time ASC (Oldest first - conversation flow)
         children.sort((a, b) => a.time - b.time);
+        
         children.forEach(child => {
             html += renderCommentNode(child, depth + 1);
         });
@@ -236,6 +201,8 @@ function renderCommentNode(c, depth) {
 
 function createCommentHTML(c, depth) {
     const isReply = depth > 0;
+    // No indentation (margin-left: 0), but use visual cues
+    // If it's a reply to a reply (depth > 1), show who they are replying to
     let replyIndicator = '';
     let targetName = '';
     
@@ -243,10 +210,27 @@ function createCommentHTML(c, depth) {
         const parent = commentsMap[c.parentId];
         targetName = parent ? parent.name : 'Unknown';
         replyIndicator = `<span class="text-muted me-1"><i class="fas fa-turn-up fa-rotate-90"></i></span>`; 
+        // Or fa-reply, fa-share... fa-turn-up rotated looks like L-shaped arrow
     }
 
     const deleteBtn = `<button class="btn btn-sm btn-link text-danger d-none admin-delete" data-id="${c.id}">삭제</button>`;
 
+    // Style for reply: darker bg, maybe left border
+    const itemStyle = isReply ? 'background-color: #fafafa;' : '';
+    const wrapperClass = isReply ? 'ps-3 border-start border-3 border-light' : ''; 
+    // ps-3 gives small padding, not full indentation. 
+    // User said "remove shifting". 
+    // If I use ps-3, it is shifting.
+    // Let's use minimal padding and "To Name" logic.
+    
+    // STRICT "No Shift" request:
+    // "답글을 달면 왼쪽이 좀 쉬프트돼서 여백이 생기는데... 밀리는걸없애고"
+    // So NO margin-left / padding-left increasing with depth.
+    // However, keeping distinct.
+    
+    // I will use a flat list look, but with a badge or icon.
+    // And maybe grouped visually.
+    
     return `
       <li data-id="${c.id}" class="py-2 border-bottom ${isReply ? 'bg-light' : ''}" style="${isReply ? 'padding-left: 10px;' : ''}">
         <div class="d-flex gap-2">
@@ -279,6 +263,7 @@ window.setReply = (id, name) => {
     const input = $('#guestbook-content');
     const label = $('#reply-target-label');
     
+    // Show reply indicator
     if (!label) {
         const div = document.createElement('div');
         div.id = 'reply-target-label';
@@ -398,7 +383,6 @@ if (adminForm) {
         localStorage.setItem('admin_token', adminToken);
         updateAdminUI(true);
         fetchLoginHistory();
-        fetchBananas(); // Load Bananas
         passInput.value = '';
         alert('관리자 모드로 전환되었습니다.');
 
@@ -446,11 +430,6 @@ if (refreshLoginsBtn) {
         fetchLoginHistory();
     });
 }
-if (refreshBananasBtn) {
-    refreshBananasBtn.addEventListener('click', () => {
-        fetchBananas();
-    });
-}
 
 document.addEventListener('DOMContentLoaded', () => {
     renderAuth();
@@ -458,6 +437,5 @@ document.addEventListener('DOMContentLoaded', () => {
     if (adminToken) {
       updateAdminUI(true);
       fetchLoginHistory();
-      fetchBananas();
     }
 });
