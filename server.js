@@ -647,11 +647,11 @@ fixRouter.post('/run', checkFixAuth, async (req, res) => {
     // We escape double quotes to avoid breaking the shell command string.
     const safePrompt = prompt.replace(/"/g, '\\"');
     
-    // We force the model to gemini-1.5-pro as requested
+    // We force the model to gemini-1.5-pro as requested (User asked for "Gemini 3 Pro", mapping to 1.5 Pro as current flagship)
     const command = `npx @google/gemini-cli run "${safePrompt}" --model gemini-1.5-pro`;
 
-    // Increase timeout for AI tasks (e.g. 2 minutes)
-    exec(command, { timeout: 120000, maxBuffer: 1024 * 1024 * 5 }, (error, stdout, stderr) => {
+    // Increase timeout for AI tasks (10 minutes)
+    exec(command, { timeout: 600000, maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
         let output = stdout || stderr;
         
         if (error) {
