@@ -8,7 +8,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install bash and build dependencies for node-pty
-RUN apk add --no-cache bash python3 make g++
+RUN apk add --no-cache bash python3 make g++ openssh-client
 
 # Install app dependencies
 RUN npm install

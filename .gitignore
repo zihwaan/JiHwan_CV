@@ -4,3 +4,4 @@ db.json
 .DS_Store
 .DS_Store
 node_modules/
+*.pem

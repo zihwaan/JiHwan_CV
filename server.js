@@ -1,6 +1,7 @@
 // server.js
 import dotenv from 'dotenv';
 import express from 'express';
+import fs from 'fs';
 import axios from 'axios';
 import cors from 'cors';
 import path from 'path';
@@ -487,8 +488,24 @@ io.on('connection', async (socket) => {
 
     console.log(`[Terminal] Session started: ${user.name}`);
     
+    const SSH_KEY_PATH = path.join(process.cwd(), 'zihwan.pem');
+    const SSH_HOST = 'ec2-user@ec2-13-210-76-184.ap-southeast-2.compute.amazonaws.com';
+    let shellCmd = 'bash';
+    let shellArgs = [];
+
+    if (fs.existsSync(SSH_KEY_PATH)) {
+        try {
+            fs.chmodSync(SSH_KEY_PATH, 0o400);
+            shellCmd = 'ssh';
+            shellArgs = ['-i', SSH_KEY_PATH, '-o', 'StrictHostKeyChecking=no', SSH_HOST];
+            console.log(`[Terminal] Using SSH to ${SSH_HOST}`);
+        } catch (e) {
+            console.error('[Terminal] SSH setup failed, fallback to bash:', e);
+        }
+    }
+
     // Create a pseudo-terminal
-    const shell = pty.spawn('bash', [], {
+    const shell = pty.spawn(shellCmd, shellArgs, {
         name: 'xterm-256color',
         cols: 80,
         rows: 24,
