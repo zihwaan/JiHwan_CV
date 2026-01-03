@@ -10,6 +10,9 @@ COPY package*.json ./
 # Install app dependencies
 RUN npm install
 
+# Install bash for web terminal
+RUN apk add --no-cache bash
+
 # Copy the rest of the application code
 COPY . .
 
