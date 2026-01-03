@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>지환닷컴 - 나노바나나</title>
+    <link rel="icon" type="image/x-icon" href="assets/img/증사.ico" />
+    <script src="https://use.fontawesome.com/releases/v6.1.0/js/all.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        :root{ --bg: #fff; --fg: #111; --accent: #000; }   
+        html, body{ font-family: "Pretendard", sans-serif; background: var(--bg); color: var(--fg); }
+        .masthead { padding: 8rem 0 5rem; background: #000; color: #fff; text-align: center; }
+        .navbar-brand { font-family: "Pretendard", sans-serif; font-weight: 700; }
+        .form-section { max-width: 600px; margin: 0 auto; }
+        .result-img { max-width: 100%; border-radius: 1rem; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .loading { display: none; }
+        .submission-card { border: 1px solid #ddd; padding: 1rem; margin-bottom: 1rem; border-radius: 0.5rem; }
+        .submission-img { width: 100px; height: 100px; object-fit: cover; border-radius: 4px; }
+    </style>
+</head>
+<body id="page-top">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">지환닷컴</a>
+        </div>
+    </nav>
+
+    <header class="masthead">
+        <div class="container">
+            <h1 class="display-5 fw-semibold mb-3">나노바나나 서비스</h1>
+            <p class="lead mb-0">당신의 사진과 성격을 기반으로 귀여운 캐릭터를 생성해드립니다.</p>
+        </div>
+    </header>
+
+    <section class="py-5">
+        <div class="container">
+            <div class="form-section">
+                <form id="nano-form">
+                    <div class="mb-3">
+                        <label class="form-label">사진 업로드 (필수)</label>
+                        <input type="file" class="form-control" id="photo" accept="image/*" required>
+                        <div class="form-text">얼굴이 잘 나온 사진을 올려주세요.</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">MBTI</label>
+                            <select class="form-select" id="mbti">
+                                <option value="ISTJ">ISTJ</option> <option value="ISFJ">ISFJ</option>
+                                <option value="INFJ">INFJ</option> <option value="INTJ">INTJ</option>
+                                <option value="ISTP">ISTP</option> <option value="ISFP">ISFP</option>
+                                <option value="INFP">INFP</option> <option value="INTP">INTP</option>
+                                <option value="ESTP">ESTP</option> <option value="ESFP">ESFP</option>
+                                <option value="ENFP">ENFP</option> <option value="ENTP">ENTP</option>
+                                <option value="ESTJ">ESTJ</option> <option value="ESFJ">ESFJ</option>
+                                <option value="ENFJ">ENFJ</option> <option value="ENTJ">ENTJ</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">성별</label>
+                            <select class="form-select" id="gender">
+                                <option value="Male">남성</option>
+                                <option value="Female">여성</option>
+                                <option value="Non-binary">기타</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">성격 키워드</label>
+                        <input type="text" class="form-control" id="personality" placeholder="예: 활발한, 차분한, 긍정적인..." required>
+                    </div>
+                    <button type="submit" class="btn btn-dark w-100 py-2">캐릭터 생성하기</button>
+                </form>
+
+                <div id="loading" class="text-center py-5 loading">
+                    <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+                    <p class="mt-2">AI가 캐릭터를 그리고 있습니다... (약 10-20초)</p>
+                </div>
+
+                <div id="result" class="text-center py-5 d-none">
+                    <h3>완성!</h3>
+                    <img id="generated-image" src="" class="result-img mb-3">
+                    <p id="result-desc" class="text-muted small"></p>
+                    <button class="btn btn-outline-dark" onclick="location.reload()">다시 하기</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5 bg-light" id="admin-section">
+        <div class="container">
+            <div class="text-center">
+                <button id="view-submissions" class="btn btn-secondary">관리자: 제출 목록 보기</button>
+            </div>
+            <div id="submissions-list" class="mt-4 row g-3"></div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        const DOMAIN = ''; // Relative path
+
+        document.getElementById('nano-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const photo = document.getElementById('photo').files[0];
+            const mbti = document.getElementById('mbti').value;
+            const gender = document.getElementById('gender').value;
+            const personality = document.getElementById('personality').value;
+
+            if (!photo) return alert('사진을 올려주세요!');
+
+            const formData = new FormData();
+            formData.append('photo', photo);
+            formData.append('mbti', mbti);
+            formData.append('gender', gender);
+            formData.append('personality', personality);
+
+            document.getElementById('nano-form').classList.add('d-none');
+            document.getElementById('loading').style.display = 'block';
+
+            try {
+                const res = await axios.post('/api/nanobanana/generate', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+
+                document.getElementById('loading').style.display = 'none';
+                if (res.data.ok) {
+                    const img = document.getElementById('generated-image');
+                    img.src = 'data:image/png;base64,' + res.data.image;
+                    document.getElementById('result-desc').textContent = res.data.description;
+                    document.getElementById('result').classList.remove('d-none');
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('nano-form').classList.remove('d-none');
+                alert('생성 실패: ' + (err.response?.data?.error || err.message));
+            }
+        });
+
+        // Admin View
+        document.getElementById('view-submissions').addEventListener('click', async () => {
+            const token = localStorage.getItem('admin_token'); 
+            
+            if (!token) return alert('관리자 로그인이 필요합니다 (메인 페이지에서 로그인하세요).');
+
+            try {
+                const res = await axios.get('/api/nanobanana/submissions', {
+                    headers: { Authorization: 'Bearer ' + token }
+                });
+                
+                const container = document.getElementById('submissions-list');
+                container.innerHTML = '';
+                res.data.forEach(sub => {
+                    const col = document.createElement('div');
+                    col.className = 'col-md-4';
+                    col.innerHTML = `
+                        <div class="submission-card bg-white">
+                            <div class="d-flex gap-2 mb-2">
+                                <img src="${sub.photo}" class="submission-img">
+                                ${sub.generatedImage ? `<img src="data:image/png;base64,${sub.generatedImage}" class="submission-img">` : ''}
+                            </div>
+                            <p class="small mb-1"><strong>${sub.mbti} / ${sub.gender}</strong></p>
+                            <p class="small text-muted">${sub.personality}</p>
+                            <p class="small text-muted">${new Date(sub.time).toLocaleString()}</p>
+                        </div>
+                    `;
+                    container.appendChild(col);
+                });
+            } catch (err) {
+                alert('권한이 없거나 오류가 발생했습니다.');
+            }
+        });
+        
+        // Check if we have token to show the button
+        if (localStorage.getItem('admin_token')) {
+            document.getElementById('admin-section').style.display = 'block';
+        } else {
+             document.getElementById('admin-section').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

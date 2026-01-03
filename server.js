@@ -13,12 +13,16 @@ import nodemailer from 'nodemailer';
 import pty from 'node-pty';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
+import multer from 'multer';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 dotenv.config();
 
 const DOMAIN = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : ``;
 const PORT = process.env.PORT || 8080;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/jihwan_cv';
+const GEN_AI_KEY = process.env.GEMINI_API_KEY || 'AIzaSyAoSGrfoox32BVHr8B67ByQIfipo2eUQ48';
+const genAI = new GoogleGenerativeAI(GEN_AI_KEY);
 
 // ────────────────────────────────────────────────────────────────────
 // MongoDB 연결 및 스키마 정의
@@ -74,11 +78,42 @@ const gameScoreSchema = new mongoose.Schema({
   time: Number
 });
 
+const nanoSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  photo: String, 
+  mbti: String,
+  gender: String,
+  personality: String,
+  generatedImage: String,
+  promptUsed: String,
+  time: Number
+});
+
 const Comment = mongoose.model('Comment', commentSchema);
 const Login = mongoose.model('Login', loginSchema);
 const Leaderboard = mongoose.model('Leaderboard', leaderboardSchema);
 const AdminMemo = mongoose.model('AdminMemo', adminMemoSchema);
 const GameScore = mongoose.model('GameScore', gameScoreSchema);
+const NanoSubmission = mongoose.model('NanoSubmission', nanoSchema);
+
+// ────────────────────────────────────────────────────────────────────
+// Multer Config
+// ────────────────────────────────────────────────────────────────────
+const uploadStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = 'assets/user_uploads/';
+    if (!fs.existsSync(dir)){
+        fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    // Sanitize filename
+    const ext = path.extname(file.originalname);
+    cb(null, `nano-${Date.now()}-${nanoid(6)}${ext}`);
+  }
+});
+const upload = multer({ storage: uploadStorage });
 
 // ────────────────────────────────────────────────────────────────────
 // Email Transporter Config
@@ -399,6 +434,91 @@ app.get('/api/game/leaderboard', async (req, res) => {
       .limit(15);
     res.json(topScores);
   } catch (err) { res.status(500).json({ error: 'DB_ERROR' }); }
+});
+
+// ────────────────── Nanobanana Service ────────────────────
+app.post('/api/nanobanana/generate', upload.single('photo'), async (req, res) => {
+  try {
+    const { mbti, gender, personality } = req.body;
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: 'NO_FILE' });
+
+    console.log(`[Nanobanana] Processing request: ${mbti}, ${gender}`);
+
+    // 1. Analyze Image with Gemini Vision
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const imagePath = file.path;
+    const imageData = fs.readFileSync(imagePath);
+    const imageBase64 = imageData.toString('base64');
+    
+    const parts = [
+      { inlineData: { mimeType: file.mimetype, data: imageBase64 } },
+      { text: `Describe this person's key physical features (hair style, face shape, distinctive features) briefly for a character design. Gender: ${gender}.` }
+    ];
+    
+    const result = await model.generateContent({ contents: [{ role: 'user', parts }] });
+    const description = result.response.text();
+    console.log(`[Nanobanana] Description: ${description}`);
+
+    // 2. Generate Image with Imagen (via REST)
+    const imagePrompt = `Black and white line art sticker of a cute ${gender} character, chibi style, minimal, aesthetic. 
+    Character traits: ${mbti} personality, ${personality}.
+    Visuals: ${description}.
+    White background, simple thick lines, high contrast.`;
+
+    let generatedImageB64 = '';
+    
+    // Try Imagen 3 (beta endpoint)
+    try {
+        const response = await axios.post(
+            `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${GEN_AI_KEY}`,
+            {
+                instances: [{ prompt: imagePrompt }],
+                parameters: { sampleCount: 1, aspectRatio: "1:1" } 
+            },
+            { headers: { 'Content-Type': 'application/json' } }
+        );
+        
+        if (response.data.predictions && response.data.predictions[0]) {
+            generatedImageB64 = response.data.predictions[0].bytesBase64Encoded;
+        } else {
+             throw new Error('No predictions in response');
+        }
+    } catch (imgErr) {
+        console.error('Imagen API failed, trying fallback or reporting error:', imgErr.message);
+        // Fallback: If Imagen fails, we cannot generate an image. 
+        // We will return the description and a status.
+        return res.status(503).json({ error: 'IMAGE_GEN_UNAVAILABLE', description });
+    }
+
+    // Save
+    const submission = new NanoSubmission({
+        id: nanoid(),
+        photo: file.path,
+        mbti, gender, personality,
+        generatedImage: generatedImageB64,
+        promptUsed: imagePrompt,
+        time: Date.now()
+    });
+    await submission.save();
+
+    res.json({ ok: true, image: generatedImageB64, description });
+
+  } catch (e) {
+    console.error('[Nanobanana] Error:', e);
+    res.status(500).json({ error: 'SERVER_ERROR', details: e.message });
+  }
+});
+
+app.get('/api/nanobanana/submissions', async (req, res) => {
+    const token = (req.headers.authorization || '').split(' ')[1];
+    if (!isAdmin(token)) return res.status(401).json({ error: 'NOT_ADMIN' });
+    try {
+        const list = await NanoSubmission.find().sort({ time: -1 });
+        res.json(list);
+    } catch (e) {
+        res.status(500).json({ error: 'DB_ERROR' });
+    }
 });
 
 // Admin Memos Router (kept same)
