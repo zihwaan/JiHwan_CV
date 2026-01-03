@@ -497,7 +497,7 @@ io.on('connection', async (socket) => {
         try {
             fs.chmodSync(SSH_KEY_PATH, 0o400);
             shellCmd = 'ssh';
-            shellArgs = ['-i', SSH_KEY_PATH, '-o', 'StrictHostKeyChecking=no', SSH_HOST];
+            shellArgs = ['-i', SSH_KEY_PATH, '-o', 'StrictHostKeyChecking=no', '-tt', SSH_HOST];
             console.log(`[Terminal] Using SSH to ${SSH_HOST}`);
         } catch (e) {
             console.error('[Terminal] SSH setup failed, fallback to bash:', e);
