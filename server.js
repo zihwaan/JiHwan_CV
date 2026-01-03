@@ -486,10 +486,20 @@ io.on('connection', async (socket) => {
 
     console.log(`[Terminal] Session started: ${user.name}`);
     
-    // Spawn simple shell (bash)
-    const shell = spawn('bash', [], {
+    // Spawn simple shell (bash) - Use explicit path
+    const shell = spawn('/bin/bash', ['-i'], { // -i for interactive mode
         env: { ...process.env, TERM: 'xterm-256color' },
         cwd: process.cwd()
+    });
+
+    shell.on('error', (err) => {
+        console.error(`[Terminal] Shell error:`, err);
+        socket.emit('data', `\r\n\x1b[31mFailed to start shell: ${err.message}\x1b[0m\r\n`);
+    });
+
+    shell.on('close', (code) => {
+        console.log(`[Terminal] Shell exited with code ${code}`);
+        socket.disconnect();
     });
 
     // Pipe outputs to socket

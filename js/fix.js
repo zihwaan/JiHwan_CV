@@ -114,8 +114,9 @@ document.addEventListener('DOMContentLoaded', () => {
         statusBadge.textContent = 'Connecting...';
         statusBadge.className = 'badge bg-warning';
 
-        // Connect Socket.io
+        // Connect Socket.io (Force WebSocket)
         socket = io({
+            transports: ['websocket'], // Force WebSocket only
             auth: {
                 token: accessToken
             }
