@@ -490,18 +490,22 @@ io.on('connection', async (socket) => {
     
     const SSH_KEY_PATH = path.join(process.cwd(), 'zihwan.pem');
     const SSH_HOST = 'ec2-user@ec2-13-210-76-184.ap-southeast-2.compute.amazonaws.com';
-    let shellCmd = 'bash';
-    let shellArgs = [];
-
+    
+    // Force SSH connection logic
+    let shellCmd = 'ssh';
+    let shellArgs = ['-i', SSH_KEY_PATH, '-o', 'StrictHostKeyChecking=no', '-tt', SSH_HOST];
+    
     if (fs.existsSync(SSH_KEY_PATH)) {
         try {
             fs.chmodSync(SSH_KEY_PATH, 0o400);
-            shellCmd = 'ssh';
-            shellArgs = ['-i', SSH_KEY_PATH, '-o', 'StrictHostKeyChecking=no', '-tt', SSH_HOST];
             console.log(`[Terminal] Using SSH to ${SSH_HOST}`);
         } catch (e) {
-            console.error('[Terminal] SSH setup failed, fallback to bash:', e);
+            console.error('[Terminal] Warning: Failed to set key permissions:', e);
         }
+    } else {
+        console.error('[Terminal] Error: zihwan.pem not found!');
+        socket.emit('data', '\r\n\x1b[31mError: SSH Key (zihwan.pem) missing. Cannot connect to host.\x1b[0m\r\n');
+        return socket.disconnect(true);
     }
 
     // Create a pseudo-terminal

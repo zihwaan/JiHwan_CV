@@ -21,21 +21,33 @@
             color: #ccc;
             font-family: "Pretendard", sans-serif;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
         #terminal-container {
             width: 100%;
-            height: calc(100% - 50px); /* Minus navbar height */
+            flex: 1;
             padding: 10px;
             box-sizing: border-box;
+            background-color: #000;
         }
         .navbar {
-            height: 50px;
+            min-height: 50px;
             background-color: #1a1a1a;
             border-bottom: 1px solid #333;
-            padding: 0 1rem;
+            padding: 0.5rem 1rem;
+            flex-shrink: 0;
         }
         .xterm-viewport {
             overflow-y: auto !important;
+        }
+        @media (max-width: 576px) {
+            .navbar-brand-text {
+                display: none;
+            }
+            .navbar {
+                padding: 0.25rem 0.5rem;
+            }
         }
     </style>
     
@@ -45,13 +57,13 @@
 <body>
     <nav class="navbar navbar-dark d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center gap-2">
-            <a href="https://zihwan.com" class="btn btn-sm btn-primary fw-bold">zihwan.com</a>
-            <i class="fas fa-terminal text-success ms-2"></i>
-            <span class="text-white fw-bold">Web Terminal</span>
-            <span id="status-badge" class="badge bg-secondary">Disconnected</span>
+            <i class="fas fa-terminal text-success"></i>
+            <a href="https://zihwan.com" class="btn btn-xs btn-outline-primary fw-bold py-0 px-2" style="font-size: 0.75rem;">zihwan.com</a>
+            <span class="text-white fw-bold navbar-brand-text">Web Terminal</span>
+            <span id="status-badge" class="badge bg-secondary" style="font-size: 0.6rem;">Disconnected</span>
         </div>
         <div class="d-flex gap-2">
-            <button id="auth-btn" class="btn btn-sm btn-outline-warning">로그인 필요</button>
+            <button id="auth-btn" class="btn btn-sm btn-outline-warning py-0 px-2" style="font-size: 0.75rem;">로그인 필요</button>
         </div>
     </nav>
 
