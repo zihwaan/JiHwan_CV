@@ -145,55 +145,117 @@ function updateAdminUI(isAdminActive) {
 
 
 /* ─────────── 방명록 목록 ─────────── */
+let commentsMap = {};
+let childrenMap = {};
+
 function fetchComments() {
   fetch('/api/comments')
     .then(res => res.json())
     .then(data => {
+      // Build maps
+      commentsMap = {};
+      childrenMap = {};
+      
+      data.forEach(c => {
+          commentsMap[c.id] = c;
+          const pid = c.parentId || 'ROOT';
+          if (!childrenMap[pid]) childrenMap[pid] = [];
+          childrenMap[pid].push(c);
+      });
+
       if (list) {
-        list.innerHTML = data.map(c => renderComment(c)).join('');
+        list.innerHTML = renderComments();
         updateAdminUI(!!adminToken);
       }
     }).catch(err => console.error("댓글 로드 실패:", err));
 }
 
-function renderComment(c) {
-    const repliesHtml = c.replies && c.replies.length > 0 
-        ? `<ul class="list-unstyled ms-5 mt-2 ps-3 border-start">
-            ${c.replies.map(r => `
-                <li class="d-flex gap-2 py-2">
-                    <img src="${r.image}" onerror="this.src='/assets/default_avatar.png'" class="avatar" style="width:28px;height:28px;">
-                    <div class="flex-grow-1">
-                        <div class="d-flex justify-content-between">
-                            <strong>${escapeHTML(r.name)}</strong>
-                            <small class="text-muted">${new Date(r.time).toLocaleString('ko-KR')}</small>
-                        </div>
-                        <p class="comment-text mb-0 small">${escapeHTML(r.text)}</p>
-                    </div>
-                    <button class="btn btn-sm btn-link text-danger d-none admin-delete" data-parent-id="${c.id}" data-id="${r.id}">삭제</button>
-                </li>
-            `).join('')}
-           </ul>` 
-        : '';
+function renderComments() {
+    const roots = childrenMap['ROOT'] || [];
+    // Sort roots by time DESC (Newest first)
+    roots.sort((a, b) => b.time - a.time);
+    
+    let html = '';
+    roots.forEach(root => {
+        html += renderCommentNode(root, 0);
+    });
+    return html;
+}
 
+function renderCommentNode(c, depth) {
+    // Render current comment
+    let html = createCommentHTML(c, depth);
+    
+    // Render children (replies)
+    const children = childrenMap[c.id];
+    if (children && children.length > 0) {
+        // Sort children by time ASC (Oldest first - conversation flow)
+        children.sort((a, b) => a.time - b.time);
+        
+        children.forEach(child => {
+            html += renderCommentNode(child, depth + 1);
+        });
+    }
+    return html;
+}
+
+function createCommentHTML(c, depth) {
+    const isReply = depth > 0;
+    // No indentation (margin-left: 0), but use visual cues
+    // If it's a reply to a reply (depth > 1), show who they are replying to
+    let replyIndicator = '';
+    let targetName = '';
+    
+    if (isReply) {
+        const parent = commentsMap[c.parentId];
+        targetName = parent ? parent.name : 'Unknown';
+        replyIndicator = `<span class="text-muted me-1"><i class="fas fa-turn-up fa-rotate-90"></i></span>`; 
+        // Or fa-reply, fa-share... fa-turn-up rotated looks like L-shaped arrow
+    }
+
+    const deleteBtn = `<button class="btn btn-sm btn-link text-danger d-none admin-delete" data-id="${c.id}">삭제</button>`;
+
+    // Style for reply: darker bg, maybe left border
+    const itemStyle = isReply ? 'background-color: #fafafa;' : '';
+    const wrapperClass = isReply ? 'ps-3 border-start border-3 border-light' : ''; 
+    // ps-3 gives small padding, not full indentation. 
+    // User said "remove shifting". 
+    // If I use ps-3, it is shifting.
+    // Let's use minimal padding and "To Name" logic.
+    
+    // STRICT "No Shift" request:
+    // "답글을 달면 왼쪽이 좀 쉬프트돼서 여백이 생기는데... 밀리는걸없애고"
+    // So NO margin-left / padding-left increasing with depth.
+    // However, keeping distinct.
+    
+    // I will use a flat list look, but with a badge or icon.
+    // And maybe grouped visually.
+    
     return `
-      <li data-id="${c.id}" class="py-2 border-bottom">
+      <li data-id="${c.id}" class="py-2 border-bottom ${isReply ? 'bg-light' : ''}" style="${isReply ? 'padding-left: 10px;' : ''}">
         <div class="d-flex gap-2">
-            <img src="${c.image}" onerror="this.src='/assets/default_avatar.png'" class="avatar" alt="">
+            <div style="width: 40px; text-align: center; flex-shrink: 0;">
+                ${isReply ? '<i class="fas fa-reply text-muted fa-rotate-180"></i>' : ''}
+                <img src="${c.image}" onerror="this.src='/assets/default_avatar.png'" class="avatar" alt="" style="${isReply ? 'width: 28px; height: 28px;' : ''}">
+            </div>
             <div class="flex-grow-1">
                 <div class="d-flex justify-content-between">
-                    <strong>${escapeHTML(c.name)}</strong>
+                    <div>
+                        <strong>${escapeHTML(c.name)}</strong>
+                        ${isReply && depth > 1 ? `<small class="text-muted ms-1">To: ${escapeHTML(targetName)}</small>` : ''}
+                    </div>
                     <small class="text-muted">${new Date(c.time).toLocaleString('ko-KR')}</small>
                 </div>
                 <p class="comment-text mb-0">${escapeHTML(c.text.trim())}</p>
                 <div class="d-flex gap-2 mt-1">
-                    <button class="btn btn-sm btn-light py-0 px-2 reply-btn" onclick="setReply('${c.id}', '${escapeHTML(c.name)}')">답글달기</button>
+                    <button class="btn btn-sm btn-light py-0 px-2 reply-btn" onclick="setReply('${c.id}', '${escapeHTML(c.name)}')">답글</button>
                 </div>
             </div>
-            <button class="btn btn-sm btn-link text-danger d-none admin-delete">삭제</button>
+            ${deleteBtn}
         </div>
-        ${repliesHtml}
       </li>`;
 }
+
 
 window.setReply = (id, name) => {
     if (!accessToken) return alert('답글을 달려면 로그인이 필요합니다.');
@@ -347,14 +409,10 @@ if (list) {
       const deleteButton = e.target.closest('.admin-delete');
       if (!deleteButton || !adminToken) return;
       
-      const parentId = deleteButton.dataset.parentId; // If reply
-      const id = deleteButton.dataset.id || deleteButton.closest('li').dataset.id; // If comment
+      const id = deleteButton.dataset.id;
 
-      if (confirm('정말 삭제하시겠습니까?')) {
-          let url = '/api/comments/' + (parentId || id);
-          if (parentId) url += `?replyId=${id}`;
-
-          fetch(url,{
+      if (confirm('정말 삭제하시겠습니까? (답글도 함께 삭제될 수 있습니다)')) {
+          fetch('/api/comments/' + id,{
             method:'DELETE',
             headers:{'Authorization':'Bearer '+adminToken}
           }).then(r => {

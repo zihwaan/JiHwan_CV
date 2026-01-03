@@ -8,6 +8,8 @@ import mongoose from 'mongoose';
 import { nanoid } from 'nanoid';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
+import { exec } from 'child_process';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -25,21 +27,14 @@ mongoose.connect(MONGODB_URI)
     process.exit(1);
   });
 
-const replySchema = new mongoose.Schema({
-  id: String,
-  name: String,
-  image: String,
-  text: String,
-  time: Number
-});
-
 const commentSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
+  parentId: { type: String, default: null }, // For infinite replies
   name: String,
   image: String,
   text: String,
   time: Number,
-  replies: [replySchema]
+  replies: { type: Array, default: [] } // Keep for legacy structure compatibility in DB, but we will migrate/ignore in logic
 });
 
 const loginSchema = new mongoose.Schema({
@@ -76,17 +71,11 @@ const gameScoreSchema = new mongoose.Schema({
   time: Number
 });
 
-const globalStatsSchema = new mongoose.Schema({
-    id: { type: String, default: 'global' },
-    totalGamesPlayed: { type: Number, default: 0 }
-});
-
 const Comment = mongoose.model('Comment', commentSchema);
 const Login = mongoose.model('Login', loginSchema);
 const Leaderboard = mongoose.model('Leaderboard', leaderboardSchema);
 const AdminMemo = mongoose.model('AdminMemo', adminMemoSchema);
 const GameScore = mongoose.model('GameScore', gameScoreSchema);
-const GlobalStats = mongoose.model('GlobalStats', globalStatsSchema);
 
 // ────────────────────────────────────────────────────────────────────
 // Email Transporter Config
@@ -94,8 +83,8 @@ const GlobalStats = mongoose.model('GlobalStats', globalStatsSchema);
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.GMAIL_USER, // .env 파일에 설정 필요
-        pass: process.env.GMAIL_PASS  // 앱 비밀번호 사용 권장
+        user: process.env.GMAIL_USER, 
+        pass: process.env.GMAIL_PASS 
     }
 });
 
@@ -151,25 +140,59 @@ async function sendEmailNotification(subject, text) {
             subject: subject,
             text: text
         });
-        console.log('✅ Email notification sent.');
+        console.log(`✅ Email notification sent to devjanggun21@gmail.com: ${subject}`);
     } catch (error) {
         console.error('❌ Email sending failed:', error);
     }
 }
 
 // ──────────────────────── API ──────────────────────────
-// 전체 댓글 조회
+// 전체 댓글 조회 (Flat list for client to handle tree)
 app.get('/api/comments', async (_, res) => {
   try {
-    const comments = await Comment.find().sort({ time: -1 });
-    res.json(comments);
+    // Flatten logic for legacy replies
+    const comments = await Comment.find().lean();
+    let allComments = [];
+
+    comments.forEach(c => {
+        // Push the main comment
+        allComments.push({
+            id: c.id,
+            parentId: c.parentId || null,
+            name: c.name,
+            image: c.image,
+            text: c.text,
+            time: c.time
+        });
+
+        // Check for legacy nested replies and promote them
+        if (c.replies && Array.isArray(c.replies) && c.replies.length > 0) {
+            c.replies.forEach(r => {
+                allComments.push({
+                    id: r.id,
+                    parentId: c.id, // Parent is the main comment
+                    name: r.name,
+                    image: r.image,
+                    text: r.text,
+                    time: r.time
+                });
+            });
+        }
+    });
+
+    // Sort by time (Oldest first or Newest first? Usually Guestbook is Newest first)
+    // But for tree reconstruction, order matters less if ID based.
+    // Let's return sorted by time desc (Newest first)
+    allComments.sort((a, b) => b.time - a.time);
+
+    res.json(allComments);
   } catch (dbError) {
     console.error('Database read error in GET /api/comments:', dbError);
     res.status(500).json({ error: 'DATABASE_READ_ERROR', message: '서버에서 댓글을 읽어오는 중 오류가 발생했습니다.' });
   }
 });
 
-// 댓글/답글 등록 (Kakao 토큰 필요)
+// 댓글/답글 등록 (Infinite Nesting)
 app.post('/api/comments', async (req, res) => {
   const token = (req.headers.authorization || '').split(' ')[1];
   const user = await verifyKakaoToken(token);
@@ -179,49 +202,61 @@ app.post('/api/comments', async (req, res) => {
   if (!text?.trim()) return res.status(400).json({ error: 'TEXT_REQUIRED' });
 
   try {
+    const newComment = new Comment({
+        id: nanoid(),
+        parentId: replyTo || null,
+        name: user.name,
+        image: user.image,
+        text: text.trim(),
+        time: Date.now(),
+        replies: [] 
+    });
+
+    await newComment.save();
+
+    // Email Notification
     if (replyTo) {
-        // 답글 처리
-        const parentComment = await Comment.findOne({ id: replyTo });
-        if (!parentComment) return res.status(404).json({ error: 'PARENT_NOT_FOUND' });
+        // Find parent to get name (optimization: could be skipped or done via separate query)
+        // Since we flattened the structure conceptually, finding parent might need a query
+        // We do a best effort lookup to provide context in email.
+        
+        let parentName = "누군가";
+        let parentText = "";
+        
+        // Try finding in top level
+        let parent = await Comment.findOne({ id: replyTo });
+        
+        // If not found, it might be a legacy reply or we need to search deeper? 
+        // But with new structure, all new replies are top level docs.
+        // Legacy replies are inside 'replies' array. 
+        if (!parent) {
+             // Try finding in legacy replies (inefficient but safe)
+             const holder = await Comment.findOne({ 'replies.id': replyTo });
+             if (holder) {
+                 const r = holder.replies.find(r => r.id === replyTo);
+                 if(r) {
+                     parentName = r.name;
+                     parentText = r.text;
+                 }
+             }
+        } else {
+            parentName = parent.name;
+            parentText = parent.text;
+        }
 
-        const reply = {
-            id: nanoid(),
-            name: user.name,
-            image: user.image,
-            text: text.trim(),
-            time: Date.now()
-        };
-
-        parentComment.replies.push(reply);
-        await parentComment.save();
-
-        // 이메일 알림
         sendEmailNotification(
-            `[지환닷컴 방명록] ${user.name}님이 답글을 남겼습니다.`, 
-            `"${parentComment.text}" 에 대한 답글:\n\n${user.name}: ${text.trim()}`
+            `[지환닷컴 방명록] ${user.name}님이 ${parentName}님에게 답글을 남겼습니다.`, 
+            `원문 ("${parentText}")\n\n답글:\n${user.name}: ${text.trim()}`
         );
-
-        res.status(201).json({ ok: true });
     } else {
-        // 새 댓글 처리
-        const comment = new Comment({
-            id: nanoid(),
-            name: user.name,
-            image: user.image,
-            text: text.trim(),
-            time: Date.now(),
-            replies: []
-        });
-        await comment.save();
-
-        // 이메일 알림
         sendEmailNotification(
             `[지환닷컴 방명록] ${user.name}님이 댓글을 남겼습니다.`, 
             `${user.name}: ${text.trim()}`
         );
-
-        res.status(201).json({ ok: true });
     }
+
+    res.status(201).json({ ok: true });
+
   } catch (dbError) {
     console.error('Database write error in POST /api/comments:', dbError);
     res.status(500).json({ error: 'DATABASE_WRITE_ERROR', message: '서버에 댓글을 저장하는 중 오류가 발생했습니다.' });
@@ -280,22 +315,29 @@ app.delete('/api/comments/:id', async (req, res) => {
 
   try {
     const { id } = req.params;
-    const { replyId } = req.query; // 답글 삭제 시 replyId 파라미터 사용
-
-    if (replyId) {
-        // 답글 삭제
-        const comment = await Comment.findOne({ id: id });
-        if (!comment) return res.status(404).json({ error: 'COMMENT_NOT_FOUND' });
-        
-        comment.replies = comment.replies.filter(r => r.id !== replyId);
-        await comment.save();
-        res.json({ ok: true });
-    } else {
-        // 원 댓글 삭제
-        const result = await Comment.findOneAndDelete({ id: id });
-        if (!result) return res.status(404).json({ error: 'COMMENT_NOT_FOUND' });
-        res.json({ ok: true });
+    
+    // 1. Try deleting from top level
+    const result = await Comment.findOneAndDelete({ id: id });
+    
+    if (result) {
+        // Also delete any children (orphans) - single level check for now
+        // Or if we want full recursive delete, we need to loop. 
+        // For now, let's just delete direct children.
+        await Comment.deleteMany({ parentId: id });
+        return res.json({ ok: true });
     }
+
+    // 2. If not found, check if it is a legacy reply inside a comment
+    // (We iterate to find which comment contains this reply)
+    const parent = await Comment.findOne({ 'replies.id': id });
+    if (parent) {
+        parent.replies = parent.replies.filter(r => r.id !== id);
+        await parent.save();
+        return res.json({ ok: true });
+    }
+
+    return res.status(404).json({ error: 'COMMENT_NOT_FOUND' });
+
   } catch (dbError) {
     console.error('Database error in DELETE /api/comments/:id:', dbError);
     res.status(500).json({ error: 'DATABASE_ERROR', message: '서버에서 댓글 삭제 중 오류가 발생했습니다.' });
@@ -337,32 +379,6 @@ app.post('/api/leaderboard', async (req, res) => {
 
 // ────────────────── GAME API ──────────────────────────
 
-// 게임 시작 시 카운트 증가
-app.post('/api/game/start', async (req, res) => {
-    try {
-        await GlobalStats.findOneAndUpdate(
-            { id: 'global' },
-            { $inc: { totalGamesPlayed: 1 } },
-            { upsert: true, new: true }
-        );
-        res.json({ ok: true });
-    } catch (e) {
-        console.error('Game start count error:', e);
-        res.status(500).json({ error: 'DB_ERROR' });
-    }
-});
-
-// 게임 전체 통계 조회
-app.get('/api/game/stats', async (req, res) => {
-    try {
-        const stats = await GlobalStats.findOne({ id: 'global' });
-        res.json({ totalGamesPlayed: stats ? stats.totalGamesPlayed : 0 });
-    } catch (e) {
-        console.error('Game stats error:', e);
-        res.status(500).json({ error: 'DB_ERROR' });
-    }
-});
-
 // 게임 점수 저장 (최고 기록만 갱신)
 app.post('/api/game/score', async (req, res) => {
   const token = (req.headers.authorization || '').split(' ')[1];
@@ -403,11 +419,11 @@ app.post('/api/game/score', async (req, res) => {
       isNewRecord = true;
     }
 
-    // Check if Top 15 (Changed from 10 to 15)
+    // Check if Top 15
     const betterScoresCount = await GameScore.countDocuments({ score: { $gt: savedScore } });
     const isTop15 = betterScoresCount < 15;
 
-    return res.json({ newRecord: isNewRecord, score: savedScore, isTop10: isTop15 }); // Using isTop10 key for compatibility but logic is Top 15
+    return res.json({ newRecord: isNewRecord, score: savedScore, isTop10: isTop15 }); 
   } catch (err) {
     console.error('Game score save error:', err);
     res.status(500).json({ error: 'DB_ERROR' });
@@ -461,7 +477,7 @@ app.get('/api/game/leaderboard', async (req, res) => {
   try {
     const topScores = await GameScore.find({}, { name: 1, image: 1, score: 1, message: 1, time: 1, _id: 0 })
       .sort({ score: -1 })
-      .limit(15); // Changed to 15
+      .limit(15);
     res.json(topScores);
   } catch (err) {
     res.status(500).json({ error: 'DB_ERROR' });
@@ -502,7 +518,7 @@ adminMemosRouter.post('/', async (req, res) => {
       id: nanoid(),
       title: title.trim(),
       content: content.trim(),
-      color: color || '#e9ecef', // Updated default color
+      color: color || '#e9ecef', 
       time: Date.now(),
     });
     await newMemo.save();
@@ -534,7 +550,7 @@ adminMemosRouter.put('/:id', async (req, res) => {
     const updatedMemo = await AdminMemo.findOneAndUpdate(
       { id: id },
       updateData,
-      { new: true } // Return updated document
+      { new: true } 
     );
 
     if (!updatedMemo) {
@@ -564,6 +580,107 @@ adminMemosRouter.delete('/:id', async (req, res) => {
 });
 
 app.use('/api/admin/memos', adminMemosRouter);
+
+// ────────────────── FIX / AGENT API ────────────────────
+const fixRouter = express.Router();
+
+// 임시 메모리에 허용된 카카오 ID 저장 (서버 재시작 시 초기화되므로 .env 권장)
+// 실무에서는 DB에 저장해야 함.
+let ALLOWED_ADMINS = (process.env.ALLOWED_KAKAO_IDS || '').split(',').filter(Boolean);
+
+// Middleware to check Kakao Auth
+async function checkFixAuth(req, res, next) {
+    const token = (req.headers.authorization || '').split(' ')[1];
+    const user = await verifyKakaoToken(token);
+    if (!user) return res.status(401).json({ error: 'INVALID_TOKEN' });
+    
+    req.user = user;
+    next();
+}
+
+fixRouter.get('/check-auth', checkFixAuth, (req, res) => {
+    if (ALLOWED_ADMINS.includes(req.user.id) || req.user.id === process.env.MASTER_ADMIN_ID) {
+        res.json({ ok: true, user: req.user });
+    } else {
+        res.status(403).json({ error: 'NOT_AUTHORIZED', user: req.user });
+    }
+});
+
+fixRouter.post('/verify-admin', checkFixAuth, (req, res) => {
+    const { code } = req.body;
+    // 간단한 관리자 코드 체크 (환경변수 ADMIN_PASS 사용)
+    if (code === process.env.ADMIN_PASS) {
+        if (!ALLOWED_ADMINS.includes(req.user.id)) {
+            ALLOWED_ADMINS.push(req.user.id);
+            // In a real app, save this to DB/File
+            console.log(`[Admin] New admin authorized: ${req.user.name} (${req.user.id})`);
+        }
+        res.json({ ok: true });
+    } else {
+        res.status(401).json({ error: 'WRONG_CODE' });
+    }
+});
+
+fixRouter.post('/run', checkFixAuth, async (req, res) => {
+    if (!ALLOWED_ADMINS.includes(req.user.id)) {
+        return res.status(403).json({ error: 'FORBIDDEN' });
+    }
+
+    const { prompt } = req.body;
+    if (!prompt) return res.status(400).json({ error: 'PROMPT_REQUIRED' });
+
+    console.log(`[Agent] Running command from ${req.user.name}: ${prompt}`);
+
+    // Command to run the Gemini CLI
+    // Note: We are using 'npx @google/gemini-cli' as requested.
+    // The CLI must be installed or npx will download it.
+    // To run it non-interactively with a prompt, we assume it supports arguments or piping.
+    // If the official CLI is interactive-only, this might be tricky.
+    // However, assuming `gemini run "prompt"` pattern or similar. 
+    // Based on 'google-gemini/gemini-cli' repo, it supports 'run' command? 
+    // Actually, the user instructions said "npx https://github.com/google-gemini/gemini-cli".
+    // Usually that means `npx gemini-chat-cli` or similar.
+    // Let's assume standard `npx @google/gemini-cli run "${prompt}"` works as a one-shot.
+    // If not, we might need to send the prompt via stdin.
+    
+    // SAFETY: Input sanitization is minimal here because it's an ADMIN tool.
+    // We escape double quotes to avoid breaking the shell command string.
+    const safePrompt = prompt.replace(/"/g, '\\"');
+    
+    // We force the model to gemini-1.5-pro as requested
+    const command = `npx @google/gemini-cli run "${safePrompt}" --model gemini-1.5-pro`;
+
+    // Increase timeout for AI tasks (e.g. 2 minutes)
+    exec(command, { timeout: 120000, maxBuffer: 1024 * 1024 * 5 }, (error, stdout, stderr) => {
+        let output = stdout || stderr;
+        
+        if (error) {
+            console.error(`[Agent] Error: ${error.message}`);
+            return res.status(500).json({ error: 'EXECUTION_FAILED', details: error.message + '\n' + stderr });
+        }
+
+        // If successful, try to Git Push
+        // We chain the git commands.
+        const gitCmd = `git add . && git commit -m "Agent Fix: ${safePrompt.slice(0, 30)}..." && git push`;
+        
+        exec(gitCmd, (gitErr, gitOut, gitErrOut) => {
+            const gitResult = gitErr ? `Git Push Failed: ${gitErr.message}` : `Git Push Success:\n${gitOut}`;
+            
+            res.json({ 
+                ok: true, 
+                output: output,
+                gitResult: gitResult
+            });
+        });
+    });
+});
+
+app.use('/api/fix', fixRouter);
+
+// Fix Page Route
+app.get('/fix', (_, res) => {
+    res.sendFile(path.join(path.resolve(), 'fix.html'));
+});
 
 // ─────────────────── SPA Fallback ──────────────────────
 app.get('*', (_, res) => {

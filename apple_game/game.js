@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 4. Load Leaderboard & Stats (Initial load)
     loadLeaderboard();
-    loadGameStats();
 });
 
 // Mobile Check
@@ -148,11 +147,6 @@ function initGrid() {
 }
 
 async function startGame() {
-    // Report Game Start
-    try {
-        await fetch('/api/game/start', { method: 'POST' });
-    } catch(e) { console.error("Game start report failed", e); }
-
     score = 0;
     timeLeft = GAME_TIME;
     scoreEl.textContent = 0;
@@ -182,7 +176,6 @@ function endGame() {
     // Save Score
     saveScore(score);
     showOverlay(resultOverlay);
-    loadGameStats(); // Reload stats to show increased count
 
     // Reset UI states in result overlay
     document.getElementById('top10-form').classList.add('d-none');
@@ -430,14 +423,7 @@ async function loadLeaderboard() {
     }
 }
 
-async function loadGameStats() {
-    try {
-        const res = await fetch('/api/game/stats');
-        const data = await res.json();
-        const els = document.querySelectorAll('.total-games-played');
-        els.forEach(el => el.textContent = data.totalGamesPlayed.toLocaleString());
-    } catch(e) { console.error("Stats load error", e); }
-}
+
 
 document.getElementById('game-start-btn').addEventListener('click', startGame);
 document.getElementById('restart-btn').addEventListener('click', startGame);
