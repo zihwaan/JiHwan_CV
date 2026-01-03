@@ -1,18 +1,103 @@
+// ==========================================
+// Navbar & UI Logic (from scripts.js)
+// ==========================================
+window.addEventListener('DOMContentLoaded', event => {
+
+    // Navbar shrink function
+    var navbarShrink = function () {
+        const navbarCollapsible = document.body.querySelector('#mainNav');
+        if (!navbarCollapsible) {
+            return;
+        }
+        if (window.scrollY === 0) {
+            navbarCollapsible.classList.remove('navbar-shrink')
+        } else {
+            navbarCollapsible.classList.add('navbar-shrink')
+        }
+
+    };
+
+    // Shrink the navbar 
+    navbarShrink();
+
+    // Shrink the navbar when page is scrolled
+    document.addEventListener('scroll', navbarShrink);
+
+    // Activate Bootstrap scrollspy on the main nav element
+    const mainNav = document.body.querySelector('#mainNav');
+    if (mainNav) {
+        new bootstrap.ScrollSpy(document.body, {
+            target: '#mainNav',
+            offset: 72,
+        });
+    };
+
+    // Collapse responsive navbar when toggler is visible
+    const navbarToggler = document.body.querySelector('.navbar-toggler');
+    const responsiveNavItems = [].slice.call(
+        document.querySelectorAll('#navbarResponsive .nav-link')
+    );
+    responsiveNavItems.map(function (responsiveNavItem) {
+        responsiveNavItem.addEventListener('click', () => {
+            if (window.getComputedStyle(navbarToggler).display !== 'none') {
+                navbarToggler.click();
+            }
+        });
+    });
+
+});
+
+if (typeof gsap !== 'undefined') {
+    gsap.registerPlugin(ScrollTrigger);
+
+    Number.prototype.numberFormat = function(decimals, dec_point, thousands_sep) {
+        dec_point = typeof dec_point !== 'undefined' ? dec_point : '.';
+        thousands_sep = typeof thousands_sep !== 'undefined' ? thousands_sep : ',';
+
+        var parts = this.toFixed(decimals).split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thousands_sep);
+
+        return parts.join(dec_point);
+    }
+
+    var startCount = {var: 0};
+
+    gsap.to(startCount, {
+      var: 51950000, duration: 3, ease:"none",
+      onUpdate: changeNumber,
+      scrollTrigger: {
+        trigger: "#number",
+      },
+    })
+
+    function changeNumber() {
+      const numberEl = document.getElementById('number');
+      if(numberEl) numberEl.innerHTML = ((startCount.var.numberFormat(0)) + "원");
+    }
+}
+
+// ==========================================
+// Guestbook & Admin Logic
+// ==========================================
+
 /* Kakao SDK 초기화 */
-Kakao.init(window.KAKAO_JS_KEY || document.querySelector('meta[name="kakao-key"]').content);
+try {
+    Kakao.init(window.KAKAO_JS_KEY || document.querySelector('meta[name="kakao-key"]').content);
+} catch(e) { console.error("Kakao Init Error", e); }
 
 /* ===== DOM ===== */
 const $ = q => document.querySelector(q);
 const loginBtn  = $('#kakao-login');
-const logoutBtn = $('#kakao-logout'); // User logout
+const logoutBtn = $('#kakao-logout');
 const form      = $('#guestbook-form');
 const list      = $('#guestbook-entries');
 const adminForm = $('#admin-form');
 const refreshLoginsBtn = $('#refresh-logins');
-const mainAdminLogoutBtn = $('#main-admin-logout-btn'); // Admin logout from admin panel
+const mainAdminLogoutBtn = $('#main-admin-logout-btn');
 
 let accessToken = localStorage.getItem('kakao_token') ?? '';
 let adminToken  = localStorage.getItem('admin_token') ?? '';
+let replyingTo  = null; 
 
 /* ===== 공통 ===== */
 const escapeHTML = s =>
@@ -26,7 +111,7 @@ function fetchLoginHistory() {
     .then(r => r.json())
     .then(data => {
       const ul = $('#login-history');
-      if (ul) { // Check if element exists
+      if (ul) {
         ul.innerHTML = data.map(l => `
           <li class="d-flex gap-2 py-1">
             <img src="${l.image}" class="avatar" alt="">
@@ -50,7 +135,7 @@ function renderAuth() {
 
 function updateAdminUI(isAdminActive) {
     const adminPanel = $('#admin-panel');
-    const adminDeleteButtons = list.querySelectorAll('.admin-delete');
+    const adminDeleteButtons = list ? list.querySelectorAll('.admin-delete') : [];
 
     if (adminPanel) adminPanel.classList.toggle('d-none', !isAdminActive);
     if (adminForm) adminForm.classList.toggle('d-none', isAdminActive);
@@ -64,23 +149,85 @@ function fetchComments() {
   fetch('/api/comments')
     .then(res => res.json())
     .then(data => {
-      if (list) { // Check if element exists
-        list.innerHTML = data.map(c => `
-          <li data-id="${c.id}" class="d-flex gap-2 py-2 border-bottom">
-            <img src="${c.image}" onerror="this.src='/assets/default_avatar.png'" class="avatar" alt="">
-            <div class="flex-grow-1">
-              <div class="d-flex justify-content-between">
-                <strong>${escapeHTML(c.name)}</strong>
-                <small class="text-muted">${new Date(c.time).toLocaleString('ko-KR')}</small>
-              </div>
-              <p class="comment-text mb-0">${escapeHTML(c.text.trim())}</p>
-            </div>
-            <button class="btn btn-sm btn-link text-danger d-none admin-delete">삭제</button>
-          </li>`).join('');
-        updateAdminUI(!!adminToken); // Ensure delete buttons visibility is correct
+      if (list) {
+        list.innerHTML = data.map(c => renderComment(c)).join('');
+        updateAdminUI(!!adminToken);
       }
     }).catch(err => console.error("댓글 로드 실패:", err));
 }
+
+function renderComment(c) {
+    const repliesHtml = c.replies && c.replies.length > 0 
+        ? `<ul class="list-unstyled ms-5 mt-2 ps-3 border-start">
+            ${c.replies.map(r => `
+                <li class="d-flex gap-2 py-2">
+                    <img src="${r.image}" onerror="this.src='/assets/default_avatar.png'" class="avatar" style="width:28px;height:28px;">
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between">
+                            <strong>${escapeHTML(r.name)}</strong>
+                            <small class="text-muted">${new Date(r.time).toLocaleString('ko-KR')}</small>
+                        </div>
+                        <p class="comment-text mb-0 small">${escapeHTML(r.text)}</p>
+                    </div>
+                    <button class="btn btn-sm btn-link text-danger d-none admin-delete" data-parent-id="${c.id}" data-id="${r.id}">삭제</button>
+                </li>
+            `).join('')}
+           </ul>` 
+        : '';
+
+    return `
+      <li data-id="${c.id}" class="py-2 border-bottom">
+        <div class="d-flex gap-2">
+            <img src="${c.image}" onerror="this.src='/assets/default_avatar.png'" class="avatar" alt="">
+            <div class="flex-grow-1">
+                <div class="d-flex justify-content-between">
+                    <strong>${escapeHTML(c.name)}</strong>
+                    <small class="text-muted">${new Date(c.time).toLocaleString('ko-KR')}</small>
+                </div>
+                <p class="comment-text mb-0">${escapeHTML(c.text.trim())}</p>
+                <div class="d-flex gap-2 mt-1">
+                    <button class="btn btn-sm btn-light py-0 px-2 reply-btn" onclick="setReply('${c.id}', '${escapeHTML(c.name)}')">답글달기</button>
+                </div>
+            </div>
+            <button class="btn btn-sm btn-link text-danger d-none admin-delete">삭제</button>
+        </div>
+        ${repliesHtml}
+      </li>`;
+}
+
+window.setReply = (id, name) => {
+    if (!accessToken) return alert('답글을 달려면 로그인이 필요합니다.');
+    replyingTo = id;
+    const input = $('#guestbook-content');
+    const label = $('#reply-target-label');
+    
+    // Show reply indicator
+    if (!label) {
+        const div = document.createElement('div');
+        div.id = 'reply-target-label';
+        div.className = 'alert alert-info py-1 px-3 mb-2 d-flex justify-content-between align-items-center';
+        div.innerHTML = `<small>To: <b>${name}</b></small> <button type="button" class="btn-close btn-close-white small" onclick="cancelReply()"></button>`;
+        form.insertBefore(div, input);
+    } else {
+        label.innerHTML = `<small>To: <b>${name}</b></small> <button type="button" class="btn-close small" onclick="cancelReply()"></button>`;
+        label.classList.remove('d-none');
+    }
+    input.placeholder = `${name}님에게 답글 작성...`;
+    input.focus();
+    form.scrollIntoView({behavior: "smooth", block: "center"});
+};
+
+window.cancelReply = () => {
+    replyingTo = null;
+    const label = $('#reply-target-label');
+    if (label) label.classList.add('d-none');
+    const input = $('#guestbook-content');
+    if(input) {
+        input.placeholder = "내용을 입력하세요…";
+        input.value = '';
+    }
+};
+
 
 /* ─────────── 인증 ─────────── */
 renderAuth();
@@ -95,15 +242,13 @@ if (loginBtn) {
           localStorage.setItem('kakao_token', accessToken);
           renderAuth();
           try {
-                  await fetch('/api/logins', {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + accessToken }
-                  });
-                } catch(e) {
-                  console.warn('⚠️ 로그인 이력 저장 실패', e);
-                }
+              await fetch('/api/logins', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + accessToken }
+              });
+          } catch(e) { console.warn(e); }
         },
-        fail: () => alert('로그인에 실패했습니다. 다시 시도해주세요.')
+        fail: () => alert('로그인에 실패했습니다.')
       });
     };
 }
@@ -115,13 +260,13 @@ if (logoutBtn) {
                 accessToken = '';
                 localStorage.removeItem('kakao_token');
                 renderAuth();
-                alert('카카오 로그아웃 되었습니다.');
+                alert('로그아웃 되었습니다.');
             });
         } else {
             accessToken = '';
             localStorage.removeItem('kakao_token');
             renderAuth();
-            alert('카카오 로그아웃 되었습니다.');
+            alert('로그아웃 되었습니다.');
         }
     };
 }
@@ -136,13 +281,20 @@ if (form) {
       const text = textInput.value.trim();
       if (!text) return alert('댓글 내용을 입력해주세요.');
 
+      const payload = { text };
+      if (replyingTo) payload.replyTo = replyingTo;
+
       fetch('/api/comments', {
         method:'POST',
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+accessToken},
-        body:JSON.stringify({text})
+        body:JSON.stringify(payload)
       })
-        .then(r => r.ok ? r.json() : Promise.reject(new Error('댓글 등록에 실패했습니다.')))
-        .then(() => { form.reset(); fetchComments(); })
+        .then(r => r.ok ? r.json() : Promise.reject(new Error('등록 실패')))
+        .then(() => { 
+            textInput.value = ''; 
+            if(replyingTo) cancelReply();
+            fetchComments(); 
+        })
         .catch(err => alert(err.message));
     };
 }
@@ -153,7 +305,7 @@ if (adminForm) {
       e.preventDefault();
       const passInput = $('#admin-pass');
       const pass = passInput.value.trim();
-      if (!pass) return alert('관리자 비밀번호를 입력하세요.');
+      if (!pass) return alert('비밀번호를 입력하세요.');
 
       try {
         const res  = await fetch('/api/admin/login',{
@@ -161,34 +313,24 @@ if (adminForm) {
           headers:{'Content-Type':'application/json'},
           body:JSON.stringify({password:pass})
         });
-        
         const result = await res.json();
 
-        if (!res.ok || !result.token) {
-            passInput.value = ''; // Clear password field on failure
-            return alert('❌ 비밀번호가 일치하지 않습니다.');
-        }
+        if (!res.ok || !result.token) return alert('비밀번호가 일치하지 않습니다.');
 
         adminToken = result.token;
         localStorage.setItem('admin_token', adminToken);
         updateAdminUI(true);
-        
-        alert('✅ 관리자 모드로 전환되었습니다.');
-        const adminToastEl = $('#adminToast');
-        if (adminToastEl && bootstrap.Toast) { // Check if bootstrap is loaded
-            new bootstrap.Toast(adminToastEl).show();
-        }
         fetchLoginHistory();
-        passInput.value = ''; // Clear password field on success
+        passInput.value = '';
+        alert('관리자 모드로 전환되었습니다.');
 
       } catch (error) {
-          console.error("관리자 로그인 오류:", error);
-          alert("관리자 로그인 중 오류가 발생했습니다.");
+          console.error(error);
+          alert("오류가 발생했습니다.");
       }
     };
 }
 
-// Admin Logout from Admin Panel
 if (mainAdminLogoutBtn) {
     mainAdminLogoutBtn.onclick = () => {
         adminToken = '';
@@ -205,16 +347,18 @@ if (list) {
       const deleteButton = e.target.closest('.admin-delete');
       if (!deleteButton || !adminToken) return;
       
-      const listItem = deleteButton.closest('li');
-      if (!listItem) return;
+      const parentId = deleteButton.dataset.parentId; // If reply
+      const id = deleteButton.dataset.id || deleteButton.closest('li').dataset.id; // If comment
 
-      const id = listItem.dataset.id;
-      if (confirm('이 댓글을 정말 삭제하시겠습니까?')) {
-          fetch('/api/comments/'+id,{
+      if (confirm('정말 삭제하시겠습니까?')) {
+          let url = '/api/comments/' + (parentId || id);
+          if (parentId) url += `?replyId=${id}`;
+
+          fetch(url,{
             method:'DELETE',
             headers:{'Authorization':'Bearer '+adminToken}
           }).then(r => {
-              if (!r.ok) throw new Error('댓글 삭제에 실패했습니다.');
+              if (!r.ok) throw new Error('삭제 실패');
               return r.json();
           })
           .then(() => fetchComments())
@@ -223,22 +367,17 @@ if (list) {
     };
 }
 
-
-/**
- * 로그인 이력 새로고침 버튼 클릭
- */
 if (refreshLoginsBtn) {
     refreshLoginsBtn.addEventListener('click', () => {
         fetchLoginHistory();
     });
 }
 
-// ─────────────────── Initialization ─────────────────
 document.addEventListener('DOMContentLoaded', () => {
     renderAuth();
     fetchComments();
     if (adminToken) {
       updateAdminUI(true);
-      fetchLoginHistory(); // Fetch login history if already in admin mode
+      fetchLoginHistory();
     }
 });

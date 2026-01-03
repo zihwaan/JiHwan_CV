@@ -7,6 +7,7 @@ import path from 'path';
 import mongoose from 'mongoose';
 import { nanoid } from 'nanoid';
 import jwt from 'jsonwebtoken';
+import nodemailer from 'nodemailer';
 
 dotenv.config();
 
@@ -24,12 +25,21 @@ mongoose.connect(MONGODB_URI)
     process.exit(1);
   });
 
+const replySchema = new mongoose.Schema({
+  id: String,
+  name: String,
+  image: String,
+  text: String,
+  time: Number
+});
+
 const commentSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   name: String,
   image: String,
   text: String,
-  time: Number
+  time: Number,
+  replies: [replySchema]
 });
 
 const loginSchema = new mongoose.Schema({
@@ -56,11 +66,6 @@ const adminMemoSchema = new mongoose.Schema({
   time: Number
 });
 
-const Comment = mongoose.model('Comment', commentSchema);
-const Login = mongoose.model('Login', loginSchema);
-const Leaderboard = mongoose.model('Leaderboard', leaderboardSchema);
-const AdminMemo = mongoose.model('AdminMemo', adminMemoSchema);
-
 const gameScoreSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   userId: { type: String, required: true }, // Kakao ID or unique identifier
@@ -70,7 +75,29 @@ const gameScoreSchema = new mongoose.Schema({
   message: String,
   time: Number
 });
+
+const globalStatsSchema = new mongoose.Schema({
+    id: { type: String, default: 'global' },
+    totalGamesPlayed: { type: Number, default: 0 }
+});
+
+const Comment = mongoose.model('Comment', commentSchema);
+const Login = mongoose.model('Login', loginSchema);
+const Leaderboard = mongoose.model('Leaderboard', leaderboardSchema);
+const AdminMemo = mongoose.model('AdminMemo', adminMemoSchema);
 const GameScore = mongoose.model('GameScore', gameScoreSchema);
+const GlobalStats = mongoose.model('GlobalStats', globalStatsSchema);
+
+// ────────────────────────────────────────────────────────────────────
+// Email Transporter Config
+// ────────────────────────────────────────────────────────────────────
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.GMAIL_USER, // .env 파일에 설정 필요
+        pass: process.env.GMAIL_PASS  // 앱 비밀번호 사용 권장
+    }
+});
 
 // ────────────────────────────────────────────────────────────────────
 // Express 앱 설정
@@ -112,6 +139,24 @@ function isAdmin(token) {
   }
 }
 
+async function sendEmailNotification(subject, text) {
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
+        console.warn('⚠️ Email configuration missing. Skipping notification.');
+        return;
+    }
+    try {
+        await transporter.sendMail({
+            from: process.env.GMAIL_USER,
+            to: 'devjanggun21@gmail.com',
+            subject: subject,
+            text: text
+        });
+        console.log('✅ Email notification sent.');
+    } catch (error) {
+        console.error('❌ Email sending failed:', error);
+    }
+}
+
 // ──────────────────────── API ──────────────────────────
 // 전체 댓글 조회
 app.get('/api/comments', async (_, res) => {
@@ -124,25 +169,59 @@ app.get('/api/comments', async (_, res) => {
   }
 });
 
-// 댓글 등록 (Kakao 토큰 필요)
+// 댓글/답글 등록 (Kakao 토큰 필요)
 app.post('/api/comments', async (req, res) => {
   const token = (req.headers.authorization || '').split(' ')[1];
   const user = await verifyKakaoToken(token);
   if (!user) return res.status(401).json({ error: 'INVALID_TOKEN' });
 
-  const { text } = req.body;
+  const { text, replyTo } = req.body;
   if (!text?.trim()) return res.status(400).json({ error: 'TEXT_REQUIRED' });
 
   try {
-    const comment = new Comment({
-      id: nanoid(),
-      name: user.name,
-      image: user.image,
-      text: text.trim(),
-      time: Date.now()
-    });
-    await comment.save();
-    res.status(201).json({ ok: true });
+    if (replyTo) {
+        // 답글 처리
+        const parentComment = await Comment.findOne({ id: replyTo });
+        if (!parentComment) return res.status(404).json({ error: 'PARENT_NOT_FOUND' });
+
+        const reply = {
+            id: nanoid(),
+            name: user.name,
+            image: user.image,
+            text: text.trim(),
+            time: Date.now()
+        };
+
+        parentComment.replies.push(reply);
+        await parentComment.save();
+
+        // 이메일 알림
+        sendEmailNotification(
+            `[지환닷컴 방명록] ${user.name}님이 답글을 남겼습니다.`, 
+            `"${parentComment.text}" 에 대한 답글:\n\n${user.name}: ${text.trim()}`
+        );
+
+        res.status(201).json({ ok: true });
+    } else {
+        // 새 댓글 처리
+        const comment = new Comment({
+            id: nanoid(),
+            name: user.name,
+            image: user.image,
+            text: text.trim(),
+            time: Date.now(),
+            replies: []
+        });
+        await comment.save();
+
+        // 이메일 알림
+        sendEmailNotification(
+            `[지환닷컴 방명록] ${user.name}님이 댓글을 남겼습니다.`, 
+            `${user.name}: ${text.trim()}`
+        );
+
+        res.status(201).json({ ok: true });
+    }
   } catch (dbError) {
     console.error('Database write error in POST /api/comments:', dbError);
     res.status(500).json({ error: 'DATABASE_WRITE_ERROR', message: '서버에 댓글을 저장하는 중 오류가 발생했습니다.' });
@@ -200,11 +279,23 @@ app.delete('/api/comments/:id', async (req, res) => {
   if (!isAdmin(token)) return res.status(401).json({ error: 'NOT_ADMIN' });
 
   try {
-    const result = await Comment.findOneAndDelete({ id: req.params.id });
-    if (!result) {
-        return res.status(404).json({ error: 'COMMENT_NOT_FOUND' });
+    const { id } = req.params;
+    const { replyId } = req.query; // 답글 삭제 시 replyId 파라미터 사용
+
+    if (replyId) {
+        // 답글 삭제
+        const comment = await Comment.findOne({ id: id });
+        if (!comment) return res.status(404).json({ error: 'COMMENT_NOT_FOUND' });
+        
+        comment.replies = comment.replies.filter(r => r.id !== replyId);
+        await comment.save();
+        res.json({ ok: true });
+    } else {
+        // 원 댓글 삭제
+        const result = await Comment.findOneAndDelete({ id: id });
+        if (!result) return res.status(404).json({ error: 'COMMENT_NOT_FOUND' });
+        res.json({ ok: true });
     }
-    res.json({ ok: true });
   } catch (dbError) {
     console.error('Database error in DELETE /api/comments/:id:', dbError);
     res.status(500).json({ error: 'DATABASE_ERROR', message: '서버에서 댓글 삭제 중 오류가 발생했습니다.' });
@@ -245,6 +336,33 @@ app.post('/api/leaderboard', async (req, res) => {
 });
 
 // ────────────────── GAME API ──────────────────────────
+
+// 게임 시작 시 카운트 증가
+app.post('/api/game/start', async (req, res) => {
+    try {
+        await GlobalStats.findOneAndUpdate(
+            { id: 'global' },
+            { $inc: { totalGamesPlayed: 1 } },
+            { upsert: true, new: true }
+        );
+        res.json({ ok: true });
+    } catch (e) {
+        console.error('Game start count error:', e);
+        res.status(500).json({ error: 'DB_ERROR' });
+    }
+});
+
+// 게임 전체 통계 조회
+app.get('/api/game/stats', async (req, res) => {
+    try {
+        const stats = await GlobalStats.findOne({ id: 'global' });
+        res.json({ totalGamesPlayed: stats ? stats.totalGamesPlayed : 0 });
+    } catch (e) {
+        console.error('Game stats error:', e);
+        res.status(500).json({ error: 'DB_ERROR' });
+    }
+});
+
 // 게임 점수 저장 (최고 기록만 갱신)
 app.post('/api/game/score', async (req, res) => {
   const token = (req.headers.authorization || '').split(' ')[1];
@@ -285,18 +403,18 @@ app.post('/api/game/score', async (req, res) => {
       isNewRecord = true;
     }
 
-    // Check if Top 10
+    // Check if Top 15 (Changed from 10 to 15)
     const betterScoresCount = await GameScore.countDocuments({ score: { $gt: savedScore } });
-    const isTop10 = betterScoresCount < 10;
+    const isTop15 = betterScoresCount < 15;
 
-    return res.json({ newRecord: isNewRecord, score: savedScore, isTop10 });
+    return res.json({ newRecord: isNewRecord, score: savedScore, isTop10: isTop15 }); // Using isTop10 key for compatibility but logic is Top 15
   } catch (err) {
     console.error('Game score save error:', err);
     res.status(500).json({ error: 'DB_ERROR' });
   }
 });
 
-// 소감 등록 (Top 10 유저용)
+// 소감 등록 (Top 15 유저용)
 app.put('/api/game/message', async (req, res) => {
     const token = (req.headers.authorization || '').split(' ')[1];
     const user = await verifyKakaoToken(token);
@@ -309,10 +427,10 @@ app.put('/api/game/message', async (req, res) => {
         const record = await GameScore.findOne({ userId: user.id });
         if (!record) return res.status(404).json({ error: 'NO_RECORD' });
         
-        // Verify Top 10 again to be safe
+        // Verify Top 15 again
         const betterScoresCount = await GameScore.countDocuments({ score: { $gt: record.score } });
-        if (betterScoresCount >= 10) {
-             return res.status(403).json({ error: 'NOT_TOP_10', message: 'Top 10 순위 밖입니다.' });
+        if (betterScoresCount >= 15) {
+             return res.status(403).json({ error: 'NOT_TOP_15', message: 'Top 15 순위 밖입니다.' });
         }
 
         record.message = message.trim().slice(0, 50); // Max 50 chars
@@ -338,12 +456,12 @@ app.get('/api/game/myscore', async (req, res) => {
   }
 });
 
-// 게임 리더보드 (TOP 10)
+// 게임 리더보드 (TOP 15)
 app.get('/api/game/leaderboard', async (req, res) => {
   try {
     const topScores = await GameScore.find({}, { name: 1, image: 1, score: 1, message: 1, time: 1, _id: 0 })
       .sort({ score: -1 })
-      .limit(10);
+      .limit(15); // Changed to 15
     res.json(topScores);
   } catch (err) {
     res.status(500).json({ error: 'DB_ERROR' });

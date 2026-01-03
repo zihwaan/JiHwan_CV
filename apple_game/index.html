@@ -144,9 +144,12 @@
                 <i class="fas fa-clock"></i>
                 <span id="timer" class="fw-bold fs-4">35</span>
             </div>
-            <div class="d-flex align-items-center gap-2">
-                <span id="score" class="fw-bold fs-4 text-warning">0</span>
-                <i class="fas fa-star text-warning"></i>
+            <div class="d-flex flex-column align-items-end">
+                <div class="d-flex align-items-center gap-2">
+                    <span id="score" class="fw-bold fs-4 text-warning">0</span>
+                    <i class="fas fa-star text-warning"></i>
+                </div>
+                <small class="text-white-50" style="font-size: 0.65rem;">총 시도: <span class="total-games-played">0</span>판</small>
             </div>
         </header>
         
@@ -168,9 +171,14 @@
                 <i class="fas fa-comment"></i> 카카오 로그인
             </button>
             
+            <div class="mb-4 text-center">
+                <p class="mb-0 text-muted small">총 게임 시도</p>
+                <h3 class="fw-bold text-primary total-games-played">0</h3>
+            </div>
+
             <!-- Embedded Leaderboard -->
-            <div class="card w-100 shadow-sm" style="max-height: 300px; overflow-y: auto;">
-                <div class="card-header bg-white fw-bold"><i class="fas fa-trophy text-warning"></i> 명예의 전당</div>
+            <div class="card w-100 shadow-sm" style="max-height: 250px; overflow-y: auto;">
+                <div class="card-header bg-white fw-bold"><i class="fas fa-trophy text-warning"></i> 명예의 전당 (Top 15)</div>
                 <div id="leaderboard-list-login" class="card-body p-0">
                     <div class="text-center py-3"><div class="spinner-border spinner-border-sm text-secondary"></div></div>
                 </div>
@@ -186,9 +194,13 @@
             <p class="text-muted small">내 최고 점수: <span id="my-best-score">0</span></p>
             <button id="game-start-btn" class="btn btn-primary btn-lg w-100 py-3 fw-bold shadow mb-4">게임 시작</button>
             
+            <div class="mb-3 text-center">
+                <span class="badge bg-light text-dark border">총 시도: <span class="total-games-played">0</span>판</span>
+            </div>
+
             <!-- Embedded Leaderboard -->
-            <div class="card w-100 shadow-sm" style="max-height: 300px; overflow-y: auto;">
-                <div class="card-header bg-white fw-bold"><i class="fas fa-trophy text-warning"></i> 명예의 전당</div>
+            <div class="card w-100 shadow-sm" style="max-height: 250px; overflow-y: auto;">
+                <div class="card-header bg-white fw-bold"><i class="fas fa-trophy text-warning"></i> 명예의 전당 (Top 15)</div>
                 <div id="leaderboard-list-start" class="card-body p-0">
                     <div class="text-center py-3"><div class="spinner-border spinner-border-sm text-secondary"></div></div>
                 </div>
@@ -197,7 +209,7 @@
             <a href="../index.html" class="btn btn-link text-muted mt-3">나가기</a>
         </div>
 
-        <!-- Game Over / Top 10 Overlay -->
+        <!-- Game Over / Top 15 Overlay -->
         <div id="result-overlay" class="overlay d-none">
             <h2 class="mb-2">Time Over!</h2>
             <h1 class="display-1 fw-bold mb-4" id="final-score">0</h1>
@@ -205,7 +217,7 @@
             <!-- Mandatory Message Input -->
             <div id="top10-form" class="w-100 d-none">
                 <div class="alert alert-warning animate__animated animate__pulse animate__infinite">
-                    🏆 <b>TOP 10 달성!</b> 🏆
+                    🏆 <b>TOP 15 달성!</b> 🏆
                 </div>
                 <p class="mb-2">명예의 전당에 남길 소감을 입력해주세요.<br><span class="text-danger small">(필수 입력)</span></p>
                 <input type="text" id="top10-msg" class="form-control mb-3 text-center" placeholder="소감 한마디 (최대 50자)" maxlength="50">

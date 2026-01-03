@@ -18,14 +18,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. Init Auth Check
     checkAuth();
     
-    // 4. Load Leaderboard (Initial load)
+    // 4. Load Leaderboard & Stats (Initial load)
     loadLeaderboard();
+    loadGameStats();
 });
 
 // Mobile Check
 function checkMobile() {
-    // Allowing wider screens if touch is present might be good, but prompt said "Mobile Only".
-    // Let's stick to width for simplicity + touch capability check?
     const isMobile = window.innerWidth <= 768 || ('ontouchstart' in window);
     
     if (!isMobile) {
@@ -49,7 +48,6 @@ const myBestScoreEl = document.getElementById('my-best-score');
 const loginOverlay = document.getElementById('login-overlay');
 const startOverlay = document.getElementById('start-overlay');
 const resultOverlay = document.getElementById('result-overlay');
-// const leaderboardOverlay = document.getElementById('leaderboard-overlay'); // Removed
 
 // Auth & Game State
 let accessToken = localStorage.getItem('kakao_token');
@@ -107,7 +105,6 @@ if (kakaoBtn) {
              return;
         }
         if (!Kakao.isInitialized()) {
-             // Try init again just in case
              try {
                 Kakao.init(window.KAKAO_JS_KEY || document.querySelector('meta[name="kakao-key"]').content);
              } catch(e) {
@@ -150,7 +147,12 @@ function initGrid() {
     }
 }
 
-function startGame() {
+async function startGame() {
+    // Report Game Start
+    try {
+        await fetch('/api/game/start', { method: 'POST' });
+    } catch(e) { console.error("Game start report failed", e); }
+
     score = 0;
     timeLeft = GAME_TIME;
     scoreEl.textContent = 0;
@@ -180,7 +182,8 @@ function endGame() {
     // Save Score
     saveScore(score);
     showOverlay(resultOverlay);
-    
+    loadGameStats(); // Reload stats to show increased count
+
     // Reset UI states in result overlay
     document.getElementById('top10-form').classList.add('d-none');
     document.getElementById('normal-actions').classList.remove('d-none');
@@ -191,9 +194,7 @@ gridContainer.addEventListener('touchstart', handleStart, {passive: false});
 gridContainer.addEventListener('touchmove', handleMove, {passive: false});
 gridContainer.addEventListener('touchend', handleEnd);
 
-// Mouse support for testing (optional, but good for dev)
 gridContainer.addEventListener('mousedown', (e) => {
-    // Only if not touch
     if(e.type === 'touchstart') return;
     handleStart(e);
 });
@@ -206,7 +207,7 @@ window.addEventListener('mouseup', handleEnd);
 
 function handleStart(e) {
     if (!isPlaying) return;
-    if (e.cancelable) e.preventDefault(); // Prevent scroll
+    if (e.cancelable) e.preventDefault();
     
     const point = e.touches ? e.touches[0] : e;
     const rect = gridContainer.getBoundingClientRect();
@@ -257,7 +258,6 @@ function updateSelectionBox(x, y, w, h) {
 }
 
 function highlightSelection(containerRect) {
-    // Get selection box rect relative to viewport to compare with elements
     const selRect = selectionBox.getBoundingClientRect();
     
     selectedApples = [];
@@ -266,7 +266,6 @@ function highlightSelection(containerRect) {
         
         const appleRect = apple.getBoundingClientRect();
         
-        // Check intersection
         const intersects = !(selRect.right < appleRect.left || 
                              selRect.left > appleRect.right || 
                              selRect.bottom < appleRect.top || 
@@ -285,7 +284,6 @@ function checkSum() {
     const sum = selectedApples.reduce((acc, el) => acc + parseInt(el.dataset.value), 0);
     
     if (sum === 10) {
-        // Success
         score += selectedApples.length; 
         scoreEl.textContent = score;
         
@@ -296,7 +294,6 @@ function checkSum() {
         });
         
     } else {
-        // Fail
         selectedApples.forEach(apple => apple.classList.remove('selected'));
     }
     selectedApples = [];
@@ -317,8 +314,8 @@ async function saveScore(finalScore) {
         });
         const data = await res.json();
         
+        // isTop10 variable from server now implies Top 15
         if (data.isTop10 && data.newRecord) {
-            // Mandatory Input Mode
             const btn = document.getElementById('submit-score-btn');
             if(btn) {
                 btn.disabled = false;
@@ -328,9 +325,8 @@ async function saveScore(finalScore) {
             if(msgInput) msgInput.value = '';
 
             document.getElementById('top10-form').classList.remove('d-none');
-            document.getElementById('normal-actions').classList.add('d-none'); // Hide normal buttons
+            document.getElementById('normal-actions').classList.add('d-none');
         } else {
-            // Not Top 10, check if we need to reload leaderboard in background
             if(data.newRecord) loadLeaderboard();
         }
     } catch (e) {
@@ -364,11 +360,10 @@ document.getElementById('submit-score-btn').addEventListener('click', async (e) 
             document.getElementById('top10-form').classList.add('d-none');
             document.getElementById('normal-actions').classList.remove('d-none');
             
-            // Reset button for next time
             btn.disabled = false;
             btn.textContent = '등록하기';
             
-            loadLeaderboard(); // Reload to show new entry
+            loadLeaderboard();
         } else {
             const err = await res.json();
             alert('등록 실패: ' + (err.message || '알 수 없는 오류'));
@@ -407,7 +402,7 @@ async function loadLeaderboard() {
                 
                 const date = new Date(entry.time || Date.now());
                 const year = date.getFullYear().toString().slice(-2);
-                const dateStr = `${year}.${date.getMonth()+1}.${date.getDate()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+                const dateStr = `${year}.${date.getMonth()+1}.${date.getDate()}`;
 
                 return `
                 <div class="d-flex justify-content-between align-items-center border-bottom px-3 py-2 bg-white">
@@ -435,11 +430,20 @@ async function loadLeaderboard() {
     }
 }
 
+async function loadGameStats() {
+    try {
+        const res = await fetch('/api/game/stats');
+        const data = await res.json();
+        const els = document.querySelectorAll('.total-games-played');
+        els.forEach(el => el.textContent = data.totalGamesPlayed.toLocaleString());
+    } catch(e) { console.error("Stats load error", e); }
+}
+
 document.getElementById('game-start-btn').addEventListener('click', startGame);
 document.getElementById('restart-btn').addEventListener('click', startGame);
 document.getElementById('go-home-btn')?.addEventListener('click', () => {
     showOverlay(startOverlay);
-    loadLeaderboard(); // Refresh leaderboard when going back
+    loadLeaderboard();
 });
 
 // Init
