@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>지환닷컴 - 나노바나나</title>
+    <title>지환닷컴 - 나만의 캐릭터 만들기</title>
     <link rel="icon" type="image/x-icon" href="assets/img/증사.ico" />
     <script src="https://use.fontawesome.com/releases/v6.1.0/js/all.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
@@ -30,8 +30,8 @@
 
     <header class="masthead">
         <div class="container">
-            <h1 class="display-5 fw-semibold mb-3">나노바나나 서비스</h1>
-            <p class="lead mb-0">당신의 사진과 성격을 기반으로 귀여운 캐릭터를 생성해드립니다.</p>
+            <h1 class="display-5 fw-semibold mb-3">나만의 캐릭터 만들기 🍌</h1>
+            <p class="lead mb-0">당신의 사진과 취향을 기반으로 귀여운 캐릭터를 생성해드립니다.</p>
         </div>
     </header>
 
@@ -44,7 +44,16 @@
                         <input type="file" class="form-control" id="photo" accept="image/*" required>
                         <div class="form-text">얼굴이 잘 나온 사진을 올려주세요.</div>
                     </div>
+                    
                     <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">성별</label>
+                            <select class="form-select" id="gender">
+                                <option value="Male">남성</option>
+                                <option value="Female">여성</option>
+                                <option value="Non-binary">기타</option>
+                            </select>
+                        </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">MBTI</label>
                             <select class="form-select" id="mbti">
@@ -58,20 +67,36 @@
                                 <option value="ENFJ">ENFJ</option> <option value="ENTJ">ENTJ</option>
                             </select>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">성별</label>
-                            <select class="form-select" id="gender">
-                                <option value="Male">남성</option>
-                                <option value="Female">여성</option>
-                                <option value="Non-binary">기타</option>
-                            </select>
-                        </div>
                     </div>
+
                     <div class="mb-3">
                         <label class="form-label">성격 키워드</label>
                         <input type="text" class="form-control" id="personality" placeholder="예: 활발한, 차분한, 긍정적인..." required>
                     </div>
-                    <button type="submit" class="btn btn-dark w-100 py-2">캐릭터 생성하기</button>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">좋아하는 색상 (포인트 컬러)</label>
+                            <input type="text" class="form-control" id="favColor" placeholder="예: 파스텔 핑크, 네이비" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">취미 / 활동</label>
+                            <input type="text" class="form-control" id="hobby" placeholder="예: 독서, 축구, 코딩" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">착용하고 싶은 악세서리</label>
+                            <input type="text" class="form-control" id="accessory" placeholder="예: 안경, 모자, 헤드셋" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">원하는 배경 분위기</label>
+                            <input type="text" class="form-control" id="bgVibe" placeholder="예: 우주, 숲속, 모던한 방" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-dark w-100 py-2">캐릭터 생성하기 🍌</button>
                 </form>
 
                 <div id="loading" class="text-center py-5 loading">
@@ -80,9 +105,8 @@
                 </div>
 
                 <div id="result" class="text-center py-5 d-none">
-                    <h3>완성!</h3>
+                    <h3>완성! 🍌</h3>
                     <img id="generated-image" src="" class="result-img mb-3">
-                    <p id="result-desc" class="text-muted small"></p>
                     <button class="btn btn-outline-dark" onclick="location.reload()">다시 하기</button>
                 </div>
             </div>
@@ -108,6 +132,10 @@
             const mbti = document.getElementById('mbti').value;
             const gender = document.getElementById('gender').value;
             const personality = document.getElementById('personality').value;
+            const favColor = document.getElementById('favColor').value;
+            const hobby = document.getElementById('hobby').value;
+            const accessory = document.getElementById('accessory').value;
+            const bgVibe = document.getElementById('bgVibe').value;
 
             if (!photo) return alert('사진을 올려주세요!');
 
@@ -116,6 +144,10 @@
             formData.append('mbti', mbti);
             formData.append('gender', gender);
             formData.append('personality', personality);
+            formData.append('favColor', favColor);
+            formData.append('hobby', hobby);
+            formData.append('accessory', accessory);
+            formData.append('bgVibe', bgVibe);
 
             document.getElementById('nano-form').classList.add('d-none');
             document.getElementById('loading').style.display = 'block';
@@ -129,7 +161,6 @@
                 if (res.data.ok) {
                     const img = document.getElementById('generated-image');
                     img.src = 'data:image/png;base64,' + res.data.image;
-                    document.getElementById('result-desc').textContent = res.data.description;
                     document.getElementById('result').classList.remove('d-none');
                 }
             } catch (err) {
@@ -164,6 +195,7 @@
                             </div>
                             <p class="small mb-1"><strong>${sub.mbti} / ${sub.gender}</strong></p>
                             <p class="small text-muted">${sub.personality}</p>
+                            <p class="small text-muted">🎨 ${sub.favColor} | ⚽ ${sub.hobby}</p>
                             <p class="small text-muted">${new Date(sub.time).toLocaleString()}</p>
                         </div>
                     `;
