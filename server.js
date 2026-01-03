@@ -9,16 +9,20 @@ import mongoose from 'mongoose';
 import { nanoid } from 'nanoid';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
-// import { spawn } from 'child_process'; // Removed in favor of node-pty
 import pty from 'node-pty';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 dotenv.config();
 
 const DOMAIN = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : ``;
 const PORT = process.env.PORT || 8080;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/jihwan_cv';
+
+// Initialize Gemini
+const genAI = new GoogleGenerativeAI("AIzaSyAoSGrfoox32BVHr8B67ByQIfipo2eUQ48"); // Hardcoded key as per request
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // ────────────────────────────────────────────────────────────────────
 // MongoDB 연결 및 스키마 정의
@@ -32,7 +36,7 @@ mongoose.connect(MONGODB_URI)
 
 const commentSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
-  parentId: { type: String, default: null }, // For infinite replies
+  parentId: { type: String, default: null },
   name: String,
   image: String,
   text: String,
@@ -74,11 +78,23 @@ const gameScoreSchema = new mongoose.Schema({
   time: Number
 });
 
+// New NanoBanana Schema
+const nanoBananaSchema = new mongoose.Schema({
+    id: { type: String, required: true, unique: true },
+    userImage: String, // Base64 (could be large, but useful for admin review)
+    generatedSvg: String,
+    gender: String,
+    mbti: String,
+    personality: String,
+    time: Number
+});
+
 const Comment = mongoose.model('Comment', commentSchema);
 const Login = mongoose.model('Login', loginSchema);
 const Leaderboard = mongoose.model('Leaderboard', leaderboardSchema);
 const AdminMemo = mongoose.model('AdminMemo', adminMemoSchema);
 const GameScore = mongoose.model('GameScore', gameScoreSchema);
+const NanoBanana = mongoose.model('NanoBanana', nanoBananaSchema);
 
 // ────────────────────────────────────────────────────────────────────
 // Email Transporter Config
@@ -101,7 +117,7 @@ const io = new SocketIOServer(server, {
 });
 
 app.use(cors({ origin: DOMAIN || true }));
-app.use(express.json());
+app.use(express.json({ limit: '50mb' })); // Increased limit for images
 app.use(express.static(path.resolve()));
 
 // ──────────────────────── UTILS ────────────────────────
@@ -154,7 +170,8 @@ async function sendEmailNotification(subject, text) {
 }
 
 // ──────────────────────── API ──────────────────────────
-// ... (Previous API routes remain unchanged) ...
+
+// ... (Existing Comment, Login APIs) ...
 app.get('/api/comments', async (_, res) => {
   try {
     const comments = await Comment.find().lean();
@@ -300,6 +317,97 @@ app.delete('/api/comments/:id', async (req, res) => {
   }
 });
 
+// ────────────────── NanoBanana Generation API ────────────────────
+app.post('/api/nano/generate', async (req, res) => {
+    const { image, gender, mbti, personality } = req.body;
+    if (!image || !gender || !mbti || !personality) {
+        return res.status(400).json({ error: 'MISSING_FIELDS' });
+    }
+
+    try {
+        // Prepare image for Gemini (Base64 without header)
+        const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+        
+        const prompt = `
+        You are an expert vector artist.
+        Analyze the provided user image to understand their key facial features (hair style, glasses, expression, accessories).
+        
+        Then, generate a SINGLE <svg> code block for a cute, consistent Chibi-style avatar of this person.
+        
+        Traits to incorporate:
+        - Gender: ${gender}
+        - MBTI: ${mbti}
+        - Personality: ${personality}
+        
+        Style Guidelines:
+        - Flat vector art.
+        - Kawaii / Chibi proportions (large head, small body).
+        - Pastel color palette.
+        - Simple geometric shapes.
+        - No background (transparent).
+        - Size: 300x300 viewBox.
+        
+        Output ONLY the raw SVG code. No markdown formatting (\`\
+`svg ... `\
+`)
+, no text descriptions. Just the <svg>...</svg> string.
+        `;
+
+        const result = await model.generateContent([
+            prompt,
+            {
+                inlineData: {
+                    data: base64Data,
+                    mimeType: "image/jpeg" 
+                }
+            }
+        ]);
+        
+        const responseText = result.response.text();
+        
+        // Clean up response if it contains markdown code blocks
+        let cleanSvg = responseText.replace(/```svg/g, '').replace(/```/g, '').trim();
+        
+        // Ensure it starts with <svg and ends with </svg>
+        const svgStart = cleanSvg.indexOf('<svg');
+        const svgEnd = cleanSvg.lastIndexOf('</svg>');
+        if (svgStart !== -1 && svgEnd !== -1) {
+            cleanSvg = cleanSvg.substring(svgStart, svgEnd + 6);
+        }
+
+        // Save to DB
+        const newBanana = new NanoBanana({
+            id: nanoid(),
+            userImage: image, // Store full base64 (might be heavy, but requested)
+            generatedSvg: cleanSvg,
+            gender,
+            mbti,
+            personality,
+            time: Date.now()
+        });
+        await newBanana.save();
+
+        res.json({ svg: cleanSvg });
+
+    } catch (err) {
+        console.error('NanoBanana Error:', err);
+        res.status(500).json({ error: 'GENERATION_FAILED' });
+    }
+});
+
+app.get('/api/admin/bananas', async (req, res) => {
+    const token = (req.headers.authorization || '').split(' ')[1];
+    if (!isAdmin(token)) return res.status(401).json({ error: 'NOT_ADMIN' });
+    
+    try {
+        const bananas = await NanoBanana.find().sort({ time: -1 });
+        res.json(bananas);
+    } catch (dbError) {
+        res.status(500).json({ error: 'DB_ERROR' });
+    }
+});
+
+
 // Leaderboard & Game APIs (kept same)
 app.get('/api/leaderboard', async (req, res) => {
   try {
@@ -401,7 +509,7 @@ app.get('/api/game/leaderboard', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'DB_ERROR' }); }
 });
 
-// Admin Memos Router (kept same)
+// Admin Memos Router
 const adminMemosRouter = express.Router();
 adminMemosRouter.use((req, res, next) => {
   const token = (req.headers.authorization || '').split(' ')[1];

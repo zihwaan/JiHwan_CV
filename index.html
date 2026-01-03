@@ -136,18 +136,25 @@
         <div class="container">
             <h2 class="text-center fw-bold mb-5">둘러보기</h2>
             <div class="row g-4 justify-content-center">
-                <div class="col-md-5 d-flex align-items-stretch">
+                <div class="col-md-4 d-flex align-items-stretch">
                     <a href="portfolio.html" class="feature-card d-block text-center w-100">
                         <div class="feature-icon"><i class="fas fa-briefcase"></i></div>
                         <h5 class="fw-bold mb-1">포트폴리오</h5>
                         <p class="small mb-0">수상 & 프로젝트</p>
                     </a>
                 </div>
-                <div class="col-md-5 d-flex align-items-stretch">
+                <div class="col-md-4 d-flex align-items-stretch">
                     <a href="apple_game/index.html" class="feature-card d-block text-center w-100">
                         <div class="feature-icon"><i class="fas fa-apple-alt"></i></div>
                         <h5 class="fw-bold mb-1">사과 게임</h5>
-                        <p class="small mb-0">사과를 모아 10을 만드세요!</p>
+                        <p class="small mb-0">사과를 모아 Top 15 명예의 전당에 도전해 보세요!</p>
+                    </a>
+                </div>
+                <div class="col-md-4 d-flex align-items-stretch">
+                    <a href="nanobanana/index.html" class="feature-card d-block text-center w-100">
+                        <div class="feature-icon"><i class="fas fa-palette text-warning"></i></div>
+                        <h5 class="fw-bold mb-1">나노바나나</h5>
+                        <p class="small mb-0">AI가 그려주는<br>나만의 귀여운 캐릭터 🍌</p>
                     </a>
                 </div>
             </div>
@@ -204,6 +211,9 @@
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="logins-tab" data-bs-toggle="tab" data-bs-target="#logins-panel" type="button">로그인 이력</button>
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="banana-tab" data-bs-toggle="tab" data-bs-target="#banana-panel" type="button">나노바나나 관리 🍌</button>
+                    </li>
                 </ul>
 
                 <div class="tab-content" id="admin-tab-content">
@@ -219,6 +229,18 @@
                             </button>
                         </div>
                         <ul id="login-history" class="list-unstyled"></ul>
+                    </div>
+
+                    <div class="tab-pane fade" id="banana-panel">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">🍌 나노바나나 생성 기록</h5>
+                            <button id="refresh-bananas" class="btn btn-sm btn-warning text-white">
+                                <i class="fas fa-sync-alt"></i> 새로고침
+                            </button>
+                        </div>
+                        <div id="banana-list" class="row g-3" style="max-height: 500px; overflow-y: auto;">
+                            <!-- Items will be injected here -->
+                        </div>
                     </div>
                 </div>
             </div>
