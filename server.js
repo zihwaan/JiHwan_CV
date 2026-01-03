@@ -487,7 +487,7 @@ io.on('connection', async (socket) => {
     console.log(`[Terminal] Session started: ${user.name}`);
     
     // Spawn simple shell (bash) - Use explicit path
-    const shell = spawn('/usr/bin/bash', ['-i'], { // -i for interactive mode
+    const shell = spawn('bash', ['-i'], { // -i for interactive mode
         env: { ...process.env, TERM: 'xterm-256color' },
         cwd: process.cwd()
     });
