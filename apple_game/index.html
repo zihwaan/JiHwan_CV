@@ -134,29 +134,32 @@
 
         .countdown-num {
             position: absolute;
-            top: 50%;
+            top: 60%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 7rem;
+            font-size: 8rem;
             font-weight: 900;
             color: white;
             z-index: 2;
-            text-shadow: 3px 3px 6px rgba(0,0,0,0.2);
+            text-shadow: 4px 4px 10px rgba(0,0,0,0.3);
             line-height: 1;
-            margin-top: -5px; /* Fine-tuning visual center */
+            margin-top: 0;
         }
 
         @keyframes popIn {
             0% {
                 opacity: 0;
-                transform: scale(0.5) rotate(-10deg);
+                transform: scale(0) rotate(-45deg);
             }
-            50% {
+            40% {
                 opacity: 1;
-                transform: scale(1.2) rotate(5deg);
+                transform: scale(1.5) rotate(10deg);
             }
-            70% {
-                transform: scale(0.9) rotate(-5deg);
+            60% {
+                transform: scale(0.8) rotate(-10deg);
+            }
+            80% {
+                transform: scale(1.1) rotate(5deg);
             }
             100% {
                 opacity: 1;
