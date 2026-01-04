@@ -45,6 +45,43 @@ window.addEventListener('DOMContentLoaded', event => {
         });
     });
 
+    // Easter Egg Logic
+    const profilePhoto = document.getElementById('profile-photo');
+    if (profilePhoto) {
+        let clickCount = 0;
+        let clickTimer;
+        let lastInteractionTime = 0;
+
+        const handleInteraction = (e) => {
+            const currentTime = new Date().getTime();
+            // Prevent double counting (touch + click) within 100ms
+            if (currentTime - lastInteractionTime < 100) return;
+            lastInteractionTime = currentTime;
+
+            clickCount++;
+            
+            // Reset count if clicks are too far apart (e.g., 2 seconds)
+            clearTimeout(clickTimer);
+            clickTimer = setTimeout(() => {
+                clickCount = 0;
+            }, 2000);
+
+            if (clickCount > 15) {
+                const easterEggModal = new bootstrap.Modal(document.getElementById('easterEggModal'));
+                easterEggModal.show();
+                clickCount = 0; // Reset after trigger
+                clearTimeout(clickTimer);
+            }
+        };
+
+        // Add both listeners for better mobile support
+        profilePhoto.addEventListener('click', handleInteraction);
+        profilePhoto.addEventListener('touchstart', (e) => {
+            // e.preventDefault(); // Don't prevent default to allow scrolling if needed, but we handle double count
+            handleInteraction(e);
+        }, { passive: true });
+    }
+
 });
 
 if (typeof gsap !== 'undefined') {
