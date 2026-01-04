@@ -158,6 +158,35 @@ async function startGame() {
     }, 1000);
 }
 
+function spawnBubbles() {
+    const overlay = document.getElementById('countdown-overlay');
+    const colors = ['#ff6b6b', '#ff9f43', '#feca57', '#48dbfb', '#ff9ff3'];
+    
+    for(let i=0; i<15; i++) {
+        const bubble = document.createElement('i');
+        bubble.className = 'fas fa-apple-whole bubble-apple';
+        
+        // Random Position
+        const left = Math.random() * 80 + 10; // 10% - 90%
+        const delay = Math.random() * 0.5;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const tx = (Math.random() - 0.5) * 100; // Random drift X
+        
+        bubble.style.left = `${left}%`;
+        bubble.style.bottom = '10%';
+        bubble.style.color = color;
+        bubble.style.animationDelay = `${delay}s`;
+        bubble.style.setProperty('--tx', `${tx}px`);
+        
+        overlay.appendChild(bubble);
+        
+        // Cleanup
+        setTimeout(() => {
+            if(bubble && bubble.parentNode) bubble.parentNode.removeChild(bubble);
+        }, 2000);
+    }
+}
+
 function runCountdown() {
     return new Promise(resolve => {
         countdownOverlay.classList.remove('d-none');
@@ -165,11 +194,17 @@ function runCountdown() {
         const icon = document.getElementById('countdown-icon');
         
         let count = 3;
+        const colors = {
+            3: '#ff6b6b', // Red
+            2: '#ff9f43', // Orange
+            1: '#feca57', // Yellow
+            0: '#1dd1a1'  // Green
+        };
         
         // Initial setup
         countdownText.textContent = count;
-        if(icon) icon.style.color = '#ff6b6b'; // Reset color
-        countdownText.style.fontSize = ''; // Reset font size
+        if(icon) icon.style.color = colors[3];
+        countdownText.style.fontSize = ''; 
         
         // Helper to trigger animation
         const triggerAnim = () => {
@@ -185,12 +220,18 @@ function runCountdown() {
             count--;
             if (count > 0) {
                 countdownText.textContent = count;
+                if(icon) icon.style.color = colors[count];
                 triggerAnim();
+                
+                // Spawn bubbles on last seconds
+                if(count === 1) spawnBubbles();
+                
             } else if (count === 0) {
                  countdownText.textContent = 'GO!';
                  countdownText.style.fontSize = '3.5rem';
-                 if(icon) icon.style.color = '#6ab04c'; // Green apple
+                 if(icon) icon.style.color = colors[0];
                  triggerAnim();
+                 spawnBubbles(); // More bubbles!
             } else {
                 clearInterval(interval);
                 if(container) container.classList.add('animate-exit');
