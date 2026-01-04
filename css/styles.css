@@ -11550,3 +11550,18 @@ html {
   color: white;
   align-self: center;
 }
+
+/* Easter Egg Styles */
+.animate-dramatic {
+    animation: dramatic-pulse 1.5s infinite alternate;
+}
+
+@keyframes dramatic-pulse {
+    0% { transform: scale(1); text-shadow: 0 0 10px #fff; }
+    100% { transform: scale(1.1); text-shadow: 0 0 20px #fff, 0 0 40px #fff; }
+}
+
+#easterEggModal .modal-content {
+    border: 2px solid white;
+    box-shadow: 0 0 50px rgba(255, 255, 255, 0.5);
+}

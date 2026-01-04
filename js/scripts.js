@@ -42,6 +42,30 @@ window.addEventListener('DOMContentLoaded', event => {
         });
     });
 
+    // Easter Egg Logic
+    const profilePhoto = document.getElementById('profile-photo');
+    if (profilePhoto) {
+        let clickCount = 0;
+        let clickTimer;
+
+        profilePhoto.addEventListener('click', function() {
+            clickCount++;
+            
+            // Reset count if clicks are too far apart (e.g., 2 seconds)
+            clearTimeout(clickTimer);
+            clickTimer = setTimeout(() => {
+                clickCount = 0;
+            }, 2000);
+
+            if (clickCount > 15) {
+                const easterEggModal = new bootstrap.Modal(document.getElementById('easterEggModal'));
+                easterEggModal.show();
+                clickCount = 0; // Reset after trigger
+                clearTimeout(clickTimer);
+            }
+        });
+    }
+
 });
 
 gsap.registerPlugin(ScrollTrigger);
