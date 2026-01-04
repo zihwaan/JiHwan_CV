@@ -161,32 +161,47 @@ async function startGame() {
 function runCountdown() {
     return new Promise(resolve => {
         countdownOverlay.classList.remove('d-none');
-        let count = 3;
-        countdownText.textContent = count;
+        const container = document.querySelector('.countdown-container');
+        const icon = document.getElementById('countdown-icon');
         
-        // Reset animation
-        countdownText.style.animation = 'none';
-        countdownText.offsetHeight; /* trigger reflow */
-        countdownText.style.animation = 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+        let count = 3;
+        
+        // Initial setup
+        countdownText.textContent = count;
+        if(icon) icon.style.color = '#ff6b6b'; // Reset color
+        countdownText.style.fontSize = ''; // Reset font size
+        
+        // Helper to trigger animation
+        const triggerAnim = () => {
+            if(!container) return;
+            container.classList.remove('animate-pop');
+            void container.offsetWidth; // trigger reflow
+            container.classList.add('animate-pop');
+        };
+        
+        triggerAnim();
 
         const interval = setInterval(() => {
             count--;
             if (count > 0) {
                 countdownText.textContent = count;
-                countdownText.style.animation = 'none';
-                countdownText.offsetHeight;
-                countdownText.style.animation = 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+                triggerAnim();
             } else if (count === 0) {
-                 countdownText.textContent = 'START!';
-                 countdownText.style.fontSize = '5rem';
-                 countdownText.style.animation = 'none';
-                 countdownText.offsetHeight;
-                 countdownText.style.animation = 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+                 countdownText.textContent = 'GO!';
+                 countdownText.style.fontSize = '3.5rem';
+                 if(icon) icon.style.color = '#6ab04c'; // Green apple
+                 triggerAnim();
             } else {
                 clearInterval(interval);
-                countdownOverlay.classList.add('d-none');
-                countdownText.style.fontSize = ''; // Reset font size
-                resolve();
+                if(container) container.classList.add('animate-exit');
+                
+                setTimeout(() => {
+                    countdownOverlay.classList.add('d-none');
+                    if(container) container.classList.remove('animate-exit', 'animate-pop');
+                    countdownText.style.fontSize = '';
+                    if(icon) icon.style.color = '';
+                    resolve();
+                }, 300);
             }
         }, 1000);
     });
