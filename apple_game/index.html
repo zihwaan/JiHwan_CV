@@ -106,6 +106,36 @@
         .d-none { display: none !important; }
 
         .progress-bar { transition: width 1s linear; }
+
+        /* Countdown Overlay */
+        #countdown-overlay {
+            background: rgba(0, 0, 0, 0.7) !important;
+            backdrop-filter: blur(5px);
+            z-index: 200; /* Higher than other overlays */
+        }
+        
+        .countdown-number {
+            font-size: 8rem;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(255, 235, 59, 0.8);
+            animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1.5);
+            }
+        }
     </style>
     
     <!-- Kakao SDK -->
@@ -183,6 +213,11 @@
             </div>
 
             <a href="../index.html" class="btn btn-link text-muted mt-3">나가기</a>
+        </div>
+
+        <!-- Countdown Overlay -->
+        <div id="countdown-overlay" class="overlay d-none">
+            <div id="countdown-text" class="countdown-number">3</div>
         </div>
 
         <!-- Game Over / Top 15 Overlay -->

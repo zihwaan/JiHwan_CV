@@ -32,6 +32,8 @@ const myBestScoreEl = document.getElementById('my-best-score');
 const loginOverlay = document.getElementById('login-overlay');
 const startOverlay = document.getElementById('start-overlay');
 const resultOverlay = document.getElementById('result-overlay');
+const countdownOverlay = document.getElementById('countdown-overlay');
+const countdownText = document.getElementById('countdown-text');
 
 // Auth & Game State
 let accessToken = localStorage.getItem('kakao_token');
@@ -77,7 +79,7 @@ async function checkAuth() {
 }
 
 function showOverlay(el) {
-    [loginOverlay, startOverlay, resultOverlay].forEach(o => o.classList.add('d-none'));
+    [loginOverlay, startOverlay, resultOverlay, countdownOverlay].forEach(o => o.classList.add('d-none'));
     if(el) el.classList.remove('d-none');
 }
 
@@ -132,6 +134,10 @@ function initGrid() {
 }
 
 async function startGame() {
+    showOverlay(null); // Clear overlays
+    
+    await runCountdown();
+
     score = 0;
     timeLeft = GAME_TIME;
     scoreEl.textContent = 0;
@@ -139,7 +145,6 @@ async function startGame() {
     timeBar.style.width = '100%';
     
     initGrid();
-    showOverlay(null); // Clear overlays
     isPlaying = true;
     
     gameInterval = setInterval(() => {
@@ -151,6 +156,40 @@ async function startGame() {
             endGame();
         }
     }, 1000);
+}
+
+function runCountdown() {
+    return new Promise(resolve => {
+        countdownOverlay.classList.remove('d-none');
+        let count = 3;
+        countdownText.textContent = count;
+        
+        // Reset animation
+        countdownText.style.animation = 'none';
+        countdownText.offsetHeight; /* trigger reflow */
+        countdownText.style.animation = 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+
+        const interval = setInterval(() => {
+            count--;
+            if (count > 0) {
+                countdownText.textContent = count;
+                countdownText.style.animation = 'none';
+                countdownText.offsetHeight;
+                countdownText.style.animation = 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+            } else if (count === 0) {
+                 countdownText.textContent = 'START!';
+                 countdownText.style.fontSize = '5rem';
+                 countdownText.style.animation = 'none';
+                 countdownText.offsetHeight;
+                 countdownText.style.animation = 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+            } else {
+                clearInterval(interval);
+                countdownOverlay.classList.add('d-none');
+                countdownText.style.fontSize = ''; // Reset font size
+                resolve();
+            }
+        }, 1000);
+    });
 }
 
 function endGame() {
