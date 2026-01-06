@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #000000;
+  --foreground: #ffffff;
+  --primary-mint: #00ffc3;
+  --surface: #111111;
+  --surface-highlight: #222222;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .text-mint {
+    color: var(--primary-mint);
+  }
+  .bg-mint {
+    background-color: var(--primary-mint);
+  }
+  .border-mint {
+    border-color: var(--primary-mint);
+  }
+  .bg-surface {
+    background-color: var(--surface);
+  }
+  .bg-surface-highlight {
+    background-color: var(--surface-highlight);
+  }
+}

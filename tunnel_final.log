@@ -112,3 +112,28 @@
 2026-01-06T14:12:09Z INF Registered tunnel connection connIndex=2 connection=0441c62a-0615-4730-95e5-471096060e9a event=0 ip=198.41.200.33 location=icn01 protocol=quic
 2026-01-06T14:12:09Z INF Registered tunnel connection connIndex=1 connection=1bcbffb5-4276-48e7-810d-29d7e9332bdb event=0 ip=198.41.200.233 location=icn05 protocol=quic
 2026-01-06T14:12:09Z INF Registered tunnel connection connIndex=3 connection=e058059f-e2c8-40e9-ba45-8cfb5a665b04 event=0 ip=198.41.192.37 location=icn06 protocol=quic
+2026-01-06T17:38:48Z INF Initiating graceful shutdown due to signal terminated ...
+2026-01-06T17:38:48Z ERR failed to run the datagram handler error="Application error 0x0 (remote)" connIndex=3 event=0 ip=198.41.192.37
+2026-01-06T17:38:48Z ERR failed to run the datagram handler error="Application error 0x0 (remote)" connIndex=0 event=0 ip=198.41.192.47
+2026-01-06T17:38:48Z ERR failed to serve tunnel connection error="accept stream listener encountered a failure while serving" connIndex=3 event=0 ip=198.41.192.37
+2026-01-06T17:38:48Z ERR Serve tunnel error error="accept stream listener encountered a failure while serving" connIndex=3 event=0 ip=198.41.192.37
+2026-01-06T17:38:48Z INF Retrying connection in up to 1s connIndex=3 event=0 ip=198.41.192.37
+2026-01-06T17:38:48Z ERR failed to serve tunnel connection error="accept stream listener encountered a failure while serving" connIndex=0 event=0 ip=198.41.192.47
+2026-01-06T17:38:48Z ERR Serve tunnel error error="accept stream listener encountered a failure while serving" connIndex=0 event=0 ip=198.41.192.47
+2026-01-06T17:38:48Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.192.47
+2026-01-06T17:38:48Z ERR Connection terminated connIndex=3
+2026-01-06T17:38:48Z ERR Connection terminated connIndex=0
+2026-01-06T17:38:48Z ERR failed to run the datagram handler error="Application error 0x0 (remote)" connIndex=2 event=0 ip=198.41.200.33
+2026-01-06T17:38:48Z ERR failed to serve tunnel connection error="accept stream listener encountered a failure while serving" connIndex=2 event=0 ip=198.41.200.33
+2026-01-06T17:38:48Z ERR Serve tunnel error error="accept stream listener encountered a failure while serving" connIndex=2 event=0 ip=198.41.200.33
+2026-01-06T17:38:48Z INF Retrying connection in up to 1s connIndex=2 event=0 ip=198.41.200.33
+2026-01-06T17:38:48Z ERR Connection terminated connIndex=2
+2026-01-06T17:38:48Z ERR failed to run the datagram handler error="Application error 0x0 (remote)" connIndex=1 event=0 ip=198.41.200.233
+2026-01-06T17:38:48Z ERR failed to serve tunnel connection error="accept stream listener encountered a failure while serving" connIndex=1 event=0 ip=198.41.200.233
+2026-01-06T17:38:48Z ERR Serve tunnel error error="accept stream listener encountered a failure while serving" connIndex=1 event=0 ip=198.41.200.233
+2026-01-06T17:38:48Z INF Retrying connection in up to 1s connIndex=1 event=0 ip=198.41.200.233
+2026-01-06T17:38:48Z ERR Connection terminated connIndex=1
+2026-01-06T17:38:48Z ERR no more connections active and exiting
+2026-01-06T17:38:48Z INF Tunnel server stopped
+2026-01-06T17:38:48Z INF icmp router terminated error="read udp 192.168.219.102:0: raw-read udp 192.168.219.102:0: use of closed network connection"
+2026-01-06T17:38:48Z INF Metrics server stopped

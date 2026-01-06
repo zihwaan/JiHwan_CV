@@ -19,6 +19,15 @@ services:
       - mongo
     restart: always
 
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: always
+    command: tunnel run --url http://app:8080
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    depends_on:
+      - app
+
   mongo:
     image: mongo:6.0
     ports:
