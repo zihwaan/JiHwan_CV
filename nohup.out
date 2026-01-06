@@ -1,0 +1,2 @@
+caffeinate: illegal option -- n
+usage: caffeinate [-disu] [-t timeout] [-w Process ID] [command arguments...]
