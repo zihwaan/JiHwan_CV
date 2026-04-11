@@ -1,0 +1,7 @@
+tunnel: a68ec9d4-a82e-47a1-8c7a-68d47eee07ce
+credentials-file: /Users/zihwan/.cloudflared/a68ec9d4-a82e-47a1-8c7a-68d47eee07ce.json
+
+ingress:
+  - hostname: zihwan.com
+    service: http://localhost:8080
+  - service: http_status:404
