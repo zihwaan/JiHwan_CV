@@ -6,7 +6,7 @@
     <title>지환닷컴</title>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="assets/img/증사.ico" />
+    <link rel="icon" type="image/svg+xml" href="assets/z_favicon.svg" />
 
     <!-- Icon & Font -->
     <script src="https://use.fontawesome.com/releases/v6.1.0/js/all.js" crossorigin="anonymous"></script>
@@ -170,30 +170,9 @@
                     <i class="fas fa-sticky-note me-1"></i> 관리자 메모 관리
                 </a>
                 
-                <ul class="nav nav-tabs mb-3" id="admin-tabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments-panel" type="button">댓글 관리</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="logins-tab" data-bs-toggle="tab" data-bs-target="#logins-panel" type="button">로그인 이력</button>
-                    </li>
-                </ul>
-
-                <div class="tab-content" id="admin-tab-content">
-                    <div class="tab-pane fade show active" id="comments-panel">
-                        <p class="text-muted">댓글 목록에서 삭제 버튼이 활성화됩니다.</p>
-                    </div>
-
-                    <div class="tab-pane fade" id="logins-panel">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0">카카오 로그인 이력</h5>
-                            <button id="refresh-logins" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-sync-alt"></i> 새로고침
-                            </button>
-                        </div>
-                        <ul id="login-history" class="list-unstyled"></ul>
-                    </div>
-                </div>
+                <a href="admin_assets.html" class="btn btn-warning btn-sm mb-3 d-block">
+                    <i class="fas fa-wallet me-1"></i> 자산 관리 포트폴리오
+                </a>
             </div>
         </div>
     </section>

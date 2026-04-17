@@ -8,7 +8,6 @@ const logoutBtn = $('#kakao-logout'); // User logout
 const form      = $('#guestbook-form');
 const list      = $('#guestbook-entries');
 const adminForm = $('#admin-form');
-const refreshLoginsBtn = $('#refresh-logins');
 const mainAdminLogoutBtn = $('#main-admin-logout-btn'); // Admin logout from admin panel
 
 let accessToken = localStorage.getItem('kakao_token') ?? '';
@@ -18,30 +17,6 @@ let adminToken  = localStorage.getItem('admin_token') ?? '';
 const escapeHTML = s =>
   s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
-function fetchLoginHistory() {
-  if (!adminToken) return;
-  fetch('/api/admin/logins', {
-    headers: { 'Authorization': 'Bearer ' + adminToken }
-  })
-    .then(r => r.json())
-    .then(data => {
-      const ul = $('#login-history');
-      if (ul) { // Check if element exists
-        ul.innerHTML = data.map(l => `
-          <li class="d-flex gap-2 py-1">
-            <img src="${l.image}" class="avatar" alt="">
-            <div class="flex-grow-1">
-              <div class="d-flex justify-content-between">
-                <strong>${escapeHTML(l.name)}</strong>
-                <small class="text-muted">${new Date(l.time).toLocaleString('ko-KR')}</small>
-              </div>
-              <span class="text-muted">${l.msg}</span>
-            </div>
-          </li>`).join('');
-      }
-    }).catch(err => console.error("로그인 이력 로드 실패:", err));
-}
-
 /* ─────────── UI helpers ─────────── */
 function renderAuth() {
   if (loginBtn) loginBtn.classList.toggle('d-none', !!accessToken);
@@ -50,7 +25,7 @@ function renderAuth() {
 
 function updateAdminUI(isAdminActive) {
     const adminPanel = $('#admin-panel');
-    const adminDeleteButtons = list.querySelectorAll('.admin-delete');
+    const adminDeleteButtons = list ? list.querySelectorAll('.admin-delete') : [];
 
     if (adminPanel) adminPanel.classList.toggle('d-none', !isAdminActive);
     if (adminForm) adminForm.classList.toggle('d-none', isAdminActive);
@@ -178,7 +153,6 @@ if (adminForm) {
         if (adminToastEl && bootstrap.Toast) { // Check if bootstrap is loaded
             new bootstrap.Toast(adminToastEl).show();
         }
-        fetchLoginHistory();
         passInput.value = ''; // Clear password field on success
 
       } catch (error) {
@@ -224,14 +198,7 @@ if (list) {
 }
 
 
-/**
- * 로그인 이력 새로고침 버튼 클릭
- */
-if (refreshLoginsBtn) {
-    refreshLoginsBtn.addEventListener('click', () => {
-        fetchLoginHistory();
-    });
-}
+
 
 // ─────────────────── Initialization ─────────────────
 document.addEventListener('DOMContentLoaded', () => {

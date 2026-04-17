@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>월별 급여 관리</title>
+
+    <link rel="icon" type="image/svg+xml" href="assets/z_favicon.svg" />
+
+    <script src="https://use.fontawesome.com/releases/v6.1.0/js/all.js" crossorigin="anonymous"></script>
+    <link href="https://webfontworld.github.io/pretendard/Pretendard.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: "Pretendard", sans-serif;
+            background-color: #050505;
+            color: #ffffff;
+            padding-top: 86px;
+            padding-bottom: 60px;
+        }
+        .navbar {
+            background-color: rgba(5, 5, 5, 0.8) !important;
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(57, 255, 20, 0.2) !important;
+        }
+        .navbar-brand { font-weight: 800; }
+        .text-accent { color: #39ff14 !important; }
+        .text-light-gray { color: #dcdcdc !important; }
+        
+        .card {
+            background-color: rgba(20, 20, 20, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        }
+        .card-header {
+            background-color: transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-weight: 600;
+            padding: 1.2rem 1.5rem;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .table-dark {
+            --bs-table-bg: transparent;
+            --bs-table-striped-bg: rgba(255, 255, 255, 0.02);
+            --bs-table-hover-bg: rgba(57, 255, 20, 0.15);
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.08);
+            margin-bottom: 0;
+            font-size: 0.85rem;
+        }
+        thead th {
+            color: #ffffff;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            border-bottom-width: 1px;
+            white-space: nowrap;
+        }
+        
+        .summary-box {
+            background: linear-gradient(135deg, rgba(20,20,20,0.8), rgba(57,255,20,0.05));
+            border: 1px solid rgba(57, 255, 20, 0.2);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .summary-val {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #39ff14;
+            text-shadow: 0 0 15px rgba(57, 255, 20, 0.3);
+        }
+        .badge { font-size: 0.7rem; padding: 0.3em 0.5em; margin-top: 4px; display: inline-block; }
+        .badge.bg-warning { background-color: rgba(255, 193, 7, 0.15) !important; color: #ffda6a !important; border: 1px solid rgba(255, 193, 7, 0.4); }
+        .badge.bg-info { background-color: rgba(13, 202, 240, 0.15) !important; color: #6edff6 !important; border: 1px solid rgba(13, 202, 240, 0.4); }
+        .badge.bg-success { background-color: rgba(57, 255, 20, 0.15) !important; color: #39ff14 !important; border: 1px solid rgba(57, 255, 20, 0.4); }
+
+        .clickable-row {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .clickable-row:hover {
+            transform: scale(1.01);
+            background-color: rgba(57, 255, 20, 0.05);
+        }
+        
+        .expense-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+    </style>
+
+    <script>
+        const adminToken = localStorage.getItem('admin_token');
+        if (!adminToken) {
+            alert('관리자 권한이 필요합니다. 관리자 로그인 후 이용해주세요.');
+            window.location.href = 'index.html#admin';
+        }
+
+        let monthlyData = [];
+        let myChart = null;
+        let cumulativeChartObj = null;
+        let editModal = null;
+        let currentEditIndex = -1;
+
+        const expenseColors = ['#ffda6a', '#ffa502', '#ff6b81', '#ff4757', '#e84118', '#c23616', '#fdcb6e', '#e17055'];
+
+        function formatMoney(num) {
+            return '₩ ' + Math.round(num).toLocaleString('ko-KR');
+        }
+
+        function calculateDeductions(gross) {
+            if (gross <= 0) return 0;
+            const pension = 207100; 
+            const health = Math.round(gross * 0.03545);
+            const care = Math.round(health * 0.1295);
+            const employment = Math.round(gross * 0.009);
+            const incomeTax = Math.round(gross * 0.045);
+            return pension + health + care + employment + incomeTax;
+        }
+
+        async function loadSettings() {
+            let savedData = [];
+            try {
+                const res = await fetch('/api/admin/salary-settings', {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    savedData = data.monthlyData || [];
+                } else if (res.status === 401) {
+                    alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+                    window.location.href = 'index.html#admin';
+                    return;
+                }
+            } catch (err) {
+                console.error('Failed to load settings:', err);
+            }
+
+            const startYear = 2026;
+            const startMonth = 3;
+            const today = new Date();
+            const currentYear = today.getFullYear();
+            const currentMonth = today.getMonth() + 1;
+            
+            let totalMonths = (currentYear - startYear) * 12 + (currentMonth - startMonth) + 1;
+            if (totalMonths < 1) totalMonths = 1;
+
+            let lastContract = 52300000;
+            let lastFixedList = [];
+            let lastSav = 0;
+
+            monthlyData = [];
+
+            for (let i = 0; i < totalMonths; i++) {
+                let y = startYear + Math.floor((startMonth - 1 + i) / 12);
+                let m = ((startMonth - 1 + i) % 12) + 1;
+                let monthStr = `${y}.${m.toString().padStart(2, '0')}`;
+
+                let defaultSav = (i >= 2) ? 2000000 : 0; 
+
+                let existing = savedData.find(d => d.monthStr === monthStr);
+                if (existing) {
+                    let currentFixedList = existing.fixedExpensesList || [];
+                    if (currentFixedList.length === 0 && existing.fixedExpense > 0) {
+                        currentFixedList = [{ name: '기본지출', amount: existing.fixedExpense }];
+                    }
+
+                    monthlyData.push({
+                        monthStr: monthStr,
+                        contractSalary: existing.contractSalary !== undefined ? existing.contractSalary : lastContract,
+                        bonus: existing.bonus || 0,
+                        fixedExpensesList: JSON.parse(JSON.stringify(currentFixedList)),
+                        fixedSavings: existing.fixedSavings !== undefined ? existing.fixedSavings : defaultSav
+                    });
+                    lastContract = monthlyData[i].contractSalary;
+                    lastFixedList = JSON.parse(JSON.stringify(monthlyData[i].fixedExpensesList));
+                    lastSav = monthlyData[i].fixedSavings;
+                } else {
+                    monthlyData.push({
+                        monthStr: monthStr,
+                        contractSalary: lastContract,
+                        bonus: 0,
+                        fixedExpensesList: JSON.parse(JSON.stringify(lastFixedList)),
+                        fixedSavings: lastSav !== 0 ? lastSav : defaultSav
+                    });
+                    lastSav = monthlyData[i].fixedSavings;
+                }
+            }
+
+            renderTable();
+        }
+
+        function getFixedTotal(list) {
+            return (list || []).reduce((sum, item) => sum + (parseInt(item.amount) || 0), 0);
+        }
+
+        function renderTable() {
+            let html = '';
+            for (let i = 0; i < monthlyData.length; i++) {
+                const d = monthlyData[i];
+                const isProbation = (i < 3);
+                
+                let badgesHTML = '';
+                if (isProbation) badgesHTML += '<span class="badge bg-secondary text-white">수습(85%)</span> ';
+                else badgesHTML += '<span class="badge bg-dark border border-secondary text-light">일반</span> ';
+                if (d.bonus > 0) badgesHTML += '<span class="badge bg-warning text-dark">보너스</span>';
+
+                let fixedTotal = getFixedTotal(d.fixedExpensesList);
+
+                html += `
+                    <tr class="clickable-row" onclick="openModal(${i})">
+                        <td class="align-middle fw-bold text-light">
+                            ${d.monthStr}<br>${badgesHTML}
+                        </td>
+                        <td class="align-middle text-light-gray" id="gross-${i}">0</td>
+                        <td class="align-middle fw-bold text-accent" id="net-${i}">0</td>
+                        <td class="align-middle" style="color: #ffda6a;" id="disp-fixed-${i}">0</td>
+                        <td class="align-middle" style="color: #39ff14;" id="disp-sav-${i}">0</td>
+                        <td class="align-middle fw-bold" id="free-${i}">0</td>
+                        <td class="align-middle fw-bold" id="cumulative-${i}" style="color: #0dcaf0;">0</td>
+                    </tr>
+                `;
+            }
+            document.getElementById('salaryTableBody').innerHTML = html;
+            recalcAll();
+        }
+
+        function recalcAll() {
+            let cumulative = 0;
+            let sumNet = 0;
+            let sumGross = 0;
+            let idealSumGross = 0;
+            let idealSumNet = 0;
+            let sumSaved = 0;
+
+            let labels = [];
+            let deductionsChart = [];
+            let savedChart = [];
+            let variableChart = [];
+            let cumulativeData = [];
+            let allCategories = new Set();
+
+            for (let i = 0; i < monthlyData.length; i++) {
+                const data = monthlyData[i];
+                const isProbation = (i < 3); 
+                
+                const monthlyBase = data.contractSalary / 12;
+                const actualBase = isProbation ? (monthlyBase * 0.85) : monthlyBase;
+                const gross = actualBase + data.bonus;
+                
+                const deductions = calculateDeductions(gross);
+                const net = gross - deductions;
+                const fixedTotal = getFixedTotal(data.fixedExpensesList);
+                const free = net - fixedTotal - data.fixedSavings;
+                
+                cumulative += data.fixedSavings;
+                const idealGross = monthlyBase + data.bonus;
+                const idealNet = idealGross - calculateDeductions(idealGross);
+                idealSumGross += idealGross;
+                idealSumNet += idealNet;
+
+                sumGross += gross;
+                sumNet += net;
+                sumSaved += data.fixedSavings;
+
+                document.getElementById(`gross-${i}`).innerText = formatMoney(gross);
+                document.getElementById(`net-${i}`).innerText = formatMoney(net);
+                document.getElementById(`disp-fixed-${i}`).innerText = formatMoney(fixedTotal);
+                document.getElementById(`disp-sav-${i}`).innerText = formatMoney(data.fixedSavings);
+                
+                const freeEl = document.getElementById(`free-${i}`);
+                freeEl.innerText = formatMoney(free);
+                if(free < 0) freeEl.style.color = '#ff4757';
+                else freeEl.style.color = '#0dcaf0';
+
+                document.getElementById(`cumulative-${i}`).innerText = formatMoney(cumulative);
+
+                labels.push(data.monthStr);
+                cumulativeData.push(cumulative);
+                deductionsChart.push(deductions);
+                savedChart.push(data.fixedSavings);
+                variableChart.push(free);
+                
+                (data.fixedExpensesList || []).forEach(item => {
+                    if (item.name.trim() !== '') allCategories.add(item.name.trim());
+                });
+            }
+
+            const avgGross = monthlyData.length > 0 ? idealSumGross / monthlyData.length : 0;
+            const avgNet = monthlyData.length > 0 ? idealSumNet / monthlyData.length : 0;
+            const annualGross = avgGross * 12;
+            const annualNet = avgNet * 12;
+
+            document.getElementById('avgNetPay').innerText = formatMoney(avgNet);
+            if (document.getElementById('annualGrossPay')) document.getElementById('annualGrossPay').innerText = formatMoney(annualGross);
+            if (document.getElementById('annualNetPay')) document.getElementById('annualNetPay').innerText = formatMoney(annualNet);
+            if (document.getElementById('totalSaved')) document.getElementById('totalSaved').innerText = formatMoney(sumSaved);
+
+            let categoryArray = Array.from(allCategories);
+            let dynamicDatasets = [];
+
+            categoryArray.forEach((categoryName, index) => {
+                let catData = monthlyData.map(d => {
+                    let found = (d.fixedExpensesList || []).find(item => item.name.trim() === categoryName);
+                    return found ? parseInt(found.amount) || 0 : 0;
+                });
+                
+                dynamicDatasets.push({
+                    label: categoryName,
+                    data: catData,
+                    backgroundColor: expenseColors[index % expenseColors.length] + 'B3',
+                    borderColor: expenseColors[index % expenseColors.length],
+                    borderWidth: 1,
+                    stack: 'Stack 0'
+                });
+            });
+
+            updateChart(labels, deductionsChart, savedChart, dynamicDatasets, variableChart);
+            updateCumulativeChart(labels, cumulativeData);
+        }
+
+        /* Input Formatting Logic */
+        function formatInputNumber(e) {
+            let val = e.target.value.replace(/[^0-9]/g, '');
+            if (val === '') {
+                e.target.value = '';
+            } else {
+                e.target.value = parseInt(val, 10).toLocaleString('ko-KR');
+            }
+        }
+
+        function setupFormattedInputs() {
+            document.querySelectorAll('.formatted-number').forEach(input => {
+                input.addEventListener('input', formatInputNumber);
+            });
+        }
+
+        function getUnformattedValue(formattedString) {
+            return parseInt(formattedString.replace(/,/g, ''), 10) || 0;
+        }
+        /* -------------------------- */
+
+        function renderModalFixedList(list) {
+            const container = document.getElementById('modalFixedExpContainer');
+            container.innerHTML = '';
+            list.forEach((item, idx) => {
+                container.insertAdjacentHTML('beforeend', `
+                    <div class="expense-row">
+                        <input type="text" class="form-control bg-dark text-white border-secondary expense-name" value="${item.name}" placeholder="항목명">
+                        <input type="text" class="form-control bg-dark text-white border-secondary text-end expense-amount formatted-number" value="${item.amount.toLocaleString('ko-KR')}" placeholder="금액">
+                        <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                    </div>
+                `);
+            });
+            setupFormattedInputs();
+        }
+
+        function addModalExpenseRow() {
+            const container = document.getElementById('modalFixedExpContainer');
+            container.insertAdjacentHTML('beforeend', `
+                <div class="expense-row">
+                    <input type="text" class="form-control bg-dark text-white border-secondary expense-name" placeholder="항목명">
+                    <input type="text" class="form-control bg-dark text-white border-secondary text-end expense-amount formatted-number" placeholder="금액">
+                    <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                </div>
+            `);
+            setupFormattedInputs();
+        }
+
+        function openModal(idx) {
+            currentEditIndex = idx;
+            const d = monthlyData[idx];
+            document.getElementById('modalMonthText').innerText = d.monthStr;
+            
+            document.getElementById('modalContract').value = d.contractSalary.toLocaleString('ko-KR');
+            document.getElementById('modalBonus').value = d.bonus.toLocaleString('ko-KR');
+            document.getElementById('modalFixedSav').value = d.fixedSavings.toLocaleString('ko-KR');
+
+            renderModalFixedList(d.fixedExpensesList || []);
+            setupFormattedInputs();
+
+            if(!editModal) {
+                editModal = new bootstrap.Modal(document.getElementById('editMonthModal'));
+            }
+            editModal.show();
+        }
+
+        function saveModal() {
+            const idx = currentEditIndex;
+            if(idx < 0) return;
+
+            const newContract = getUnformattedValue(document.getElementById('modalContract').value);
+            const newBonus = getUnformattedValue(document.getElementById('modalBonus').value);
+            const newFixedSav = getUnformattedValue(document.getElementById('modalFixedSav').value);
+
+            let newFixedList = [];
+            document.querySelectorAll('#modalFixedExpContainer .expense-row').forEach(row => {
+                const name = row.querySelector('.expense-name').value.trim();
+                const amount = getUnformattedValue(row.querySelector('.expense-amount').value);
+                if (name !== '' && amount >= 0) {
+                    newFixedList.push({ name, amount });
+                }
+            });
+
+            monthlyData[idx].bonus = newBonus;
+
+            for (let i = idx; i < monthlyData.length; i++) {
+                monthlyData[i].contractSalary = newContract;
+                monthlyData[i].fixedSavings = newFixedSav;
+                monthlyData[i].fixedExpensesList = JSON.parse(JSON.stringify(newFixedList));
+            }
+
+            editModal.hide();
+            renderTable();
+            saveToServer();
+        }
+
+        function updateChart(labels, deductionsData, savedData, dynamicExpenseDatasets, variableData) {
+            const ctx = document.getElementById('salaryChart').getContext('2d');
+            if (myChart) myChart.destroy();
+
+            Chart.defaults.color = '#ffffff';
+            Chart.defaults.font.family = 'Pretendard, sans-serif';
+
+            // 동적 고정 지출 항목들을 범례에서 숨기기 위해 isHiddenFromLegend 속성 추가
+            dynamicExpenseDatasets.forEach(ds => {
+                ds.isHiddenFromLegend = true;
+            });
+
+            let datasets = [
+                {
+                    type: 'bar',
+                    label: '공제액 (세금/4대보험)',
+                    data: deductionsData,
+                    backgroundColor: 'rgba(160, 160, 160, 0.4)',
+                    borderColor: '#a0a0a0',
+                    borderWidth: 1,
+                    stack: 'Stack 0',
+                    yAxisID: 'y'
+                },
+                {
+                    type: 'bar',
+                    label: '고정 지출 (통합)', // 범례에만 표시할 더미 데이터셋
+                    data: [], 
+                    backgroundColor: 'rgba(255, 218, 106, 0.7)',
+                    borderColor: '#ffda6a',
+                    borderWidth: 1,
+                    isDummyFixed: true, // 식별용 플래그
+                },
+                ...dynamicExpenseDatasets.map(ds => ({ ...ds, type: 'bar', yAxisID: 'y' })),
+                {
+                    type: 'bar',
+                    label: '변동 지출',
+                    data: variableData,
+                    backgroundColor: 'rgba(13, 202, 240, 0.7)',
+                    borderColor: '#0dcaf0',
+                    borderWidth: 1,
+                    stack: 'Stack 0',
+                    yAxisID: 'y'
+                },
+                {
+                    type: 'bar',
+                    label: '저축액',
+                    data: savedData,
+                    backgroundColor: 'rgba(57, 255, 20, 0.7)',
+                    borderColor: '#39ff14',
+                    borderWidth: 1,
+                    stack: 'Stack 0',
+                    yAxisID: 'y'
+                }
+            ];
+
+            myChart = new Chart(ctx, {
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false }, // 마우스 오버 시 같은 x축 데이터 한 번에 표시
+                    scales: {
+                        x: { stacked: true, grid: { display: false } },
+                        y: { 
+                            type: 'linear', display: true, position: 'left', stacked: true, 
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                        }
+                    },
+                    plugins: {
+                        legend: { 
+                            position: 'top', 
+                            labels: { 
+                                color: '#ffffff', usePointStyle: true, boxWidth: 8,
+                                filter: function(item, chart) {
+                                    return !chart.datasets[item.datasetIndex].isHiddenFromLegend;
+                                }
+                            },
+                            onClick: function(e, legendItem, legend) {
+                                const index = legendItem.datasetIndex;
+                                const ci = legend.chart;
+                                if (ci.datasets[index].isDummyFixed) {
+                                    const meta = ci.getDatasetMeta(index);
+                                    meta.hidden = meta.hidden === null ? true : null;
+                                    ci.data.datasets.forEach((ds, i) => {
+                                        if (ds.isHiddenFromLegend) {
+                                            ci.getDatasetMeta(i).hidden = meta.hidden;
+                                        }
+                                    });
+                                    ci.update();
+                                } else {
+                                    Chart.defaults.plugins.legend.onClick.call(this, e, legendItem, legend);
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.9)',
+                            titleColor: '#39ff14',
+                            bodyColor: '#ffffff',
+                            borderColor: 'rgba(57,255,20,0.5)',
+                            borderWidth: 1,
+                            itemSort: function(a, b) {
+                                return b.parsed.y - a.parsed.y;
+                            },
+                            callbacks: {
+                                label: function(context) {
+                                    if (context.dataset.isDummyFixed) return null; 
+                                    return context.dataset.label + ': ' + Math.round(context.parsed.y).toLocaleString() + '원';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        
+        function updateCumulativeChart(labels, cumulativeData) {
+            const ctx = document.getElementById('cumulativeChart').getContext('2d');
+            if (cumulativeChartObj) cumulativeChartObj.destroy();
+
+            cumulativeChartObj = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '누적 저축액',
+                        data: cumulativeData,
+                        borderColor: '#39ff14',
+                        backgroundColor: 'rgba(57, 255, 20, 0.2)',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: '#39ff14',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#39ff14',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { 
+                            type: 'linear', display: true, position: 'left',
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: '#39ff14' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.9)',
+                            titleColor: '#39ff14',
+                            bodyColor: '#ffffff',
+                            borderColor: 'rgba(57, 255, 20, 0.5)',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + Math.round(context.parsed.y).toLocaleString() + '원';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function saveToServer() {
+            const settings = { monthlyData: monthlyData };
+            try {
+                const res = await fetch('/api/admin/salary-settings', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}` 
+                    },
+                    body: JSON.stringify(settings)
+                });
+                
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+                        window.location.href = 'index.html#admin';
+                    } else {
+                        console.error('Server save error');
+                    }
+                }
+            } catch (err) {
+                console.error('Network error during save:', err);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", loadSettings);
+    </script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="admin_assets.html">
+                <i class="fas fa-chevron-left me-2" style="font-size: 0.9rem; color: #ffffff;"></i> 
+                <span style="color: #ffffff;">자산관리</span><span class="text-accent ms-2">월별 급여 상세 관리</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="container px-3 px-md-4">
+        <div class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="summary-box h-100 d-flex flex-column justify-content-center">
+                    <h6 class="text-white mb-2 fw-bold">월평균 실수령액</h6>
+                    <div class="summary-val mb-3" id="avgNetPay" style="font-size: 2.2rem; color: #39ff14;">₩ 0</div>
+                    <div class="text-light-gray text-center mx-auto" style="font-size: 0.95rem; line-height: 1.6;">
+                        <span class="text-white fw-bold">원천징수 연봉: <span id="annualGrossPay" class="text-warning">₩ 0</span></span><br>
+                        <span class="text-white fw-bold">총 실수령 연봉: <span id="annualNetPay" class="text-accent">₩ 0</span></span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="card h-100">
+                    <div class="card-body p-3">
+                        <div class="chart-container" style="height: 250px;">
+                            <canvas id="salaryChart"></canvas>
+                        </div>
+                        <div class="text-center mt-2 text-light-gray" style="font-size: 0.8rem;">
+                            * 막대의 각 항목에 마우스를 올리면 세부 내역이 <strong>금액이 큰 순서대로(내림차순)</strong> 정렬되어 표시됩니다.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div><i class="fas fa-calendar-alt me-2 text-accent"></i> 월별 상세 내역</div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-dark text-center align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>지급월</th>
+                                        <th>세전 월급</th>
+                                        <th class="text-accent">실수령액</th>
+                                        <th style="color: #ffda6a;">고정 지출</th>
+                                        <th style="color: #39ff14;">저축액</th>
+                                        <th class="text-info">변동 지출</th>
+                                        <th class="text-white">누적 저축</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="salaryTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-12">
+                <div class="summary-box d-flex flex-column justify-content-center" style="border-color: rgba(57, 255, 20, 0.4); background: linear-gradient(135deg, rgba(20,20,20,0.8), rgba(57, 255, 20, 0.05));">
+                    <h6 class="text-white mb-2 fw-bold">총 저축액 (누적)</h6>
+                    <div class="summary-val" id="totalSaved" style="font-size: 2.2rem; color: #39ff14;">₩ 0</div>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="card h-100">
+                    <div class="card-body p-3">
+                        <div class="chart-container" style="height: 250px;">
+                            <canvas id="cumulativeChart"></canvas>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editMonthModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content text-white" style="background-color: #1a1a1a; border: 1px solid #39ff14;">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title fw-bold"><span id="modalMonthText" class="text-accent"></span> 금액 설정</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-white fw-bold">계약 연봉 (원)</label>
+                        <input type="text" class="form-control bg-dark text-white border-secondary fw-bold formatted-number" id="modalContract">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white fw-bold">보너스 / 성과급 (원)</label>
+                        <input type="text" class="form-control bg-dark text-white border-secondary fw-bold formatted-number" id="modalBonus">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold" style="color: #39ff14;">고정 저축액 (원)</label>
+                        <input type="text" class="form-control bg-dark text-white border-secondary fw-bold formatted-number" id="modalFixedSav">
+                    </div>
+                    <div class="mb-4 border-top border-secondary pt-3"></div>
+                    
+                    <div class="mb-2">
+                        <label class="form-label fw-bold" style="color: #ffda6a;">고정 지출 관리 (세부 항목)</label>
+                        <div id="modalFixedExpContainer">
+                            <!-- 항목들이 동적으로 추가됨 -->
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-warning w-100 mt-2" onclick="addModalExpenseRow()">+ 항목 추가</button>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                    <button type="button" class="btn fw-bold" style="background-color: #39ff14; color: #000;" onclick="saveModal()">적용하기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

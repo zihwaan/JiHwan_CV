@@ -29,22 +29,7 @@ try {
 
 const dbFile = path.join(DATA_DIR, 'db.json');
 console.log(`Using database file: ${dbFile}`);
-const defaultData = { 
-    comments: [], 
-    logins: [], 
-    adminMemos: [], 
-    leaderboard: [], 
-    salarySettings: { 
-        baseSalary: 58000000, 
-        fixedExpenses: [
-            {id: nanoid(), name: '월세', amount: 600000}, 
-            {id: nanoid(), name: '통신비', amount: 100000}
-        ], 
-        taiRate: 100, 
-        opiRate: 20 
-    } 
-};
-
+const defaultData = { comments: [], logins: [], adminMemos: [], leaderboard: [], salarySettings: { monthlyData: [] } };
 const adapter = new JSONFile(dbFile);
 const db = new Low(adapter, defaultData);
 
@@ -57,6 +42,7 @@ async function initializeDatabase() {
                 db.data[key] = defaultData[key];
             }
         }
+        await db.write();
         console.log('Database initialized and read successfully.');
     } catch (initDbError) {
         console.error('Fatal error initializing database:', initDbError);
@@ -67,30 +53,35 @@ async function initializeDatabase() {
 // Initialize DB before starting the app
 await initializeDatabase();
 
+
 const app = express();
-app.use(cors());
+app.use(cors({ origin: DOMAIN || true }));
 app.use(express.json());
 app.use(express.static(path.resolve()));
 
-// ──────────────────────── UTILS ──────────────────────────
+// ──────────────────────── UTILS ────────────────────────
 async function verifyKakaoToken(token) {
-  if (!token) return null;
   try {
-    const res = await axios.get('https://kapi.kakao.com/v2/user/me', {
+    const { data } = await axios.get('https://kapi.kakao.com/v2/user/me', {
       headers: { Authorization: `Bearer ${token}` }
     });
+
+    let img = data.properties?.profile_image ||
+              data.kakao_account?.profile?.profile_image_url || '';
+    img = img.replace(/^http:\/\//, 'https://');
+
     return {
-      id   : res.data.id,
-      name : res.data.properties?.nickname || 'Unknown',
-      image: res.data.properties?.profile_image || ''
+      name  : data.properties?.nickname ||
+              data.kakao_account?.profile?.nickname ||
+              '익명',
+      image : img || '/assets/default_avatar.png'
     };
-  } catch (err) {
+  } catch (_) {
     return null;
   }
 }
 
 function isAdmin(token) {
-  if (!token) return false;
   try {
     jwt.verify(token, process.env.ADMIN_PASS);
     return true;
@@ -138,7 +129,7 @@ app.post('/api/comments', async (req, res) => {
   }
 });
 
-// 로그인 이력 기록
+// ────────────────── 로그인 이력 기록 ───────────────────
 app.post('/api/logins', async (req, res) => {
   const token = (req.headers.authorization || '').split(' ')[1];
   const user = await verifyKakaoToken(token);
@@ -162,7 +153,6 @@ app.post('/api/logins', async (req, res) => {
   }
 });
 
-// 관리자 로그인
 app.post('/api/admin/login', (req, res) => {
   if (req.body.password === process.env.ADMIN_PASS) {
     const token = jwt.sign({ admin: true }, process.env.ADMIN_PASS, { expiresIn: '1h' });
@@ -171,7 +161,19 @@ app.post('/api/admin/login', (req, res) => {
   res.status(401).json({ error: 'WRONG_PASS' });
 });
 
-// 댓글 삭제 (관리자 권한)
+app.get('/api/admin/logins', async (req, res) => {
+  const token = (req.headers.authorization || '').split(' ')[1];
+  if (!isAdmin(token)) return res.status(401).json({ error: 'NOT_ADMIN' });
+
+  try {
+    await db.read();
+    db.data.logins = db.data.logins || [];
+    res.json(db.data.logins.sort((a, b) => b.time - a.time));
+  } catch (dbError) {
+    res.status(500).json({ error: 'DATABASE_READ_ERROR' });
+  }
+});
+
 app.delete('/api/comments/:id', async (req, res) => {
   const token = (req.headers.authorization || '').split(' ')[1];
   if (!isAdmin(token)) return res.status(401).json({ error: 'NOT_ADMIN' });
@@ -181,7 +183,7 @@ app.delete('/api/comments/:id', async (req, res) => {
     db.data.comments = db.data.comments || [];
     const initialLength = db.data.comments.length;
     db.data.comments = db.data.comments.filter((c) => c.id !== req.params.id);
-    if (db.data.comments.length === initialLength) return res.status(404).json({ error: 'NOT_FOUND' });
+    if (db.data.comments.length === initialLength) return res.status(404).json({ error: 'COMMENT_NOT_FOUND' });
     await db.write();
     res.json({ ok: true });
   } catch (dbError) {
@@ -189,7 +191,7 @@ app.delete('/api/comments/:id', async (req, res) => {
   }
 });
 
-// 리더보드
+// ────────────────── LEADERBOARD API ────────────────────
 app.get('/api/leaderboard', async (req, res) => {
   try {
     await db.read();
@@ -203,7 +205,18 @@ app.get('/api/leaderboard', async (req, res) => {
 
 app.post('/api/leaderboard', async (req, res) => {
   const { name, score, message } = req.body;
-  const newEntry = { id: nanoid(), name: (name||'').slice(0,10), score, message: (message||'').slice(0,30), time: Date.now() };
+  if (!name?.trim() || !message?.trim() || typeof score !== 'number') {
+    return res.status(400).json({ error: 'INVALID_DATA' });
+  }
+
+  const newEntry = {
+    id: nanoid(),
+    name: name.trim().slice(0, 10),
+    score,
+    message: message.trim().slice(0, 30),
+    time: Date.now(),
+  };
+
   try {
     await db.read();
     db.data.leaderboard = db.data.leaderboard || [];
@@ -217,6 +230,7 @@ app.post('/api/leaderboard', async (req, res) => {
 
 // ────────────────── ADMIN MEMOS API ────────────────────
 const adminMemosRouter = express.Router();
+
 adminMemosRouter.use((req, res, next) => {
   const token = (req.headers.authorization || '').split(' ')[1];
   if (!isAdmin(token)) return res.status(401).json({ error: 'NOT_ADMIN' });
@@ -229,13 +243,19 @@ adminMemosRouter.get('/', async (req, res) => {
     db.data.adminMemos = db.data.adminMemos || [];
     res.json(db.data.adminMemos.sort((a, b) => b.time - a.time));
   } catch (dbError) {
-    res.status(500).json({ error: 'DATABASE_ERROR' });
+    res.status(500).json({ error: 'DATABASE_READ_ERROR' });
   }
 });
 
 adminMemosRouter.post('/', async (req, res) => {
   const { title, content, color } = req.body;
-  const newMemo = { id: nanoid(), title, content, color: color || '#e9ecef', time: Date.now() };
+  const newMemo = {
+    id: nanoid(),
+    title: title.trim(),
+    content: content.trim(),
+    color: color || '#e9ecef',
+    time: Date.now(),
+  };
   try {
     await db.read();
     db.data.adminMemos = db.data.adminMemos || [];
@@ -243,35 +263,47 @@ adminMemosRouter.post('/', async (req, res) => {
     await db.write();
     res.status(201).json(newMemo);
   } catch (dbError) {
-    res.status(500).json({ error: 'DATABASE_ERROR' });
+    res.status(500).json({ error: 'DATABASE_WRITE_ERROR' });
   }
 });
 
 adminMemosRouter.put('/:id', async (req, res) => {
+  const { id } = req.params;
   const { title, content, color } = req.body;
+
   try {
     await db.read();
     db.data.adminMemos = db.data.adminMemos || [];
-    const index = db.data.adminMemos.findIndex(m => m.id === req.params.id);
-    if (index === -1) return res.status(404).json({ error: 'NOT_FOUND' });
-    
-    db.data.adminMemos[index] = {
-      ...db.data.adminMemos[index],
-      title: title !== undefined ? title : db.data.adminMemos[index].title,
-      content: content !== undefined ? content : db.data.adminMemos[index].content,
-      color: color !== undefined ? color : db.data.adminMemos[index].color
+    const memoIndex = db.data.adminMemos.findIndex((memo) => memo.id === id);
+
+    if (memoIndex === -1) return res.status(404).json({ error: 'MEMO_NOT_FOUND' });
+
+    const originalMemo = db.data.adminMemos[memoIndex];
+    const updatedMemo = {
+      ...originalMemo,
+      title: title?.trim() !== undefined ? title.trim() : originalMemo.title,
+      content: content?.trim() !== undefined ? content.trim() : originalMemo.content,
+      color: color !== undefined ? color : originalMemo.color,
+      time: Date.now(),
     };
+
+    db.data.adminMemos[memoIndex] = updatedMemo;
     await db.write();
-    res.json(db.data.adminMemos[index]);
+    res.json(updatedMemo);
   } catch (dbError) {
     res.status(500).json({ error: 'DATABASE_ERROR' });
   }
 });
 
 adminMemosRouter.delete('/:id', async (req, res) => {
+  const { id } = req.params;
   try {
     await db.read();
-    db.data.adminMemos = (db.data.adminMemos || []).filter(m => m.id !== req.params.id);
+    db.data.adminMemos = db.data.adminMemos || [];
+    const initialLength = db.data.adminMemos.length;
+    db.data.adminMemos = db.data.adminMemos.filter((memo) => memo.id !== id);
+
+    if (db.data.adminMemos.length === initialLength) return res.status(404).json({ error: 'MEMO_NOT_FOUND' });
     await db.write();
     res.json({ ok: true });
   } catch (dbError) {
@@ -287,7 +319,7 @@ app.get('/api/admin/salary-settings', async (req, res) => {
   if (!isAdmin(token)) return res.status(401).json({ error: 'NOT_ADMIN' });
   try {
     await db.read();
-    res.json(db.data.salarySettings || defaultData.salarySettings);
+    res.json(db.data.salarySettings || { monthlyData: [] });
   } catch (dbError) {
     res.status(500).json({ error: 'DATABASE_ERROR' });
   }
@@ -306,12 +338,15 @@ app.post('/api/admin/salary-settings', async (req, res) => {
   }
 });
 
-// SPA Fallback
+// ─────────────────── SPA Fallback ──────────────────────
 app.get('*', (_, res) => {
     res.sendFile(path.join(path.resolve(), 'index.html'));
 });
 
+// ──────────────────── SERVER ON ────────────────────────
 const PORT = process.env.PORT || 8080;
+const HOST_MSG = DOMAIN || `http://localhost:${PORT}`;
+
 app.listen(PORT, () => {
-  console.log(`🚀 Server ready @ ${PORT}`);
+  console.log(`🚀 Server ready @ ${HOST_MSG}`);
 });

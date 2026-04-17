@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>변지환 자산관리 현황</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/z_favicon.svg" />
+
+    <!-- Icon & Font -->
+    <script src="https://use.fontawesome.com/releases/v6.1.0/js/all.js" crossorigin="anonymous"></script>
+    <link href="https://webfontworld.github.io/pretendard/Pretendard.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: "Pretendard", sans-serif;
+            background-color: #050505;
+            color: #ffffff;
+            padding-top: 86px;
+            padding-bottom: 60px;
+        }
+        /* Glassmorphism Navbar */
+        .navbar {
+            background-color: rgba(5, 5, 5, 0.8) !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(57, 255, 20, 0.2) !important;
+        }
+        .navbar-brand {
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        .text-accent {
+            color: #39ff14 !important; /* Neon Green */
+        }
+        
+        /* Trendy Cards */
+        .card {
+            background-color: rgba(20, 20, 20, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(57, 255, 20, 0.12);
+            border-color: rgba(57, 255, 20, 0.3);
+        }
+        .card-header {
+            background-color: transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-weight: 600;
+            padding: 1.2rem 1.5rem;
+            color: #f0f0f0;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* Typography */
+        .asset-value {
+            font-size: clamp(2rem, 5vw, 2.8rem);
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: #39ff14;
+            text-shadow: 0 0 25px rgba(57, 255, 20, 0.4);
+            line-height: 1.2;
+        }
+        .sub-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        .return-rate.positive { color: #39ff14; }
+        .return-rate.negative { color: #ff4757; }
+
+        /* Progress Bar for Liquidity */
+        .liquidity-bar-container {
+            margin-top: 10px;
+        }
+        .progress {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            height: 14px;
+            overflow: visible;
+        }
+        .progress-bar {
+            border-radius: 50px;
+            position: relative;
+        }
+        .bg-liquid {
+            background: linear-gradient(90deg, #198754, #39ff14);
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.5);
+        }
+        .bg-non-liquid {
+            background: linear-gradient(90deg, #0dcaf0, #0d6efd);
+            box-shadow: 0 0 15px rgba(13, 202, 240, 0.5);
+        }
+        .liquidity-label {
+            font-size: 0.85rem;
+            color: #f0f0f0;
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 320px;
+            width: 100%;
+        }
+
+        /* Custom Table Styling */
+        .table-dark {
+            --bs-table-bg: transparent;
+            --bs-table-striped-bg: rgba(255, 255, 255, 0.02);
+            --bs-table-hover-bg: rgba(57, 255, 20, 0.05);
+            color: #e0e0e0;
+            border-color: rgba(255, 255, 255, 0.08);
+            margin-bottom: 0;
+        }
+        thead th {
+            color: #f0f0f0;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            border-bottom-width: 1px;
+            padding-top: 1.2rem;
+            padding-bottom: 1.2rem;
+        }
+        tbody td {
+            padding-top: 1.2rem;
+            padding-bottom: 1.2rem;
+            vertical-align: middle;
+        }
+        .badge {
+            font-weight: 500;
+            padding: 0.6em 0.8em;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+        /* Glowing Badges */
+        .badge.bg-success { background-color: rgba(57, 255, 20, 0.15) !important; color: #39ff14 !important; border: 1px solid rgba(57, 255, 20, 0.4); }
+        .badge.bg-primary { background-color: rgba(13, 110, 253, 0.15) !important; color: #6ea8fe !important; border: 1px solid rgba(13, 110, 253, 0.4); }
+        .badge.bg-info { background-color: rgba(13, 202, 240, 0.15) !important; color: #6edff6 !important; border: 1px solid rgba(13, 202, 240, 0.4); }
+        .badge.bg-warning { background-color: rgba(255, 193, 7, 0.15) !important; color: #ffda6a !important; border: 1px solid rgba(255, 193, 7, 0.4); }
+        .badge.bg-secondary { background-color: rgba(108, 117, 125, 0.15) !important; color: #adb5bd !important; border: 1px solid rgba(108, 117, 125, 0.4); }
+    </style>
+
+    <script>
+        // 관리자 권한 확인 (Front-end 1차 검증)
+        const adminToken = localStorage.getItem('admin_token');
+        if (!adminToken) {
+            alert('관리자 권한이 필요합니다. 관리자 로그인 후 이용해주세요.');
+            window.location.href = 'index.html#admin';
+        }
+    </script>
+</head>
+<body id="page-top">
+    <!-- 내비게이션 바 -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <i class="fas fa-chevron-left me-2" style="font-size: 0.9rem; color: #f0f0f0;"></i> 
+                <span style="color: #fff;">변지환</span><span class="text-accent ms-2">자산관리 현황</span>
+            </a>
+            <span class="navbar-text d-none d-md-block text-white-50" style="font-size: 0.9rem;">
+                <i class="fas fa-shield-alt me-1 text-accent"></i> Secure Portfolio
+            </span>
+        </div>
+    </nav>
+
+    <div class="container px-3 px-md-4">
+        <!-- 상단 요약 (총자산 & 유동성) -->
+        <div class="row g-4 mb-4">
+            <!-- 총 자산 -->
+            <div class="col-12 col-lg-6">
+                <div class="card h-100 py-4 px-3">
+                    <div class="card-body d-flex flex-column justify-content-center text-center text-lg-start">
+                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-center mb-2">
+                            <h5 class="text-light text-uppercase" style="font-size: 0.9rem; letter-spacing: 1px;">Total Net Worth (KRW)</h5>
+                            <span class="badge bg-success mt-2 mt-lg-0"><i class="fas fa-sync-alt me-1"></i> 실시간 연동</span>
+                        </div>
+                        <div class="asset-value my-3">₩ 182,500,000</div>
+                        <div class="d-flex flex-column flex-sm-row justify-content-center justify-content-lg-start gap-3 mt-2">
+                            <p class="mb-0" style="font-size: 0.95rem; color: #ffffff;">
+                                전월 대비 <span class="return-rate positive ms-1 fw-bold"><i class="fas fa-arrow-up"></i> 4.1%</span>
+                            </p>
+                            <p class="mb-0" style="font-size: 0.95rem; color: #ffffff;">
+                                누적 수익률 <span class="return-rate positive ms-1 fw-bold">+ 15.8%</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 유동성 분석 (유동자산 vs 비유동자산) -->
+            <div class="col-12 col-lg-6">
+                <div class="card h-100 py-4 px-3">
+                    <div class="card-body d-flex flex-column justify-content-center">
+                        <h5 class="text-light text-uppercase mb-4 text-center text-lg-start" style="font-size: 0.9rem; letter-spacing: 1px;">Asset Liquidity</h5>
+                        
+                        <div class="row text-center text-lg-start mb-3">
+                            <div class="col-6 border-end border-secondary border-opacity-25">
+                                <div class="text-light mb-1" style="font-size: 0.8rem;"><span class="dot" style="background-color: #39ff14;"></span>유동 자산 (현금/주식)</div>
+                                <div class="sub-value">₩ 136,875,000</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-light mb-1" style="font-size: 0.8rem;"><span class="dot" style="background-color: #0dcaf0;"></span>비유동 자산 (IRP/연금)</div>
+                                <div class="sub-value">₩ 45,625,000</div>
+                            </div>
+                        </div>
+
+                        <div class="liquidity-bar-container mt-2">
+                            <div class="progress">
+                                <div class="progress-bar bg-liquid" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+                                <div class="progress-bar bg-non-liquid" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <div class="liquidity-label">
+                                <span><strong class="text-white">75%</strong> 유동성 (즉시 현금화 가능)</span>
+                                <span><strong class="text-white">25%</strong> 장기 보유 (은퇴/연금)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 차트 영역 -->
+        <div class="row g-4 mb-4">
+            <!-- 자산 구성 (Doughnut Chart) -->
+            <div class="col-12 col-lg-5">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-chart-pie me-2 text-accent"></i> Portfolio Allocation</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="assetPieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 월별 수익률 추이 (Line Chart) -->
+            <div class="col-12 col-lg-7">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-chart-line me-2 text-accent"></i> Monthly Trend</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="assetLineChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 세부 자산 리스트 -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-list me-2 text-accent"></i> Asset Details
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover text-center align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>자산 성격</th>
+                                        <th>분류</th>
+                                        <th class="text-start ps-4">종목 / 자산명</th>
+                                        <th>비중</th>
+                                        <th class="text-end pe-4">평가 금액</th>
+                                        <th>수익률</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- 유동 자산 -->
+                                    <tr>
+                                        <td><span class="badge bg-success">유동 자산</span></td>
+                                        <td><span class="badge bg-primary">국내 주식</span></td>
+                                        <td class="text-start fw-bold text-white ps-4">삼성전자</td>
+                                        <td class="text-light">25%</td>
+                                        <td class="text-end pe-4 font-monospace">₩ 45,625,000</td>
+                                        <td class="return-rate positive">+12.4%</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge bg-success">유동 자산</span></td>
+                                        <td><span class="badge bg-info">해외 주식</span></td>
+                                        <td class="text-start fw-bold text-white ps-4">Apple (AAPL)</td>
+                                        <td class="text-light">20%</td>
+                                        <td class="text-end pe-4 font-monospace">₩ 36,500,000</td>
+                                        <td class="return-rate positive">+25.1%</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge bg-success">유동 자산</span></td>
+                                        <td><span class="badge bg-warning">암호화폐</span></td>
+                                        <td class="text-start fw-bold text-white ps-4">Bitcoin (BTC)</td>
+                                        <td class="text-light">15%</td>
+                                        <td class="text-end pe-4 font-monospace">₩ 27,375,000</td>
+                                        <td class="return-rate positive">+45.2%</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge bg-success">유동 자산</span></td>
+                                        <td><span class="badge bg-success">현금/ISA</span></td>
+                                        <td class="text-start fw-bold text-white ps-4">CMA / 중개형 ISA</td>
+                                        <td class="text-light">15%</td>
+                                        <td class="text-end pe-4 font-monospace">₩ 27,375,000</td>
+                                        <td class="text-light">0.0%</td>
+                                    </tr>
+                                    <!-- 비유동 자산 -->
+                                    <tr>
+                                        <td><span class="badge bg-secondary">비유동 자산</span></td>
+                                        <td><span class="badge bg-secondary">퇴직연금</span></td>
+                                        <td class="text-start fw-bold text-white ps-4">IRP (TDF 2050)</td>
+                                        <td class="text-light">15%</td>
+                                        <td class="text-end pe-4 font-monospace">₩ 27,375,000</td>
+                                        <td class="return-rate positive">+6.8%</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="badge bg-secondary">비유동 자산</span></td>
+                                        <td><span class="badge bg-secondary">개인연금</span></td>
+                                        <td class="text-start fw-bold text-white ps-4">
+                                            KODEX 미국S&P500TR ETF (삼성증권)<br>
+                                            <span class="text-muted fw-normal" style="font-size: 0.85rem;"><i class="fas fa-plus-circle fa-sm me-1 text-accent"></i>월 납입: 본인 14만 + 회사지원 14만 (총 28만)</span>
+                                        </td>
+                                        <td class="text-light">10%</td>
+                                        <td class="text-end pe-4 font-monospace">₩ 18,250,000</td>
+                                        <td class="return-rate positive">+11.2%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 미래 자산 시뮬레이션 -->
+        <div class="row g-4 mb-5">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
+                        <span><i class="fas fa-rocket me-2 text-accent"></i> Future Wealth Projection (10 Years)</span>
+                        <span class="badge bg-secondary text-light border-0 mt-2 mt-md-0" style="font-size: 0.75rem; font-weight: normal; letter-spacing: 0px;">매월 200만 원 저축 & 연평균 수익률 3.0% (보수적) 기준</span>
+                    </div>
+                    <div class="card-body">
+                        <!-- Goal Tracker -->
+                        <div class="mb-4 p-3 rounded" style="background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <h6 class="mb-0 text-white"><i class="fas fa-flag-checkered me-2" style="color: #ffc107;"></i> 3년에 1억 만들기 목표 현황</h6>
+                                    <small class="text-light">목표: 월 278만 원 저축 필요 | 현재: 월 200만 원 저축 중</small>
+                                </div>
+                                <div class="text-end">
+                                    <h5 class="mb-0" style="color: #39ff14;">예상 달성률: 75.2%</h5>
+                                </div>
+                            </div>
+                            <div class="progress mt-3" style="height: 20px; background-color: rgba(255, 255, 255, 0.1);">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 75.2%; background-color: #39ff14; color: #000; font-weight: bold; font-size: 0.8rem;" aria-valuenow="75.2" aria-valuemin="0" aria-valuemax="100">7,524만 원 예상</div>
+                            </div>
+                            <small class="text-light mt-2 d-block text-end">3년 뒤 예상 추가 자산 (원금 7,200만 원 + 투자 수익 약 324만 원)</small>
+                        </div>
+
+                        <div class="chart-container" style="height: 350px;">
+                            <canvas id="futureProjectionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 자산 관리 팁 및 연동 메뉴 -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card border-0" style="background: linear-gradient(135deg, rgba(20,20,20,0.8), rgba(57,255,20,0.05));">
+                    <div class="card-body p-4">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                            <div class="mb-4 mb-md-0">
+                                <h5 class="text-white fw-bold mb-3"><i class="fas fa-lightbulb text-warning me-2"></i> 핵심 자산관리 및 절세 가이드</h5>
+                                <ul class="list-unstyled text-light mb-0" style="font-size: 0.95rem; line-height: 1.6; color: #dcdcdc !important;">
+                                    <li class="mb-2"><i class="fas fa-check text-accent me-2"></i> <strong>연금계좌 (연금저축):</strong> 연 600만 원 한도 세액공제 혜택 (13.2% ~ 16.5% 환급)</li>
+                                    <li class="mb-2"><i class="fas fa-check text-accent me-2"></i> <strong>퇴직연금 (IRP):</strong> 연금저축 포함 최대 연 900만 원 세액공제 한도 확보 가능</li>
+                                    <li class="mb-2"><i class="fas fa-check text-accent me-2"></i> <strong>중개형 ISA:</strong> 3년 만기 시 비과세 혜택 (일반형 200만, 서민형 400만) 및 손익통산 적용</li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-accent me-2"></i> <strong>소비 소득공제 황금비율:</strong> 총급여의 25%까지는 혜택이 좋은 신용카드를, 초과분은 공제율(30%)이 높은 체크카드/현금영수증 사용을 권장합니다.
+                                    </li>
+                                    <li><i class="fas fa-check text-accent me-2"></i> <strong>삼성전자 복지 (개인연금):</strong> 회사 연계 개인연금 가입 시 임직원 납입액의 <strong>절반(50%)</strong>을 회사에서 추가 지원! (단, 연봉의 3% 상한)</li>
+                                </ul>
+                            </div>
+                            <div class="text-md-end text-center">
+                                <a href="admin_salary.html" class="btn btn-lg w-100 fw-bold" style="background-color: #39ff14; color: #000; box-shadow: 0 0 15px rgba(57, 255, 20, 0.4);">
+                                    <i class="fas fa-coins me-2"></i> 급여 및 성과급 관리 (이동)
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            Chart.defaults.color = '#f0f0f0';
+            Chart.defaults.font.family = 'Pretendard, sans-serif';
+
+            // 1. 자산 구성 비중 (Doughnut Chart - Multi-level)
+            const ctxPie = document.getElementById('assetPieChart').getContext('2d');
+            new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: ['국내 주식 (유동)', '해외 주식 (유동)', '암호화폐 (유동)', '현금/ISA (유동)', '퇴직/개인연금 (비유동)'],
+                    datasets: [
+                        {
+                            label: '상세 비중',
+                            data: [25, 20, 15, 15, 25],
+                            backgroundColor: [
+                                '#0d6efd', // Blue
+                                '#0dcaf0', // Cyan
+                                '#ffc107', // Yellow
+                                '#198754', // Dark Green
+                                '#6c757d'  // Gray
+                            ],
+                            borderColor: '#141414',
+                            borderWidth: 2,
+                            hoverOffset: 4
+                        },
+                        {
+                            label: '유동성 분류',
+                            data: [25, 20, 15, 15, 25], // Sums match liquidity (75%) and non-liquidity (25%)
+                            backgroundColor: [
+                                '#39ff14', // Neon Green (Liquid)
+                                '#39ff14', 
+                                '#39ff14', 
+                                '#39ff14', 
+                                '#0a58ca'  // Dark Blue (Non-Liquid) to differentiate from Cyan
+                            ],
+                            borderColor: '#141414',
+                            borderWidth: 2,
+                            hoverOffset: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false // Hide default legend as labels are complex
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleColor: '#39ff14',
+                            bodyColor: '#fff',
+                            borderColor: 'rgba(57,255,20,0.3)',
+                            borderWidth: 1,
+                            padding: 10,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += context.parsed + '%';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '55%'
+                },
+                plugins: [{
+                    id: 'customLegend',
+                    afterDraw: (chart) => {
+                        const ctx = chart.ctx;
+                        ctx.save();
+                        ctx.font = '14px Pretendard';
+                        ctx.fillStyle = '#39ff14';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('유동 75%', chart.width / 2, chart.height / 2 - 10);
+                        ctx.fillStyle = '#0dcaf0';
+                        ctx.fillText('비유동 25%', chart.width / 2, chart.height / 2 + 15);
+                        ctx.restore();
+                    }
+                }]
+            });
+
+            // 2. 월별 총자산 추이 (Line Chart)
+            const ctxLine = document.getElementById('assetLineChart').getContext('2d');
+            
+            let gradientTotal = ctxLine.createLinearGradient(0, 0, 0, 300);
+            gradientTotal.addColorStop(0, 'rgba(57, 255, 20, 0.4)'); 
+            gradientTotal.addColorStop(1, 'rgba(57, 255, 20, 0.0)'); 
+
+            let gradientLiquid = ctxLine.createLinearGradient(0, 0, 0, 300);
+            gradientLiquid.addColorStop(0, 'rgba(13, 202, 240, 0.3)'); 
+            gradientLiquid.addColorStop(1, 'rgba(13, 202, 240, 0.0)'); 
+
+            new Chart(ctxLine, {
+                type: 'line',
+                data: {
+                    labels: ['10월', '11월', '12월', '1월', '2월', '3월'],
+                    datasets: [
+                        {
+                            label: '총자산',
+                            data: [155, 158, 162, 170, 175, 182.5],
+                            borderColor: '#39ff14', // Neon Green
+                            backgroundColor: gradientTotal,
+                            borderWidth: 3,
+                            pointBackgroundColor: '#141414',
+                            pointBorderColor: '#39ff14',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            fill: true,
+                            tension: 0.4 
+                        },
+                        {
+                            label: '유동 자산',
+                            data: [116.2, 118.5, 121.5, 127.5, 131.2, 136.8],
+                            borderColor: '#0dcaf0', // Cyan
+                            backgroundColor: gradientLiquid,
+                            borderWidth: 2,
+                            pointBackgroundColor: '#141414',
+                            pointBorderColor: '#0dcaf0',
+                            pointBorderWidth: 2,
+                            pointRadius: 3,
+                            pointHoverRadius: 5,
+                            fill: true,
+                            tension: 0.4 
+                        },
+                        {
+                            label: '비유동 자산',
+                            data: [38.8, 39.5, 40.5, 42.5, 43.8, 45.6],
+                            borderColor: '#6c757d', // Gray
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            pointBackgroundColor: '#141414',
+                            pointBorderColor: '#6c757d',
+                            pointBorderWidth: 2,
+                            pointRadius: 3,
+                            pointHoverRadius: 5,
+                            fill: false,
+                            tension: 0.4 
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
+                            ticks: { color: '#f0f0f0' }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
+                            ticks: { color: '#f0f0f0' },
+                            beginAtZero: false
+                        }
+                    },
+                    plugins: {
+                        legend: { 
+                            display: true,
+                            labels: {
+                                color: '#f0f0f0',
+                                font: { size: 12 },
+                                usePointStyle: true,
+                                boxWidth: 8
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#f0f0f0',
+                            bodyColor: '#ffffff',
+                            borderColor: 'rgba(57,255,20,0.3)',
+                            borderWidth: 1,
+                            padding: 12,
+                            titleFont: { size: 13 },
+                            bodyFont: { size: 13 }
+                        }
+                    }
+                }
+            });
+
+            // 3. 미래 자산 시뮬레이션 (Bar + Line Chart)
+            const ctxFuture = document.getElementById('futureProjectionChart').getContext('2d');
+            
+            const currentTotal = 182.5; // 시작 자산 (백만 원)
+            const monthlySaving = 2; // 매월 저축+투자 (백만 원)
+            const annualReturn = 0.03; // 연평균 수익률 (3.0% 보수적)
+            
+            let futureLabels = [];
+            let principalData = []; // 원금 (현재자산 + 새로운 저축)
+            let interestData = [];  // 복리 수익
+            let totalData = [];     // 총 자산 (라인차트용)
+            
+            let currentYear = new Date().getFullYear();
+            let accumulatedPrincipal = currentTotal;
+            let accumulatedTotal = currentTotal;
+
+            for (let i = 0; i <= 10; i++) {
+                futureLabels.push((currentYear + i) + '년');
+                
+                if (i === 0) {
+                    principalData.push(Math.round(accumulatedPrincipal));
+                    interestData.push(0);
+                    totalData.push(Math.round(accumulatedTotal));
+                } else {
+                    accumulatedPrincipal += (monthlySaving * 12);
+                    // 복리 계산: 매년 연초에 연간저축액이 모두 들어간다고 단순 가정
+                    accumulatedTotal = (accumulatedTotal + (monthlySaving * 12)) * (1 + annualReturn);
+                    
+                    principalData.push(Math.round(accumulatedPrincipal));
+                    interestData.push(Math.round(accumulatedTotal - accumulatedPrincipal));
+                    totalData.push(Math.round(accumulatedTotal));
+                }
+            }
+
+            new Chart(ctxFuture, {
+                type: 'bar',
+                data: {
+                    labels: futureLabels,
+                    datasets: [
+                        {
+                            label: '원금 누적액 (초기자금+저축)',
+                            data: principalData,
+                            backgroundColor: 'rgba(13, 202, 240, 0.7)', // Cyan
+                            borderColor: '#0dcaf0',
+                            borderWidth: 1,
+                            stack: 'Stack 0',
+                            order: 2
+                        },
+                        {
+                            label: '누적 복리 수익',
+                            data: interestData,
+                            backgroundColor: 'rgba(57, 255, 20, 0.7)', // Neon Green
+                            borderColor: '#39ff14',
+                            borderWidth: 1,
+                            stack: 'Stack 0',
+                            order: 2
+                        },
+                        {
+                            label: '예상 총 자산 (백만 원)',
+                            type: 'line',
+                            data: totalData,
+                            borderColor: '#ffffff',
+                            backgroundColor: '#ffffff',
+                            borderWidth: 3,
+                            pointBackgroundColor: '#ffffff',
+                            pointBorderColor: '#ffffff',
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            fill: false,
+                            tension: 0.3,
+                            order: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
+                            ticks: { color: '#f0f0f0', font: { size: 11 } }
+                        },
+                        y: {
+                            stacked: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
+                            ticks: { 
+                                color: '#f0f0f0', 
+                                font: { size: 11 },
+                                callback: function(value) { return value + 'M'; } 
+                            },
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: { 
+                            display: true,
+                            labels: {
+                                color: '#f0f0f0',
+                                font: { size: 12 },
+                                usePointStyle: true,
+                                boxWidth: 8
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#f0f0f0',
+                            bodyColor: '#ffffff',
+                            borderColor: 'rgba(57,255,20,0.3)',
+                            borderWidth: 1,
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y.toLocaleString() + ' 백만원';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

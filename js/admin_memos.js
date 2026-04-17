@@ -16,6 +16,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const editMemoContentInput = document.getElementById('edit-memo-content');
     const editMemoColorInput = document.getElementById('edit-memo-color');
     const saveMemoChangesBtn = document.getElementById('save-memo-changes-btn');
+    
+    const memoPreview = document.getElementById('memo-preview');
+    const editMemoPreview = document.getElementById('edit-memo-preview');
+
+    // Setup Markdown previews
+    function renderMarkdown(text) {
+        if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
+            try {
+                const html = typeof marked.parse === 'function' ? marked.parse(text) : marked(text);
+                return DOMPurify.sanitize(html);
+            } catch (e) {
+                console.error('Markdown rendering error:', e);
+                return escapeHTML(text);
+            }
+        }
+        return escapeHTML(text);
+    }
+
+    if (memoContentInput && memoPreview) {
+        memoContentInput.addEventListener('input', () => {
+            memoPreview.innerHTML = renderMarkdown(memoContentInput.value);
+        });
+    }
+
+    if (editMemoContentInput && editMemoPreview) {
+        editMemoContentInput.addEventListener('input', () => {
+            editMemoPreview.innerHTML = renderMarkdown(editMemoContentInput.value);
+        });
+    }
 
     // Helper function to escape HTML (basic XSS prevention)
     function escapeHTML(str) {
@@ -72,33 +101,32 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             memos.forEach(memo => {
-                const memoCol = document.createElement('div');
-                memoCol.className = 'col'; // For Bootstrap grid
+                const memoPost = document.createElement('div');
+                memoPost.className = 'memo-post border rounded p-4 position-relative';
+                memoPost.style.backgroundColor = memo.color || '#ffffff';
+                memoPost.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
 
-                const memoBox = document.createElement('div');
-                memoBox.className = 'memo-box h-100 d-flex flex-column'; // Added h-100 and flex classes
-                memoBox.style.backgroundColor = escapeHTML(memo.color || '#e9ecef');
+                const headerContainer = document.createElement('div');
+                headerContainer.className = 'd-flex justify-content-between align-items-start mb-3 border-bottom pb-3';
 
-                const cardBody = document.createElement('div');
-                cardBody.className = 'card-body d-flex flex-column flex-grow-1'; // Added flex-grow-1
+                const titleInfoContainer = document.createElement('div');
 
-                const title = document.createElement('h5');
-                title.className = 'card-title';
-                title.textContent = escapeHTML(memo.title);
+                const title = document.createElement('h4');
+                title.className = 'mb-1 fw-bold text-dark';
+                title.textContent = memo.title;
 
-                const timestamp = document.createElement('p');
-                timestamp.className = 'timestamp card-subtitle mb-2 text-muted';
+                const timestamp = document.createElement('small');
+                timestamp.className = 'text-muted';
                 timestamp.textContent = new Date(memo.time).toLocaleString('ko-KR');
 
-                const content = document.createElement('p');
-                content.className = 'card-text flex-grow-1'; // Allow content to take available space
-                content.textContent = escapeHTML(memo.content);
+                titleInfoContainer.appendChild(title);
+                titleInfoContainer.appendChild(timestamp);
 
                 const actions = document.createElement('div');
-                actions.className = 'memo-actions mt-auto'; // Push actions to the bottom
+                actions.className = 'memo-actions d-flex flex-shrink-0';
 
                 const editBtn = document.createElement('button');
-                editBtn.className = 'btn btn-sm btn-outline-primary edit-memo-btn';
+                editBtn.className = 'btn btn-sm btn-outline-primary edit-memo-btn me-2';
                 editBtn.innerHTML = '<i class="fas fa-edit"></i> 수정';
                 editBtn.dataset.id = memo.id;
                 editBtn.dataset.title = memo.title;
@@ -106,20 +134,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 editBtn.dataset.color = memo.color;
 
                 const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'btn btn-sm btn-outline-danger delete-memo-btn ms-2';
+                deleteBtn.className = 'btn btn-sm btn-outline-danger delete-memo-btn';
                 deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> 삭제';
                 deleteBtn.dataset.id = memo.id;
 
                 actions.appendChild(editBtn);
                 actions.appendChild(deleteBtn);
 
-                cardBody.appendChild(title);
-                cardBody.appendChild(timestamp);
-                cardBody.appendChild(content);
-                cardBody.appendChild(actions);
-                memoBox.appendChild(cardBody);
-                memoCol.appendChild(memoBox);
-                memosContainer.appendChild(memoCol);
+                headerContainer.appendChild(titleInfoContainer);
+                headerContainer.appendChild(actions);
+
+                const content = document.createElement('div');
+                content.className = 'memo-content text-dark markdown-body';
+                content.innerHTML = renderMarkdown(memo.content);
+
+                memoPost.appendChild(headerContainer);
+                memoPost.appendChild(content);
+
+                memosContainer.appendChild(memoPost);
             });
 
         } catch (error) {
@@ -159,6 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 createMemoForm.reset(); 
                 memoColorInput.value = '#e9ecef'; // Reset color to new default
+                if (memoPreview) memoPreview.innerHTML = '';
                 await fetchAndRenderMemos(); 
             } catch (error) {
                 console.error('메모 생성 오류:', error);
@@ -181,6 +214,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 editMemoTitleInput.value = target.dataset.title;
                 editMemoContentInput.value = target.dataset.content;
                 editMemoColorInput.value = target.dataset.color;
+                
+                if (editMemoPreview) {
+                    editMemoPreview.innerHTML = renderMarkdown(target.dataset.content);
+                }
+
                 editMemoModal.show();
             }
 
