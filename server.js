@@ -110,6 +110,24 @@ app.use(
 );
 
 app.use(express.json());
+
+// Don't let browsers cache the hub HTML or its top-level JS bundle — the
+// SPA's Vite assets are content-hashed so they can cache forever, but the
+// hub (index.html, app.js) is loaded by URL without hashing, and stale
+// app.js means click handlers for newly-added cards never attach.
+app.use((req, res, next) => {
+  const p = req.path;
+  const isHubStatic = (
+    p === '/' ||
+    p.endsWith('.html') ||
+    (p.endsWith('.js') && !p.startsWith('/wealthmate/'))
+  );
+  if (isHubStatic) {
+    res.set('Cache-Control', 'no-cache, must-revalidate');
+  }
+  next();
+});
+
 app.use(express.static(path.resolve()));
 
 // SPA 라우팅: /wealthmate/* 가 정적 파일/프록시에 걸리지 않았다면 index.html

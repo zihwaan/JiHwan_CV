@@ -10,10 +10,18 @@ from models import ExpenseCreate
 router = APIRouter(prefix="/api/expenses", tags=["expenses"])
 
 
+from models import _must_be_month  # type: ignore
+from pydantic import Field, field_validator
+
+
 class _ExpenseRow(BaseModel):
     month: str
     category: str
-    amount: int
+    amount: int = Field(ge=0)
+
+    @field_validator("month")
+    @classmethod
+    def _m(cls, v): return _must_be_month(v)
 
 
 class _BulkBody(BaseModel):

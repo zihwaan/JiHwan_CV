@@ -1,6 +1,90 @@
 import { useEffect, useRef, useState } from 'react';
 import { COLORS } from '../theme';
 
+// Very small Markdown-ish renderer for agent replies. Handles the 95% of
+// cases the agent actually produces: **bold**, *italic*, `code`, bullet/
+// numbered lists, paragraph breaks. Not a full parser — deliberately
+// minimal so we don't ship 20KB of react-markdown + micromark for this.
+function InlineFormat({ text }) {
+  // tokenize **bold**, *italic*, `code` in one pass
+  const parts = [];
+  const re = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g;
+  let last = 0;
+  let m;
+  let i = 0;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    const tok = m[0];
+    if (tok.startsWith('**'))      parts.push(<strong key={i}>{tok.slice(2, -2)}</strong>);
+    else if (tok.startsWith('`'))  parts.push(<code key={i} style={{ background: '#eef2fb', padding: '0 4px', borderRadius: 3 }}>{tok.slice(1, -1)}</code>);
+    else                           parts.push(<em key={i}>{tok.slice(1, -1)}</em>);
+    i += 1;
+    last = m.index + tok.length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return <>{parts}</>;
+}
+
+function Markdown({ text }) {
+  const lines = (text || '').split('\n');
+  const blocks = [];
+  let listBuf = null; // { type: 'ul'|'ol', items: [] }
+  let paraBuf = [];
+
+  const flushPara = () => {
+    if (paraBuf.length) {
+      blocks.push({ kind: 'p', text: paraBuf.join('\n') });
+      paraBuf = [];
+    }
+  };
+  const flushList = () => {
+    if (listBuf) { blocks.push(listBuf); listBuf = null; }
+  };
+
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+    const mUl = line.match(/^\s*[-*]\s+(.*)$/);
+    const mOl = line.match(/^\s*(\d+)\.\s+(.*)$/);
+    if (mUl) {
+      flushPara();
+      if (!listBuf || listBuf.type !== 'ul') { flushList(); listBuf = { type: 'ul', items: [] }; }
+      listBuf.items.push(mUl[1]);
+    } else if (mOl) {
+      flushPara();
+      if (!listBuf || listBuf.type !== 'ol') { flushList(); listBuf = { type: 'ol', items: [] }; }
+      listBuf.items.push(mOl[2]);
+    } else if (line === '') {
+      flushList();
+      flushPara();
+    } else {
+      flushList();
+      paraBuf.push(line);
+    }
+  }
+  flushList();
+  flushPara();
+
+  return (
+    <>
+      {blocks.map((b, i) => {
+        if (b.kind === 'p') {
+          return <p key={i} className="m-0 whitespace-pre-wrap leading-relaxed">
+            <InlineFormat text={b.text} />
+          </p>;
+        }
+        const Tag = b.type === 'ol' ? 'ol' : 'ul';
+        return (
+          <Tag key={i} className={`m-0 pl-5 ${b.type === 'ol' ? 'list-decimal' : 'list-disc'}`}>
+            {b.items.map((it, j) => (
+              <li key={j} className="leading-relaxed"><InlineFormat text={it} /></li>
+            ))}
+          </Tag>
+        );
+      })}
+    </>
+  );
+}
+
 function MessageBubble({ m }) {
   if (m.role === 'user') {
     return (
@@ -21,7 +105,7 @@ function MessageBubble({ m }) {
   return (
     <div className="flex flex-col gap-2 max-w-[92%]">
       <div
-        className="rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap leading-relaxed shadow-card"
+        className="rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-card flex flex-col gap-2"
         style={{
           background: COLORS.card,
           border: `1px solid ${m.isError ? COLORS.red : COLORS.border}`,
@@ -29,7 +113,9 @@ function MessageBubble({ m }) {
           borderBottomLeftRadius: 6,
         }}
       >
-        {m.text}
+        {m.isError
+          ? <span className="whitespace-pre-wrap">{m.text}</span>
+          : <Markdown text={m.text} />}
       </div>
       {m.action && (
         <div

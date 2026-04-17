@@ -185,7 +185,26 @@ async def build_user_context(user_id: str) -> dict:
 
     # Real net-worth reconstruction.
     months = sorted(set(list(expenses_by_month.keys()) + list(extra_income_by_month.keys())))
-    start_amount = (goal_row["start_amount"] if goal_row else 0) or 0
+
+    # Anchor the trajectory. If goal.start_amount is missing or zero, fall
+    # back to working BACKWARDS from the current total_assets: subtract the
+    # net inflow of every known month so the last point lines up with
+    # total_assets and the first point is a sensible starting balance.
+    raw_start = (goal_row["start_amount"] if goal_row else 0) or 0
+    if raw_start > 0:
+        start_amount = raw_start
+        anchor_is_back_computed = False
+    else:
+        # compute aggregate inflow to back-out from total_assets
+        total_delta = 0
+        for m in months:
+            inflow = salary + extra_income_by_month.get(m, 0)
+            out = sum(expenses_by_month.get(m, {}).values())
+            saving = expenses_by_month.get(m, {}).get("저축", 0)
+            total_delta += inflow - (out - saving)
+        start_amount = max(0, total_assets - total_delta)
+        anchor_is_back_computed = True
+
     net_worth_series: list[dict] = []
     cum = start_amount
     for m in months:
@@ -262,7 +281,18 @@ async def build_user_context(user_id: str) -> dict:
             "violated": len(details) - passed,
         }
 
+    # "Configured" = user has finished the onboarding wizard. We treat the
+    # absence of any of {name, salary, at least one asset or a goal} as
+    # evidence the account is still at its factory state and the frontend
+    # should prompt the user through the wizard before showing the rest.
+    configured = bool(
+        (user.get("name") or "").strip()
+        and (salary or 0) > 0
+        and (len(assets) > 0 or goal_row is not None)
+    )
+
     return {
+        "configured": configured,
         "profile": {
             "name": user["name"],
             "department": user["department"],

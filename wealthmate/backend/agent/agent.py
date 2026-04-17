@@ -27,7 +27,7 @@ from agent.tools import TOOLS, execute_tool
 from agent.prompts import build_system_prompt, check_violations
 
 
-MODEL_SDK = "claude-sonnet-4-20250514"
+MODEL_SDK = os.environ.get("WEALTHMATE_MODEL") or "claude-sonnet-4-5"
 MODEL_CLI = "sonnet"
 MAX_ITERATIONS = 5
 
@@ -68,12 +68,28 @@ async def _run_with_sdk(user_id: str, message: str, system_prompt: str) -> dict:
     last_action = None
     final_text_parts = []
 
+    # Prompt caching: the system prompt (per-user RAG context) and the tools
+    # array are the bulky, repeat-across-turns parts. Marking the last block
+    # of each with cache_control lets Anthropic serve subsequent tokens from
+    # cache — ~90% cheaper + faster on cache hits. The cache survives
+    # across this chat session's tool-use loop turns and across requests
+    # within the 5-minute TTL.
+    system_blocks = [{
+        "type": "text",
+        "text": system_prompt,
+        "cache_control": {"type": "ephemeral"},
+    }]
+    tools_cached = [
+        {**t, "cache_control": {"type": "ephemeral"}} if i == len(TOOLS) - 1 else t
+        for i, t in enumerate(TOOLS)
+    ]
+
     for _ in range(MAX_ITERATIONS):
         response = client.messages.create(
             model=MODEL_SDK,
             max_tokens=1024,
-            system=system_prompt,
-            tools=TOOLS,
+            system=system_blocks,
+            tools=tools_cached,
             messages=messages,
         )
         messages.append({"role": "assistant", "content": response.content})

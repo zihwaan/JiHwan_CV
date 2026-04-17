@@ -22,6 +22,22 @@ cd "$LOCAL_ROOT"
 echo "== 1. local SPA build (spare the server's memory)"
 ( cd wealthmate/frontend && npm run build )
 
+echo "== 2a. snapshot server state on the server so a bad deploy can roll back"
+ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" "$HOST" '
+  set -e
+  ts=$(date -u +%Y%m%dT%H%M%SZ)
+  mkdir -p ~/wm-backups
+  cd ~/JiHwan_CV/wealthmate/backend
+  for f in .keys.json .env wealthmate.db; do
+    [ -f "$f" ] && cp -a "$f" ~/wm-backups/"${ts}__${f//\//_}" 2>/dev/null || true
+  done
+  # keep only last 10 snapshots per file
+  ls -1t ~/wm-backups/*.keys.json 2>/dev/null | tail -n +11 | xargs -r rm --
+  ls -1t ~/wm-backups/*.env       2>/dev/null | tail -n +11 | xargs -r rm --
+  ls -1t ~/wm-backups/*wealthmate.db 2>/dev/null | tail -n +11 | xargs -r rm --
+  ls -1 ~/wm-backups/ | tail -5 | sed "s/^/    /"
+'
+
 echo "== 2. rsync backend (source only — exclude venv/db/cache/secrets)"
 rsync -az --delete \
   --exclude 'node_modules' --exclude '.venv' --exclude 'dist' \
@@ -65,15 +81,35 @@ ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" "$HOST" '
 
 echo "== 6. wait for readiness and smoke test"
 sleep 3
+# Public endpoints — gate is not involved.
 for ep in \
   "https://zihwan.com/" \
   "https://zihwan.com/wealthmate/" \
-  "https://zihwan.com/wealthmate/api/auth/status" \
-  "https://zihwan.com/wealthmate/api/dashboard/user-jihwan-001"
+  "https://zihwan.com/wealthmate/api/auth/gate_status"
 do
   code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 15 "$ep")
   printf "  %-60s HTTP=%s\n" "$ep" "$code"
   [ "$code" = "200" ] || { echo "FAIL: $ep"; exit 1; }
 done
+
+# Gated endpoint check — if WEALTHMATE_ACCESS_PIN is set in the shell,
+# exercise a protected route with the PIN header; otherwise just confirm
+# the gate is returning 401 correctly (proof the gate is active).
+gate_required=$(curl -sS --max-time 15 "https://zihwan.com/wealthmate/api/auth/gate_status" \
+  | python3 -c 'import json,sys;print(json.load(sys.stdin).get("required"))')
+if [ "$gate_required" = "True" ]; then
+  if [ -n "${WEALTHMATE_ACCESS_PIN:-}" ]; then
+    code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 15 \
+      -H "x-wm-pin: ${WEALTHMATE_ACCESS_PIN}" \
+      "https://zihwan.com/wealthmate/api/dashboard/user-jihwan-001")
+    printf "  %-60s HTTP=%s\n" "dashboard w/ PIN" "$code"
+    [ "$code" = "200" ] || { echo "FAIL: gated dashboard"; exit 1; }
+  else
+    code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 15 \
+      "https://zihwan.com/wealthmate/api/dashboard/user-jihwan-001")
+    printf "  %-60s HTTP=%s\n" "gate rejects no-PIN" "$code"
+    [ "$code" = "401" ] || { echo "FAIL: gate should reject unauthenticated"; exit 1; }
+  fi
+fi
 
 echo "ALL GREEN"

@@ -3,13 +3,15 @@ import Dashboard from './components/Dashboard';
 import AgentChat from './components/AgentChat';
 import AgentKnowledgeModal from './components/AgentKnowledgeModal';
 import AuthBanner from './components/AuthBanner';
+import ErrorBoundary from './components/ErrorBoundary';
+import OnboardingWizard from './components/OnboardingWizard';
 import { useDashboard } from './hooks/useDashboard';
 import { useChat } from './hooks/useChat';
 import { useAuth } from './hooks/useAuth';
 import { USER_ID } from './api';
 import { COLORS } from './theme';
 
-export default function App() {
+function Shell() {
   const { data, refresh, error } = useDashboard(USER_ID, 5000);
   const { status: authStatus, refresh: refreshAuth, markLoginPending } = useAuth();
   const [chatOpen, setChatOpen] = useState(false);
@@ -18,6 +20,12 @@ export default function App() {
     // on mobile after sending a message, keep chat open to show reply
   }, data?.profile?.name);
   const [knowledgeOpen, setKnowledgeOpen] = useState(false);
+
+  // First-load wizard: if the backend reports the user hasn't completed
+  // the setup wizard (no name / no salary / no assets & no goal), we
+  // show it on top of the dashboard. After completion we refresh the
+  // dashboard and the wizard is auto-dismissed because `configured` flips.
+  const showWizard = data ? data.configured === false : false;
 
   return (
     <div className="flex flex-col h-screen" style={{ background: COLORS.bg }}>
@@ -32,6 +40,7 @@ export default function App() {
           onOpenKnowledge={() => setKnowledgeOpen(true)}
           onRefresh={refresh}
         />
+        {showWizard && <OnboardingWizard onComplete={refresh} />
         <AgentChat
           messages={messages}
           onSend={send}

@@ -11,17 +11,25 @@ The fixed monthly salary stays on `users.salary` (single scalar).
 from typing import Optional
 import aiosqlite
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
 from database import DB_PATH
+from models import _must_be_month  # type: ignore
 
 router = APIRouter(prefix="/api/incomes", tags=["incomes"])
 
 
 class IncomeCreate(BaseModel):
+    # Field-level constraints stay loose here so the router can translate
+    # business-rule violations to 400 (instead of Pydantic's 422) with a
+    # reason code the UI already understands.
     month: str      # YYYY-MM
     label: str
     amount: int
+
+    @field_validator("month")
+    @classmethod
+    def _m(cls, v): return _must_be_month(v)
 
 
 @router.get("/{user_id}")

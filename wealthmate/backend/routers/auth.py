@@ -148,60 +148,54 @@ def _read_env_key(name: str) -> str | None:
 # ---------------------------------------------------------------------------
 async def _validate_api_key(key: str) -> tuple[bool, str | None]:
     """
-    Two-stage validation.
+    Narrow, Anthropic-SDK-typed validation.
 
-    Stage 1 — identity (`models.list`): every real Anthropic key, regardless
-    of plan or workspace, can list its own accessible models. Failure here
-    means the key is not recognised at all → hard reject.
+    Prior iterations over-rejected valid keys in two ways:
+      (a) probing `messages.create` with a hard-coded model that the key's
+          workspace didn't have access to — Anthropic returns a 403/404,
+          whose human-readable message happened to contain tokens like
+          "permission" or numbers that tripped my substring rules.
+      (b) substring-matching "401" in error payloads — but Anthropic wraps
+          many non-auth errors in envelopes whose JSON bodies mention
+          status codes, so the pattern drifted.
 
-    Stage 2 — capability (`messages.create` with the actual agent model).
-    Best-effort. We try the exact model the agent uses so we catch cases
-    like "Admin key can't call messages API" or "no credit left". But we
-    DON'T reject for soft failures such as "this workspace doesn't have
-    access to claude-sonnet-4" — those keys may still work with the chat
-    endpoint's own fallback handling, and rejecting them is a false
-    negative on a perfectly good key.
+    Official recommendation (Anthropic docs): there is no dedicated
+    /validate endpoint; just make a real API call. So we:
+
+      1. Call `client.models.list` — Anthropic guarantees this succeeds for
+         every workspace-scoped key. If this raises
+         `anthropic.AuthenticationError` (the SDK's typed 401), the key is
+         definitively not recognised → reject.
+
+      2. Any other failure (network blip, 5xx, unusual workspace config,
+         rate-limit) → treat as **soft**. The key is stored; the
+         `/api/chat` endpoint's error handler will surface specific
+         problems (credit_balance_too_low, permission_error, etc.) at real
+         use time with actionable hints.
+
+    Net effect: a key you *know* is valid will never be falsely rejected
+    because of a regional hiccup or a model-access quirk.
     """
     try:
         import anthropic
     except ImportError:
         return False, "anthropic SDK not installed on server"
 
-    client = anthropic.Anthropic(api_key=key)
+    client = anthropic.Anthropic(api_key=key, timeout=20.0, max_retries=1)
 
-    # Stage 1 — must pass
     try:
         await asyncio.to_thread(lambda: client.models.list(limit=1))
-    except Exception as e:  # noqa: BLE001
-        return False, f"{type(e).__name__}: {str(e)[:250]}"
-
-    # Stage 2 — probe messages.create with the agent's real model
-    try:
-        await asyncio.to_thread(lambda: client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=1,
-            messages=[{"role": "user", "content": "."}],
-        ))
         return True, None
-    except Exception as e:  # noqa: BLE001
-        err = f"{type(e).__name__}: {str(e)[:250]}"
-        lower = err.lower()
-        # Hard rejects — key itself is not usable for chat, no point saving it
-        hard = (
-            "authentication_error" in lower
-            or "invalid x-api-key" in lower
-            or "invalid api key" in lower
-            or "401" in lower
-            or "credit" in lower
-            or "billing" in lower
-            or "insufficient" in lower
-            or "402" in lower
-        )
-        if hard:
-            return False, err
-        # Soft — probably a model-access/region/rate-limit hiccup. Accept
-        # the key; if the agent truly can't call this model, the chat
-        # endpoint's error handler will surface a specific message then.
+    except anthropic.AuthenticationError as e:
+        # Definitive 401 — the key is not recognised at all
+        return False, f"AuthenticationError: {str(e)[:250]}"
+    except anthropic.PermissionDeniedError as e:
+        # Definitive 403 on key metadata — e.g., revoked / region-blocked
+        return False, f"PermissionDeniedError: {str(e)[:250]}"
+    except Exception:  # noqa: BLE001
+        # Network / rate-limit / transient / unknown SDK-version quirk:
+        # don't punish a legitimate key. Save it; chat endpoint will tell
+        # the user the real story when they actually try to talk to the agent.
         return True, None
 
 
