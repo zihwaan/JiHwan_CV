@@ -9,8 +9,12 @@ import { Low } from 'lowdb';
 import { JSONFile } from 'lowdb/node';
 import { nanoid } from 'nanoid';
 import jwt from 'jsonwebtoken';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 
 dotenv.config();
+
+const WEALTHMATE_BACKEND = process.env.WEALTHMATE_BACKEND_URL || 'http://127.0.0.1:8001';
+const WEALTHMATE_DIST = path.resolve('./wealthmate/frontend/dist');
 
 const DOMAIN = process.env.DOMAIN ? `https://${process.env.DOMAIN}` : ``;
 
@@ -69,8 +73,51 @@ await initializeDatabase();
 
 const app = express();
 app.use(cors());
+
+// ────────────────────────────────────────────────────────────────────
+// WealthMate 서브앱: 반드시 express.json() 과 정적 라우트 앞에 프록시를 둬야
+// body parsing이 먼저 일어나서 POST /chat 같은 요청이 깨지는 걸 막을 수 있다.
+// ────────────────────────────────────────────────────────────────────
+app.use(
+  createProxyMiddleware({
+    // pathFilter 로 매칭해야 http-proxy-middleware v3 에서 pathRewrite 가
+    // 원본 URL (prefix 포함) 에 적용된다. app.use('/prefix', ...) 방식은 v3에서
+    // Express 가 prefix 를 먼저 떼어내 rewrite 가 안 먹는 이슈가 있다.
+    pathFilter: '/wealthmate/api',
+    target: WEALTHMATE_BACKEND,
+    changeOrigin: true,
+    pathRewrite: { '^/wealthmate/api': '/api' },
+    proxyTimeout: 180000,
+    timeout: 180000,
+    on: {
+      error: (err, _req, res) => {
+        if (res && !res.headersSent) {
+          res.writeHead(502, { 'content-type': 'application/json' });
+          res.end(JSON.stringify({
+            error: 'WEALTHMATE_BACKEND_UNREACHABLE',
+            detail: err?.message || 'unknown',
+          }));
+        }
+      },
+    },
+  }),
+);
+
+// Built SPA assets (Vite build output)
+app.use(
+  '/wealthmate',
+  express.static(WEALTHMATE_DIST, { fallthrough: true, index: false }),
+);
+
 app.use(express.json());
 app.use(express.static(path.resolve()));
+
+// SPA 라우팅: /wealthmate/* 가 정적 파일/프록시에 걸리지 않았다면 index.html
+app.get(/^\/wealthmate(\/.*)?$/, (_req, res, next) => {
+  const indexPath = path.join(WEALTHMATE_DIST, 'index.html');
+  if (fs.existsSync(indexPath)) return res.sendFile(indexPath);
+  return next();
+});
 
 // ──────────────────────── UTILS ──────────────────────────
 async function verifyKakaoToken(token) {
